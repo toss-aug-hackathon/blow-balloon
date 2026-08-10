@@ -1,0 +1,58 @@
+name: Discord Merge Notification
+
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  notify-discord:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send merge notification to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+        run: |
+          MESSAGE=$(cat <<EOF
+          ${BASE_BRANCH} 브랜치 Merge 완료
+          ${REPOSITORY}의 ${BASE_BRANCH} 브랜치가 업데이트되었습니다.
+
+          PR: #${PR_NUMBER} ${PR_TITLE}
+          Merge한 사람: ${MERGED_BY}
+
+          작업 중인 변경사항을 먼저 커밋하거나 stash한 뒤 최신 ${BASE_BRANCH}을 받아주세요.
+
+          \`\`\`bash
+          git switch ${BASE_BRANCH}
+          git pull origin ${BASE_BRANCH}
+          \`\`\`
+          EOF
+          )
+
+          PAYLOAD=$(jq -n \
+            --arg content "$MESSAGE" \
+            '{
+              username: "GitHub Merge 알림",
+              content: $content,
+              allowed_mentions: {
+                parse: []
+              }
+            }')
+
+          curl --fail-with-body \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data "$PAYLOAD" \
+            "$DISCORD_WEBHOOK_URL"
