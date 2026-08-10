@@ -12,6 +12,12 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@apps-in-toss/web-framework": ["./src/sdk/appsInTossV2Compat.ts"],
+      "#apps-in-toss-sdk-v2": [
+        "./node_modules/@apps-in-toss/web-framework/dist-web/index.d.ts"
+      ]
+    },
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

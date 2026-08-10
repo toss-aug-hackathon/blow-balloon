@@ -1,8 +1,9 @@
 allowBuilds:
+  '@sentry/cli': set this to true or false
+  '@swc/core': set this to true or false
   cloudflared: true
   esbuild: true
   protobufjs: true
 minimumReleaseAgeExclude:
-  - '@apps-in-toss/cli@3.0.3'
-  - '@apps-in-toss/web-framework@3.0.3'
-  - '@apps-in-toss/devtools@3.0.3'
+  - '@apps-in-toss/cli@2.10.8'
+  - '@apps-in-toss/web-framework@2.10.8'
