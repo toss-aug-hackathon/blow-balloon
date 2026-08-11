@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getUserKeyForGame } from '@apps-in-toss/web-bridge';
-import { getGameUser, type GameUser } from '../api/gameApi';
+import {
+  getGameUser,
+  getMyRecords,
+  type GameUser,
+} from '../api/gameApi';
 
 export type GameUserStatus = 'loading' | 'ready' | 'unavailable';
 
@@ -24,8 +28,13 @@ export function useGameUser() {
         return;
       }
 
+      const userRequest = getGameUser(keyResult.hash);
+      const recordsRequest = getMyRecords(keyResult.hash).catch(() => null);
+      const nextUser = await userRequest;
+      if (nextUser.isRegistered) await recordsRequest;
+
       setUserKey(keyResult.hash);
-      setUser(await getGameUser(keyResult.hash));
+      setUser(nextUser);
       setStatus('ready');
     } catch {
       setUserKey(null);

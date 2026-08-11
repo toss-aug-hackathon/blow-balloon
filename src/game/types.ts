@@ -37,6 +37,7 @@ export type BalloonRushResult = {
   mode: 'balloon-rush';
   durationMs: 30000;
   completedCount: number;
+  completionTimeMs: number | null;
   totalBlowingMs: number;
   balloons: BalloonBody[];
 };

@@ -52,7 +52,7 @@ export async function createResultSnapshot(
       Math.min(330, 160 + result.finalBalloonScale * 34),
     );
     context.font = '800 72px system-ui, sans-serif';
-    context.fillText('폐활량 테스트', SNAPSHOT_WIDTH / 2, 180);
+    context.fillText('풍선 크게 불기', SNAPSHOT_WIDTH / 2, 180);
     context.font = '800 90px system-ui, sans-serif';
     context.fillStyle = APP_THEME.ink;
     context.fillText(
@@ -82,18 +82,22 @@ export async function createResultSnapshot(
     });
     context.font = '800 72px system-ui, sans-serif';
     context.fillStyle = APP_THEME.ink;
-    context.fillText('풍선 많이 만들기', SNAPSHOT_WIDTH / 2, 180);
+    context.fillText('풍선 스피드런', SNAPSHOT_WIDTH / 2, 180);
     context.font = '800 78px system-ui, sans-serif';
     context.fillStyle = APP_THEME.ink;
     context.fillText(
-      `30초 동안 풍선 ${result.completedCount}개 완성!`,
+      result.completionTimeMs === null
+        ? `30초 동안 ${result.completedCount}개 완성!`
+        : `${result.completedCount}개 · ${formatSeconds(result.completionTimeMs)}초`,
       SNAPSHOT_WIDTH / 2,
       1160,
     );
     context.font = '700 42px system-ui, sans-serif';
     context.fillStyle = APP_THEME.inkSoft;
     context.fillText(
-      `바람을 분 시간 ${formatSeconds(result.totalBlowingMs)}초`,
+      result.completionTimeMs === null
+        ? '30초 안에 목표에 도달하지 못했어요'
+        : '마지막 풍선까지 걸린 시간',
       SNAPSHOT_WIDTH / 2,
       1230,
     );

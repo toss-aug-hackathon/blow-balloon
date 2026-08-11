@@ -10,8 +10,9 @@ Supabase Dashboard만 사용해 설치하는 PostgreSQL + Edge Function 백엔�
 | --- | --- | --- | --- |
 | `GET` | `/game-api/game-user` | 등록 사용자 확인 | 필요 |
 | `POST` | `/game-api/register-nickname` | 최초 별명 등록 | 필요 |
+| `POST` | `/game-api/update-nickname` | 별명 변경 | 필요 |
 | `POST` | `/game-api/submit-score` | 최고 기록 등록 | 필요 |
-| `GET` | `/game-api/ranking?gameType=...&limit=100` | 게임별 랭킹 | 불필요 |
+| `GET` | `/game-api/ranking?gameType=...&limit=15` | 게임별 랭킹 | 불필요 |
 | `GET` | `/game-api/my-records` | 내 두 게임 기록과 순위 | 필요 |
 
 사용자 키는 요청 본문이나 URL이 아니라 `x-game-user-key` 헤더로 전달합니다. API 응답에는 반환하지 않습니다.
@@ -19,11 +20,14 @@ Supabase Dashboard만 사용해 설치하는 PostgreSQL + Edge Function 백엔�
 ## Dashboard 설치 순서
 
 1. Supabase 프로젝트의 **SQL Editor**를 엽니다.
-2. [`migrations/001_ranking_backend.sql`](./migrations/001_ranking_backend.sql) 전체를 붙여 넣고 한 번 실행합니다.
-3. **Edge Functions**에서 `game-api` Function을 새로 만듭니다.
-4. [`functions/game-api/index.ts`](./functions/game-api/index.ts) 전체로 교체합니다.
-5. Edge Function 설정에서 **Verify JWT with legacy secret**을 끕니다. 이 앱은 legacy anon JWT나 Supabase Auth JWT를 보내지 않습니다.
-6. Dashboard에서 Function을 배포합니다.
+2. [`migrations/001_ranking_backend.sql`](./migrations/001_ranking_backend.sql) 전체를 붙여 넣고 실행합니다.
+3. [`migrations/002_profile_identity_and_nickname.sql`](./migrations/002_profile_identity_and_nickname.sql) 전체를 붙여 넣고 실행합니다.
+4. [`migrations/003_speedrun_balloon_limit.sql`](./migrations/003_speedrun_balloon_limit.sql) 전체를 붙여 넣고 실행합니다.
+5. [`migrations/004_metric_duration_records.sql`](./migrations/004_metric_duration_records.sql) 전체를 붙여 넣고 실행합니다.
+6. **Edge Functions**에서 `game-api` Function을 새로 만듭니다.
+7. [`functions/game-api/index.ts`](./functions/game-api/index.ts) 전체로 교체합니다.
+8. Edge Function 설정에서 **Verify JWT with legacy secret**을 끕니다. 이 앱은 legacy anon JWT나 Supabase Auth JWT를 보내지 않습니다.
+9. Dashboard에서 Function을 배포합니다.
 
 `SUPABASE_URL`과 `SUPABASE_SECRET_KEYS`는 Supabase-hosted Edge Function에 기본 제공됩니다. 별도의 Edge Function Secret 등록은 필요하지 않습니다. 코드는 현재 Secret Key의 `default` 값을 우선 사용하고, 기존 프로젝트에서는 `SUPABASE_SERVICE_ROLE_KEY`로 자동 대체합니다. 실제 Secret/Service Role 키를 파일이나 프론트 환경 변수에 복사하지 마세요.
 
@@ -39,9 +43,12 @@ VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 
 - `gameType`: `BALLOON_COUNT` 또는 `LUNG_CAPACITY`
 - `score`: 0 이상의 정수
-- `BALLOON_COUNT` 최대값: `10,000`
-- `LUNG_CAPACITY` 최대값: `86,400,000`
+- `BALLOON_COUNT` 최대값: `30`
+- `LUNG_CAPACITY` 최대값: `999`
+- 모든 점수는 `best_duration_ms`와 함께 저장하며, 점수 동률이면 시간이 짧은 기록을 우선합니다.
 - 별명: 앞뒤 공백을 제거한 2~12자, `#`와 제어 문자 금지, 중복 허용
+- 표시 ID: 최초 등록 시 생성되는 1000~9999 사이의 고정 숫자. 별명을 바꿔도 유지
+- 유해 별명: 욕설·성적 표현과 반복 문자·특수문자 우회 표현 차단
 - 랭킹 `limit`: 1~100
 
 `LUNG_CAPACITY`의 단위가 아직 확정되지 않았으므로 DB는 정수형 범용 점수로 저장합니다. 프론트 규칙 확정 시 `SCORE_LIMITS`만 실제 단위의 현실적인 상한으로 낮추세요. 의료 단위로 해석하거나 노출하지 않습니다.

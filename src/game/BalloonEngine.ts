@@ -12,8 +12,10 @@ import { updateHeliumPhysics } from './physics/physics';
 import {
   BALLOON_RUSH_DURATION_MS,
   LUNG_MAX_GROWTH_DURATION_MS,
+  MAX_RUSH_BALLOON_COUNT,
   calculateAverageWind,
   calculateBalloonScore,
+  calculateWindGrowthMultiplier,
   hasLungBreathEnded,
   hasRushTimeExpired,
   isBalloonComplete,
@@ -33,8 +35,10 @@ type BalloonEngineOptions = {
   onFinish: (result: GameResult) => void;
 };
 
-const ACTIVE_BALLOON_BOTTOM_RATIO = 0.88;
-const LUNG_ACTIVE_BALLOON_START_Y_RATIO = 0.68;
+// The active balloon starts behind the bottom wind panel and reveals itself
+// as it grows into the playfield.
+const ACTIVE_BALLOON_HIDDEN_OFFSET = 46;
+const ACTIVE_BALLOON_TARGET_RATIO = 0.82;
 const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.5;
 const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
 export class BalloonEngine {
@@ -49,6 +53,7 @@ export class BalloonEngine {
   private previousFrameTime: number | null = null;
   private elapsedMs = 0;
   private totalBlowingMs = 0;
+  private lastCompletionElapsedMs: number | null = null;
   private windIntegral = 0;
   private peakWind = 0;
   private lungBreathStarted = false;
@@ -180,7 +185,7 @@ export class BalloonEngine {
         (LUNG_MAX_GROWTH_DURATION_MS / 1000);
       const growth =
         growthPerSecond *
-        (1.05 + signal.windStrength * 0.35) *
+        calculateWindGrowthMultiplier(signal.windStrength) *
         deltaSeconds;
       this.growActiveBalloon(growth);
     } else if (this.lungBreathStarted) {
@@ -197,9 +202,13 @@ export class BalloonEngine {
     this.elapsedMs += deltaMs;
     if (signal.isBlowing) {
       this.totalBlowingMs += deltaMs;
-      const growth = 37 * (0.72 + signal.windStrength * 0.28) * deltaSeconds;
+      const growth =
+        37 * calculateWindGrowthMultiplier(signal.windStrength) * deltaSeconds;
       this.growActiveBalloon(growth);
-      if (isBalloonComplete(this.averageRadius(this.activeBalloon))) {
+      if (
+        this.completedBalloons.length < MAX_RUSH_BALLOON_COUNT &&
+        isBalloonComplete(this.averageRadius(this.activeBalloon))
+      ) {
         this.completeActiveBalloon();
       }
     }
@@ -222,9 +231,10 @@ export class BalloonEngine {
   private completeActiveBalloon(): void {
     this.activeBalloon.completed = true;
     this.activeBalloon.vx = (Math.random() - 0.5) * 8;
-    this.activeBalloon.vy = -42 - Math.random() * 20;
+    this.activeBalloon.vy = -8 - Math.random() * 8;
     this.activeBalloon.angularVelocity = (Math.random() - 0.5) * 0.2;
     this.completedBalloons.push(this.activeBalloon);
+    this.lastCompletionElapsedMs = this.elapsedMs;
     const variant = createRandomVariant(this.activeBalloon.variant);
     this.activeBalloon = createBalloonBody(variant, 0, 0, 19);
     this.activeSpawnXRatio = this.chooseSpawnXRatio();
@@ -246,27 +256,28 @@ export class BalloonEngine {
       1,
     );
     const playHeight = this.getPlayHeight();
+    const hiddenStartY = playHeight + ACTIVE_BALLOON_HIDDEN_OFFSET;
     if (this.mode === 'lung-test') {
-      // Start in the lower third, then move the balloon's center to the
-      // screen center while it grows quickly and dramatically.
-      const centerMoveProgress = clamp(progress * 1.8, 0, 1);
+      // Start behind the bottom wind panel, then move the balloon's center
+      // quickly toward the middle as the breath continues.
+      const centerMoveProgress = clamp(progress * 2.5, 0, 1);
+      const targetY =
+        this.height * LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO;
       this.activeBalloon.x = this.width * 0.5;
       this.activeBalloon.y =
-        this.safeTopInset +
-        (playHeight - this.safeTopInset) *
-          (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
-            (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
-              LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO) *
-              centerMoveProgress);
+        hiddenStartY + (targetY - hiddenStartY) * centerMoveProgress;
       return;
     }
 
     const upwardLift = playHeight * 0.13 * progress;
-    this.activeBalloon.x = this.width * this.activeSpawnXRatio;
-    this.activeBalloon.y =
-      playHeight * ACTIVE_BALLOON_BOTTOM_RATIO -
+    const targetY =
+      playHeight * ACTIVE_BALLOON_TARGET_RATIO -
       this.activeBalloon.radiusY * 0.68 -
       upwardLift;
+    const revealProgress = clamp(progress * 1.25, 0, 1);
+    this.activeBalloon.x = this.width * this.activeSpawnXRatio;
+    this.activeBalloon.y =
+      hiddenStartY + (targetY - hiddenStartY) * revealProgress;
   }
 
   private chooseSpawnXRatio(): number {
@@ -284,6 +295,7 @@ export class BalloonEngine {
     if (this.finished) return;
     this.finished = true;
     const baseRadius = 22;
+    const baseAverageRadius = this.getBaseAverageRadius(baseRadius);
     this.onFinish({
       mode: 'lung-test',
       durationMs: this.totalBlowingMs,
@@ -294,7 +306,7 @@ export class BalloonEngine {
       peakWindStrength: this.peakWind,
       finalBalloonScale: calculateBalloonScore(
         this.averageRadius(this.activeBalloon),
-        baseRadius,
+        baseAverageRadius,
       ),
       balloon: structuredClone(this.activeBalloon),
     });
@@ -307,6 +319,7 @@ export class BalloonEngine {
       mode: 'balloon-rush',
       durationMs: BALLOON_RUSH_DURATION_MS,
       completedCount: this.completedBalloons.length,
+      completionTimeMs: this.lastCompletionElapsedMs,
       totalBlowingMs: this.totalBlowingMs,
       balloons: structuredClone(this.completedBalloons),
     });
@@ -353,7 +366,6 @@ export class BalloonEngine {
     }
 
     if (!this.finished) {
-      this.drawWindFlow(timeMs, windStrength);
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       const baseRadius = 22;
@@ -434,91 +446,6 @@ export class BalloonEngine {
     context.restore();
   }
 
-  private drawWindFlow(timeMs: number, windStrength: number): void {
-    if (windStrength < 0.035) return;
-
-    const context = this.context;
-    const strength = clamp(windStrength, 0, 1);
-    const originY = this.height * 0.99;
-    const targetY = this.activeBalloon.y + this.activeBalloon.radiusY * 0.72;
-    const distance = Math.max(100, originY - targetY);
-    const flowSpeed = timeMs * (0.0009 + strength * 0.0014);
-    const ribbonGradient = context.createLinearGradient(
-      0,
-      originY,
-      0,
-      targetY,
-    );
-    ribbonGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    ribbonGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.08)');
-    ribbonGradient.addColorStop(0.82, 'rgba(255, 255, 255, 0.28)');
-    ribbonGradient.addColorStop(1, 'rgba(255, 225, 211, 0.48)');
-
-    context.save();
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.strokeStyle = ribbonGradient;
-
-    for (let index = 0; index < 3; index += 1) {
-      const offset = (index - 1) * (18 + strength * 5);
-      const phase = flowSpeed + index * 1.9;
-      const sway = Math.sin(phase) * (13 + strength * 10);
-      const startX = this.activeBalloon.x + offset + sway;
-      const endX = this.activeBalloon.x + offset * 0.42;
-      const controlOneX = startX - sway * 0.8;
-      const controlTwoX = endX + Math.sin(phase + 1.2) * 22;
-      const startY = originY + index * 12;
-      const endPointY = targetY + index * 4;
-
-      context.globalAlpha = 0.62 - index * 0.09;
-      context.lineWidth = 4 + strength * 5 - index * 0.65;
-      context.beginPath();
-      context.moveTo(startX, startY);
-      context.bezierCurveTo(
-        controlOneX,
-        startY - distance * 0.28,
-        controlTwoX,
-        startY - distance * 0.72,
-        endX,
-        endPointY,
-      );
-      context.stroke();
-
-      context.globalAlpha = 0.18 + strength * 0.12;
-      context.lineWidth = 1.2;
-      context.strokeStyle = 'rgba(255, 255, 255, 0.95)';
-      context.beginPath();
-      context.moveTo(startX, startY - 2);
-      context.bezierCurveTo(
-        controlOneX + 3,
-        startY - distance * 0.28,
-        controlTwoX - 3,
-        startY - distance * 0.72,
-        endX,
-        endPointY,
-      );
-      context.stroke();
-      context.strokeStyle = ribbonGradient;
-    }
-
-    // Small bubbles drift along the upper part of the breeze as it reaches
-    // the balloon, making the air feel soft instead of like rigid lines.
-    context.fillStyle = 'rgba(255, 255, 255, 0.52)';
-    for (let index = 0; index < 4; index += 1) {
-      const progress = (flowSpeed * 0.8 + index * 0.23) % 1;
-      const x =
-        this.activeBalloon.x +
-        Math.sin(timeMs * 0.002 + index * 2.4) * (12 + strength * 12);
-      const y = targetY + distance * (0.12 + progress * 0.42);
-      const radius = 1.8 + ((index + 1) % 2) * 1.1;
-      context.globalAlpha = (1 - progress) * (0.22 + strength * 0.28);
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fill();
-    }
-    context.restore();
-  }
-
   private getMaximumActiveRadius(): number {
     return this.mode === 'lung-test'
       ? Math.max(this.width, this.height) * 0.36
@@ -528,6 +455,11 @@ export class BalloonEngine {
 
   private averageRadius(balloon: BalloonBody): number {
     return (balloon.radiusX + balloon.radiusY) / 2;
+  }
+
+  private getBaseAverageRadius(baseRadius: number): number {
+    const bodyAspect = this.activeBalloon.radiusY / this.activeBalloon.radiusX;
+    return (baseRadius + baseRadius * bodyAspect) / 2;
   }
 
   private getPlayHeight(): number {

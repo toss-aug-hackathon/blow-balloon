@@ -100,25 +100,26 @@ type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 
 | 화면의 게임 | API `gameType` |
 | --- | --- |
-| 풍선 많이 만들기 | `BALLOON_COUNT` |
+| 풍선 스피드런 | `BALLOON_COUNT` |
 | 폐활량 테스트 | `LUNG_CAPACITY` |
 
 대소문자를 변경하거나 화면용 한글 이름을 API에 보내면 안 된다.
 
 ## 5. 점수 규칙
 
-### 풍선 많이 만들기
+### 풍선 스피드런
 
-완성된 풍선 개수를 정수로 전송한다. 미완성 풍선은 포함하지 않는다.
+완성된 풍선 개수와 마지막으로 완성한 풍선까지의 시간을 함께 전송한다. 미완성 풍선은 포함하지 않는다.
 
 ```json
 {
   "gameType": "BALLOON_COUNT",
-  "score": 39
+  "score": 26,
+  "durationMs": 17360
 }
 ```
 
-허용 범위는 `0~10,000`이다.
+허용 범위는 `0~30`이다.
 
 ### 폐활량 테스트
 
@@ -127,13 +128,14 @@ type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 ```json
 {
   "gameType": "LUNG_CAPACITY",
-  "score": 21320
+  "score": 184,
+  "durationMs": 8420
 }
 ```
 
-권장 기준은 호흡 지속 시간을 중심으로 계산한 재미용 점수다. 리터, 밀리리터 등 의료 측정 단위로 표시하면 안 된다.
+풍선 크기 점수와 한 호흡 시간을 함께 저장한다. 리터, 밀리리터 등 의료 측정 단위로 표시하면 안 된다.
 
-허용 범위는 `0~86,400,000`이다.
+허용 범위는 `0~999`이다.
 
 소수, 문자열, `NaN`, 음수는 보내지 않는다.
 
@@ -283,6 +285,22 @@ const result = await response.json()
 
 프론트에서도 같은 규칙을 먼저 검사하되 서버 응답을 최종 기준으로 사용한다.
 
+## 9. 별명 변경
+
+나의 기록 화면에서 별명을 변경할 때 호출한다. 표시 ID는 변경되지 않는다.
+
+```http
+POST /update-nickname
+Content-Type: application/json
+x-game-user-key: <userKey>
+```
+
+```json
+{
+  "nickname": "새별명"
+}
+```
+
 이미 등록된 사용자가 다시 호출해도 최초 별명과 `displayId`가 유지된다. 별명 변경 API는 제공하지 않는다.
 
 ## 9. 점수 등록
@@ -298,7 +316,8 @@ x-game-user-key: <userKey>
 ```json
 {
   "gameType": "BALLOON_COUNT",
-  "score": 39
+  "score": 26,
+  "durationMs": 17360
 }
 ```
 
@@ -309,7 +328,7 @@ const response = await fetch(`${GAME_API_URL}/submit-score`, {
     'Content-Type': 'application/json',
     'x-game-user-key': userKey,
   },
-  body: JSON.stringify({ gameType, score }),
+  body: JSON.stringify({ gameType, score, durationMs }),
 })
 
 const result = await response.json()
@@ -321,8 +340,9 @@ const result = await response.json()
 {
   "success": true,
   "gameType": "BALLOON_COUNT",
-  "submittedScore": 39,
-  "bestScore": 39,
+  "submittedScore": 26,
+  "bestScore": 26,
+  "bestDurationMs": 17360,
   "isNewBest": true
 }
 ```
@@ -333,8 +353,9 @@ const result = await response.json()
 {
   "success": true,
   "gameType": "BALLOON_COUNT",
-  "submittedScore": 32,
-  "bestScore": 39,
+  "submittedScore": 24,
+  "bestScore": 26,
+  "bestDurationMs": 17360,
   "isNewBest": false
 }
 ```
@@ -355,11 +376,11 @@ const result = await response.json()
 랭킹은 게임별로 따로 조회한다.
 
 ```http
-GET /ranking?gameType=BALLOON_COUNT&limit=100
+GET /ranking?gameType=BALLOON_COUNT&limit=15
 ```
 
 ```http
-GET /ranking?gameType=LUNG_CAPACITY&limit=100
+GET /ranking?gameType=LUNG_CAPACITY&limit=15
 ```
 
 이 요청에는 `x-game-user-key`가 필요하지 않다.
