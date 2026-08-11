@@ -213,7 +213,11 @@ export default function App() {
               className="mode-card mode-card--lung"
               onClick={() => selectMode('lung-test')}
             >
-              <span className="mode-card__art balloon-art balloon-art--lung" />
+              <img
+                className="mode-card__art balloon-art balloon-art--lung"
+                src="/balloons/balloon_09.svg"
+                alt=""
+              />
               <span className="mode-card__number">01</span>
               <strong>폐활량 테스트</strong>
               <small>한 번의 숨으로 풍선을 얼마나 크게 만들 수 있을까요?</small>
@@ -224,7 +228,11 @@ export default function App() {
               className="mode-card mode-card--rush"
               onClick={() => selectMode('balloon-rush')}
             >
-              <span className="mode-card__art balloon-art balloon-art--rush" />
+              <img
+                className="mode-card__art balloon-art balloon-art--rush"
+                src="/balloons/balloon_30.svg"
+                alt=""
+              />
               <span className="mode-card__number">02</span>
               <strong>풍선 많이 만들기</strong>
               <small>30초 동안 풍선을 최대한 많이 만들어보세요.</small>
@@ -242,7 +250,11 @@ export default function App() {
             <span className="sr-only">홈으로</span>
           </button>
           <div className="permission-art" aria-hidden="true">
-            <span className="permission-art__balloon" />
+            <img
+              className="permission-art__balloon"
+              src="/balloons/balloon_03.svg"
+              alt=""
+            />
           </div>
           <p className="eyebrow">
             {mode === 'lung-test' ? '폐활량 테스트' : '풍선 많이 만들기'}

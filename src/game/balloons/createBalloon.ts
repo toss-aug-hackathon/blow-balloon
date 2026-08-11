@@ -1,40 +1,20 @@
-import { BALLOON_PALETTES } from './balloonPalette';
-import type {
-  BalloonBody,
-  BalloonShape,
-  BalloonVariant,
-} from '../types';
-
-export const BALLOON_SHAPES: BalloonShape[] = [
-  'round',
-  'oval',
-  'pear',
-  'heart',
-];
+import type { BalloonBody, BalloonVariant } from '../types';
+import { BALLOON_ASSETS, getBalloonAsset } from './balloonAssets';
 
 export function createRandomVariant(
   previous?: BalloonVariant,
   random: () => number = Math.random,
 ): BalloonVariant {
-  let variant: BalloonVariant;
-  do {
-    const shape =
-      BALLOON_SHAPES[Math.floor(random() * BALLOON_SHAPES.length)] ??
-      'round';
-    const palette =
-      BALLOON_PALETTES[Math.floor(random() * BALLOON_PALETTES.length)] ??
-      BALLOON_PALETTES[0]!;
-    variant = {
-      shape,
-      paletteId: palette.id,
-      seed: Math.floor(random() * 1_000_000),
-    };
-  } while (
-    previous &&
-    variant.shape === previous.shape &&
-    variant.paletteId === previous.paletteId
-  );
-  return variant;
+  const assetId = previous
+    ? ((previous.assetId + Math.floor(random() * (BALLOON_ASSETS.length - 1))) %
+        BALLOON_ASSETS.length) +
+      1
+    : Math.floor(random() * BALLOON_ASSETS.length) + 1;
+
+  return {
+    assetId,
+    seed: Math.floor(random() * 1_000_000),
+  };
 }
 
 export function createBalloonBody(
@@ -43,13 +23,11 @@ export function createBalloonBody(
   y: number,
   radius = 22,
 ): BalloonBody {
-  const proportions: Record<BalloonShape, [number, number]> = {
-    round: [1, 1],
-    oval: [0.86, 1.16],
-    pear: [0.94, 1.12],
-    heart: [1.05, 0.98],
-  };
-  const [width, height] = proportions[variant.shape];
+  const asset = getBalloonAsset(variant.assetId);
+  const bodyAspect = Math.min(
+    1.55,
+    Math.max(0.82, (asset.height / asset.width) * 0.67),
+  );
   return {
     id: `${variant.seed}-${performance.now().toFixed(2)}`,
     variant,
@@ -57,8 +35,8 @@ export function createBalloonBody(
     y,
     vx: 0,
     vy: 0,
-    radiusX: radius * width,
-    radiusY: radius * height,
+    radiusX: radius,
+    radiusY: radius * bodyAspect,
     rotation: 0,
     angularVelocity: 0,
     compressionX: 1,

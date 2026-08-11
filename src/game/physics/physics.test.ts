@@ -7,7 +7,7 @@ import {
 
 function balloon(seed: number, x: number, y: number) {
   return createBalloonBody(
-    { shape: 'round', paletteId: 'coral', seed },
+    { assetId: 1, seed },
     x,
     y,
     30,

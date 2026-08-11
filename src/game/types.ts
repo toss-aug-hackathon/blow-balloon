@@ -1,21 +1,7 @@
 export type GameMode = 'lung-test' | 'balloon-rush';
 
-export type BalloonShape =
-  | 'round'
-  | 'oval'
-  | 'pear'
-  | 'heart'
-
-export type BalloonPalette = {
-  id: string;
-  light: string;
-  base: string;
-  dark: string;
-};
-
 export type BalloonVariant = {
-  shape: BalloonShape;
-  paletteId: string;
+  assetId: number;
   seed: number;
 };
 
