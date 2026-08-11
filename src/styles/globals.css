@@ -2109,6 +2109,35 @@ h1 {
   color: #938a8d;
 }
 
+.mode-card .balloon-art--blink {
+  z-index: 2;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mode-card .balloon-art--open {
+    animation:
+      balloon-float 3.8s ease-in-out infinite,
+      home-balloon-open 4.2s step-end infinite;
+  }
+
+  .mode-card .balloon-art--blink {
+    animation:
+      balloon-float 3.8s ease-in-out infinite,
+      home-balloon-closed 4.2s step-end infinite;
+  }
+}
+
+@keyframes home-balloon-open {
+  0%, 44%, 56%, 100% { opacity: 1; }
+  45%, 55% { opacity: 0; }
+}
+
+@keyframes home-balloon-closed {
+  0%, 44%, 56%, 100% { opacity: 0; }
+  45%, 55% { opacity: 1; }
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
