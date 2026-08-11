@@ -27,11 +27,11 @@ export function getBalloonFacePose(
 ): BalloonFacePose {
   const growth = clamp(growthProgress, 0, 1);
   const surprise =
-    smoothstep(0.16, 0.34, growth) * (1 - smoothstep(0.46, 0.62, growth));
+    smoothstep(0.4, 0.44, growth) * (1 - smoothstep(0.56, 0.6, growth));
   const delight =
-    smoothstep(0.04, 0.2, growth) * (1 - smoothstep(0.28, 0.42, growth));
-  const strain = smoothstep(0.44, 0.7, growth);
-  const squeeze = smoothstep(0.86, 0.96, growth);
+    smoothstep(0.2, 0.24, growth) * (1 - smoothstep(0.36, 0.4, growth));
+  const strain = smoothstep(0.6, 0.64, growth);
+  const squeeze = smoothstep(0.8, 0.84, growth);
   const relief = smoothstep(0.12, 0.78, settlingProgress);
 
   return {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  LUNG_MAX_GROWTH_DURATION_MS,
   calculateAverageWind,
   calculateBalloonScore,
   hasLungBreathEnded,
@@ -8,6 +9,10 @@ import {
 } from './rules';
 
 describe('game rules', () => {
+  it('reaches maximum lung-test size in 15 seconds at peak wind', () => {
+    expect(LUNG_MAX_GROWTH_DURATION_MS).toBe(15_000);
+  });
+
   it('finishes rush mode at exactly 30 seconds', () => {
     expect(hasRushTimeExpired(29_999)).toBe(false);
     expect(hasRushTimeExpired(30_000)).toBe(true);
