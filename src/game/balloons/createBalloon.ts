@@ -9,7 +9,6 @@ export const BALLOON_SHAPES: BalloonShape[] = [
   'round',
   'oval',
   'pear',
-  'long',
   'heart',
 ];
 
@@ -48,7 +47,6 @@ export function createBalloonBody(
     round: [1, 1],
     oval: [0.86, 1.16],
     pear: [0.94, 1.12],
-    long: [0.73, 1.32],
     heart: [1.05, 0.98],
   };
   const [width, height] = proportions[variant.shape];

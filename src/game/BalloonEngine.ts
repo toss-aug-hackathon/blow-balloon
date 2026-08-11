@@ -5,6 +5,7 @@ import {
   createRandomVariant,
 } from './balloons/createBalloon';
 import { drawBalloon } from './balloons/drawBalloon';
+import { APP_THEME } from '../styles/theme';
 import { updateHeliumPhysics } from './physics/physics';
 import {
   BALLOON_RUSH_DURATION_MS,
@@ -177,9 +178,9 @@ export class BalloonEngine {
 
   private completeActiveBalloon(): void {
     this.activeBalloon.completed = true;
-    this.activeBalloon.vx = (Math.random() - 0.5) * 24;
+    this.activeBalloon.vx = (Math.random() - 0.5) * 8;
     this.activeBalloon.vy = -42 - Math.random() * 20;
-    this.activeBalloon.angularVelocity = (Math.random() - 0.5) * 0.35;
+    this.activeBalloon.angularVelocity = (Math.random() - 0.5) * 0.2;
     this.completedBalloons.push(this.activeBalloon);
     const variant = createRandomVariant(this.activeBalloon.variant);
     this.activeBalloon = createBalloonBody(variant, 0, 0, 19);
@@ -244,9 +245,9 @@ export class BalloonEngine {
     const context = this.context;
     context.clearRect(0, 0, this.width, this.height);
     const background = context.createLinearGradient(0, 0, 0, this.height);
-    background.addColorStop(0, '#fff4dc');
-    background.addColorStop(0.52, '#fff9f2');
-    background.addColorStop(1, '#eaf8ff');
+    background.addColorStop(0, APP_THEME.paper);
+    background.addColorStop(0.52, APP_THEME.paper);
+    background.addColorStop(1, APP_THEME.paperDeep);
     context.fillStyle = background;
     context.fillRect(0, 0, this.width, this.height);
 
@@ -264,12 +265,12 @@ export class BalloonEngine {
 
     [...this.completedBalloons]
       .sort((first, second) => first.depth - second.depth)
-      .forEach((balloon) => drawBalloon(context, balloon, timeMs));
+      .forEach((balloon) => drawBalloon(context, balloon, timeMs, 0.96));
 
     if (!this.finished) {
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
-      drawBalloon(context, this.activeBalloon, timeMs);
+      drawBalloon(context, this.activeBalloon, timeMs, 1, windStrength);
       if (this.mode === 'balloon-rush') {
         const progress = clamp(
           (this.averageRadius(this.activeBalloon) - 19) / (59 - 19),
@@ -282,17 +283,18 @@ export class BalloonEngine {
           this.height - 42,
           this.activeBalloon.y + this.activeBalloon.radiusY + 25,
         );
-        context.fillStyle = 'rgba(55,45,59,0.1)';
+        context.fillStyle = 'rgba(38,51,58,0.12)';
         context.beginPath();
         context.roundRect(x, y, barWidth, 7, 4);
         context.fill();
-        context.fillStyle = '#ff7581';
+        context.fillStyle = APP_THEME.coral;
         context.beginPath();
         context.roundRect(x, y, barWidth * progress, 7, 4);
         context.fill();
       }
     }
   }
+
 
   private averageRadius(balloon: BalloonBody): number {
     return (balloon.radiusX + balloon.radiusY) / 2;

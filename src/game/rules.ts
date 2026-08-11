@@ -1,6 +1,6 @@
 import { clamp } from '../utils/math';
 
-export const BALLOON_RUSH_DURATION_MS = 60_000;
+export const BALLOON_RUSH_DURATION_MS = 30_000;
 export const RUSH_COMPLETION_RADIUS = 59;
 
 export function hasRushTimeExpired(elapsedMs: number): boolean {

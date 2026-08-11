@@ -7,9 +7,9 @@ import {
 } from './rules';
 
 describe('game rules', () => {
-  it('finishes rush mode at exactly 60 seconds', () => {
-    expect(hasRushTimeExpired(59_999)).toBe(false);
-    expect(hasRushTimeExpired(60_000)).toBe(true);
+  it('finishes rush mode at exactly 30 seconds', () => {
+    expect(hasRushTimeExpired(29_999)).toBe(false);
+    expect(hasRushTimeExpired(30_000)).toBe(true);
   });
 
   it('counts only balloons that reached the completion radius', () => {

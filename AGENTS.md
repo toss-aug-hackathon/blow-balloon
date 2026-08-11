@@ -202,7 +202,7 @@ Title:
 Description:
 
 ```text
-60초 동안 풍선을 최대한 많이 만들어보세요.
+30초 동안 풍선을 최대한 많이 만들어보세요.
 ```
 
 Both choices should feel like large mobile game cards/buttons.
@@ -895,7 +895,7 @@ blow-balloon
 
 ```text
 풍선 많이 만들기
-60초 동안 18개 완성!
+30초 동안 18개 완성!
 blow-balloon
 ```
 
@@ -1090,7 +1090,7 @@ type LungTestResult = {
 
 type BalloonRushResult = {
   mode: 'balloon-rush';
-  durationMs: 60000;
+  durationMs: 30000;
   completedCount: number;
   totalBlowingMs: number;
   balloons: BalloonVariant[];
