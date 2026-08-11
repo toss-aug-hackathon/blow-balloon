@@ -4,6 +4,7 @@ import {
   createBalloonBody,
   createRandomVariant,
 } from './balloons/createBalloon';
+import { getBalloonAsset, getBalloonImage } from './balloons/balloonAssets';
 import { drawBalloon } from './balloons/drawBalloon';
 import { APP_THEME } from '../styles/theme';
 import { updateHeliumPhysics } from './physics/physics';
@@ -53,6 +54,8 @@ export class BalloonEngine {
   private finished = false;
   private paused = false;
   private hudAccumulatorMs = 0;
+  private background: CanvasGradient | null = null;
+  private readonly completedImageCache = new Map<number, HTMLCanvasElement>();
 
   constructor(options: BalloonEngineOptions) {
     this.mode = options.mode;
@@ -65,6 +68,10 @@ export class BalloonEngine {
   resize(width: number, height: number): void {
     this.width = width;
     this.height = height;
+    this.background = this.context.createLinearGradient(0, 0, 0, height);
+    this.background.addColorStop(0, APP_THEME.paper);
+    this.background.addColorStop(0.52, APP_THEME.paper);
+    this.background.addColorStop(1, APP_THEME.paperDeep);
     if (!this.lungBreathStarted && this.completedBalloons.length === 0) {
       this.positionActiveBalloon();
     } else {
@@ -83,6 +90,16 @@ export class BalloonEngine {
 
   hasStartedLungBreath(): boolean {
     return this.lungBreathStarted;
+  }
+
+  dispose(): void {
+    for (const image of this.completedImageCache.values()) {
+      image.width = 0;
+      image.height = 0;
+    }
+    this.completedImageCache.clear();
+    this.completedBalloons.length = 0;
+    this.background = null;
   }
 
   update(timeMs: number, signal: DetectorFrame): void {
@@ -256,12 +273,7 @@ export class BalloonEngine {
 
   private draw(timeMs: number, windStrength: number): void {
     const context = this.context;
-    context.clearRect(0, 0, this.width, this.height);
-    const background = context.createLinearGradient(0, 0, 0, this.height);
-    background.addColorStop(0, APP_THEME.paper);
-    background.addColorStop(0.52, APP_THEME.paper);
-    background.addColorStop(1, APP_THEME.paperDeep);
-    context.fillStyle = background;
+    context.fillStyle = this.background ?? APP_THEME.paper;
     context.fillRect(0, 0, this.width, this.height);
 
     context.fillStyle = 'rgba(255,255,255,0.58)';
@@ -276,9 +288,17 @@ export class BalloonEngine {
       context.fill();
     }
 
-    [...this.completedBalloons]
-      .sort((first, second) => first.depth - second.depth)
-      .forEach((balloon) => drawBalloon(context, balloon, timeMs, 0.96));
+    for (const balloon of this.completedBalloons) {
+      drawBalloon(
+        context,
+        balloon,
+        timeMs,
+        0.96,
+        0,
+        undefined,
+        this.getCompletedImage(balloon.variant.assetId),
+      );
+    }
 
     if (!this.finished) {
       this.activeBalloon.rotation =
@@ -303,6 +323,9 @@ export class BalloonEngine {
               settlingProgress: clamp(this.lungSettlingMs / 700, 0, 1),
             }
           : undefined,
+        this.mode === 'balloon-rush'
+          ? (getBalloonImage(this.activeBalloon.variant.assetId) ?? undefined)
+          : undefined,
       );
     }
   }
@@ -310,5 +333,23 @@ export class BalloonEngine {
 
   private averageRadius(balloon: BalloonBody): number {
     return (balloon.radiusX + balloon.radiusY) / 2;
+  }
+
+  private getCompletedImage(assetId: number): CanvasImageSource | undefined {
+    const cached = this.completedImageCache.get(assetId);
+    if (cached) return cached;
+    const source = getBalloonImage(assetId);
+    if (!source?.complete || source.naturalWidth === 0) return undefined;
+    const asset = getBalloonAsset(assetId);
+    const image = document.createElement('canvas');
+    image.width = 256;
+    image.height = Math.round((image.width * asset.height) / asset.width);
+    const context = image.getContext('2d');
+    if (!context) return undefined;
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(source, 0, 0, image.width, image.height);
+    this.completedImageCache.set(assetId, image);
+    return image;
   }
 }

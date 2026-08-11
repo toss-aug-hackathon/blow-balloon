@@ -3,6 +3,7 @@ import { createBalloonBody } from '../balloons/createBalloon';
 import {
   constrainToBounds,
   resolveBalloonCollision,
+  updateHeliumPhysics,
 } from './physics';
 
 function balloon(seed: number, x: number, y: number) {
@@ -31,5 +32,13 @@ describe('balloon physics', () => {
     constrainToBounds(body, 320, 640);
     expect(body.x).toBeGreaterThan(0);
     expect(body.y).toBeGreaterThan(0);
+  });
+
+  it('checks collisions across neighboring spatial cells', () => {
+    const first = balloon(4, 139, 200);
+    const second = balloon(5, 141, 200);
+    const before = Math.abs(second.x - first.x);
+    updateHeliumPhysics([first, second], 0, 500, 500);
+    expect(Math.abs(second.x - first.x)).toBeGreaterThan(before);
   });
 });
