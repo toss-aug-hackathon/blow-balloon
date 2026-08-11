@@ -9,6 +9,7 @@ import { APP_THEME } from '../styles/theme';
 import { updateHeliumPhysics } from './physics/physics';
 import {
   BALLOON_RUSH_DURATION_MS,
+  LUNG_MAX_GROWTH_DURATION_MS,
   calculateAverageWind,
   calculateBalloonScore,
   hasLungBreathEnded,
@@ -133,7 +134,14 @@ export class BalloonEngine {
       this.totalBlowingMs += deltaMs;
       this.windIntegral += signal.windStrength * deltaMs;
       this.peakWind = Math.max(this.peakWind, signal.windStrength);
-      const growth = 19 * (0.75 + signal.windStrength * 0.25) * deltaSeconds;
+      const maximumRadius = Math.min(this.width, this.height) * 0.48;
+      const growthPerSecond =
+        Math.max(1, maximumRadius - 22) /
+        (LUNG_MAX_GROWTH_DURATION_MS / 1000);
+      const growth =
+        growthPerSecond *
+        (0.75 + signal.windStrength * 0.25) *
+        deltaSeconds;
       this.growActiveBalloon(growth);
     } else if (this.lungBreathStarted) {
       this.lungGapMs += deltaMs;

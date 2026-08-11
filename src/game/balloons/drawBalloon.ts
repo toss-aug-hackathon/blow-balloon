@@ -54,10 +54,16 @@ export function drawBalloon(
   context.drawImage(image, -drawWidth / 2, bodyTop, drawWidth, drawHeight);
   context.filter = 'none';
   if (faceMotion) {
-    const faceScale = drawWidth * 0.62;
+    const faceScale = drawWidth * asset.face.scale;
     context.save();
-    context.translate(0, bodyTop + drawWidth * 0.58);
+    context.translate(
+      (asset.face.x - 0.5) * drawWidth,
+      bodyTop + asset.face.y * drawHeight,
+    );
     context.scale(faceScale, faceScale);
+    context.beginPath();
+    context.ellipse(0, 0, 0.58, 0.52, 0, 0, Math.PI * 2);
+    context.clip();
     drawBalloonFace(context, timeMs, balloon.variant.seed, faceMotion);
     context.restore();
   }

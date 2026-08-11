@@ -4,6 +4,11 @@ export type BalloonAsset = {
   height: number;
   url: string;
   fullResolutionUrl: string;
+  face: {
+    x: number;
+    y: number;
+    scale: number;
+  };
 };
 
 const DIMENSIONS: ReadonlyArray<readonly [number, number]> = [
@@ -17,16 +22,57 @@ const DIMENSIONS: ReadonlyArray<readonly [number, number]> = [
   [6429, 9099],
 ];
 
+const FACE_PLACEMENTS: ReadonlyArray<readonly [number, number, number]> = [
+  [0.5, 0.31, 0.52], // 01 round
+  [0.5, 0.3, 0.46], // 02 heart
+  [0.5, 0.32, 0.5], // 03 oval
+  [0.5, 0.3, 0.36], // 04 star
+  [0.5, 0.32, 0.5], // 05 long
+  [0.5, 0.31, 0.5], // 06 oval
+  [0.5, 0.32, 0.34], // 07 twist
+  [0.5, 0.32, 0.5], // 08 pear
+  [0.5, 0.37, 0.28], // 09 clover
+  [0.5, 0.31, 0.34], // 10 twist
+  [0.5, 0.32, 0.46], // 11 clear round
+  [0.5, 0.31, 0.38], // 12 shell
+  [0.5, 0.32, 0.46], // 13 patterned oval
+  [0.5, 0.31, 0.5], // 14 oval
+  [0.5, 0.31, 0.5], // 15 oval
+  [0.5, 0.31, 0.5], // 16 oval
+  [0.5, 0.33, 0.48], // 17 long
+  [0.5, 0.31, 0.36], // 18 star
+  [0.5, 0.4, 0.25], // 19 bubbles
+  [0.5, 0.34, 0.32], // 20 beaded heart
+  [0.5, 0.33, 0.17], // 21 flower center
+  [0.5, 0.31, 0.52], // 22 round
+  [0.5, 0.39, 0.3], // 23 cloud
+  [0.5, 0.33, 0.17], // 24 flower center
+  [0.5, 0.31, 0.5], // 25 oval
+  [0.5, 0.32, 0.3], // 26 shell
+  [0.5, 0.34, 0.3], // 27 candy center
+  [0.5, 0.36, 0.14], // 28 bow center
+  [0.5, 0.29, 0.46], // 29 heart
+  [0.5, 0.42, 0.28], // 30 bunny head
+  [0.5, 0.3, 0.42], // 31 candy round
+  [0.5, 0.4, 0.25], // 32 bubbles
+  [0.5, 0.31, 0.32], // 33 twist
+  [0.38, 0.32, 0.16], // 34 crescent
+  [0.5, 0.31, 0.36], // 35 star
+];
+
 export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
   ([width, height], index) => {
     const id = index + 1;
     const filename = `balloon_${String(id).padStart(2, '0')}.png`;
+    const [faceX, faceY, faceScale] =
+      FACE_PLACEMENTS[index] ?? FACE_PLACEMENTS[0]!;
     return {
       id,
       width,
       height,
       url: `/balloons/${filename}`,
       fullResolutionUrl: `/balloons/full/${filename}`,
+      face: { x: faceX, y: faceY, scale: faceScale },
     };
   },
 );
