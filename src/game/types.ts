@@ -1,6 +1,10 @@
 export type GameMode = 'lung-test' | 'balloon-rush';
 
-export type BalloonShape = 'round' | 'oval' | 'pear' | 'long' | 'heart';
+export type BalloonShape =
+  | 'round'
+  | 'oval'
+  | 'pear'
+  | 'heart'
 
 export type BalloonPalette = {
   id: string;
@@ -44,7 +48,7 @@ export type LungTestResult = {
 
 export type BalloonRushResult = {
   mode: 'balloon-rush';
-  durationMs: 60000;
+  durationMs: 30000;
   completedCount: number;
   totalBlowingMs: number;
   balloons: BalloonBody[];

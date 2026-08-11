@@ -11,6 +11,7 @@ import { useScreenAwake } from './hooks/useScreenAwake';
 import { formatSeconds } from './utils/math';
 import { ResultScreen } from './components/ResultScreen';
 import { WindMeter } from './components/WindMeter';
+import { BALLOON_RUSH_DURATION_MS } from './game/rules';
 
 type AppScreen =
   | 'home'
@@ -23,7 +24,7 @@ type AppScreen =
 
 const INITIAL_HUD: GameHudState = {
   elapsedMs: 0,
-  remainingMs: 60_000,
+  remainingMs: BALLOON_RUSH_DURATION_MS,
   completedCount: 0,
   windStrength: 0,
   isWaitingForBreath: true,
@@ -31,6 +32,58 @@ const INITIAL_HUD: GameHudState = {
 
 export default function App() {
   useSafeArea();
+
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    let isEdgeGesture = false;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      isEdgeGesture =
+        startX <= 28 || startX >= window.innerWidth - 28;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!isEdgeGesture) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      const deltaX = Math.abs(touch.clientX - startX);
+      const deltaY = Math.abs(touch.clientY - startY);
+
+      if (deltaX > 8 && deltaX > deltaY) {
+        event.preventDefault();
+      }
+    };
+
+    const resetEdgeGesture = () => {
+      isEdgeGesture = false;
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, {
+      passive: true,
+    });
+    document.addEventListener('touchmove', handleTouchMove, {
+      passive: false,
+    });
+    document.addEventListener('touchend', resetEdgeGesture, {
+      passive: true,
+    });
+    document.addEventListener('touchcancel', resetEdgeGesture, {
+      passive: true,
+    });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', resetEdgeGesture);
+      document.removeEventListener('touchcancel', resetEdgeGesture);
+    };
+  }, []);
+
   const detector = useBlowDetector();
   const {
     stop: stopDetector,
@@ -43,6 +96,7 @@ export default function App() {
   const [hud, setHud] = useState<GameHudState>(INITIAL_HUD);
   const [result, setResult] = useState<GameResult | null>(null);
   const [debugWindOn, setDebugWindOn] = useState(false);
+  const [testWindOn, setTestWindOn] = useState(false);
   const isPlaying = screen === 'game';
   useScreenAwake(isPlaying);
 
@@ -55,6 +109,7 @@ export default function App() {
 
   const goHome = useCallback(() => {
     stopDetector();
+    setTestWindOn(false);
     setScreen('home');
     setMode(null);
     setResult(null);
@@ -63,6 +118,7 @@ export default function App() {
 
   const selectMode = (nextMode: GameMode) => {
     stopDetector();
+    setTestWindOn(false);
     setMode(nextMode);
     setResult(null);
     setHud(INITIAL_HUD);
@@ -72,6 +128,16 @@ export default function App() {
   const startMicrophone = async () => {
     setScreen('calibrating');
     await requestPermission();
+  };
+
+  const startTestWind = () => {
+    detector.setSimulatedWind(1);
+    setTestWindOn(true);
+  };
+
+  const stopTestWind = () => {
+    detector.setSimulatedWind(0);
+    setTestWindOn(false);
   };
 
   useEffect(() => {
@@ -103,6 +169,7 @@ export default function App() {
   const finishGame = useCallback(
     (nextResult: GameResult) => {
       stopDetector();
+      setTestWindOn(false);
       setResult(nextResult);
       setScreen('result');
     },
@@ -111,11 +178,13 @@ export default function App() {
 
   const interruptLungTest = useCallback(() => {
     stopDetector();
+    setTestWindOn(false);
     setScreen('interrupted');
   }, [stopDetector]);
 
   const retry = useCallback(() => {
     stopDetector();
+    setTestWindOn(false);
     setResult(null);
     setHud(INITIAL_HUD);
     setScreen('mic-permission');
@@ -158,7 +227,7 @@ export default function App() {
               <span className="mode-card__art balloon-art balloon-art--rush" />
               <span className="mode-card__number">02</span>
               <strong>풍선 많이 만들기</strong>
-              <small>60초 동안 풍선을 최대한 많이 만들어보세요.</small>
+              <small>30초 동안 풍선을 최대한 많이 만들어보세요.</small>
               <span className="mode-card__arrow">도전하기 →</span>
             </button>
           </section>
@@ -174,23 +243,30 @@ export default function App() {
           </button>
           <div className="permission-art" aria-hidden="true">
             <span className="permission-art__balloon" />
-            <span className="permission-art__wind">〰</span>
           </div>
           <p className="eyebrow">
             {mode === 'lung-test' ? '폐활량 테스트' : '풍선 많이 만들기'}
           </p>
-          <h1>마이크에 바람을 불어주세요</h1>
+          <h1>
+            {detector.testModeEnabled
+              ? '테스트 바람을 준비할게요'
+              : '마이크에 바람을 불어주세요'}
+          </h1>
           <p className="body-copy">
-            풍선을 키우기 위해 마이크를 사용해요.
+            {detector.testModeEnabled
+              ? '실기기 테스트 모드에서는 화면 버튼으로 바람을 만들어요.'
+              : '풍선을 키우기 위해 마이크를 사용해요.'}
             <br />
-            소리는 저장하거나 서버로 전송하지 않아요.
+            {detector.testModeEnabled
+              ? '마이크 권한 없이 바로 시작할 수 있어요.'
+              : '소리는 저장하거나 서버로 전송하지 않아요.'}
           </p>
           <button
             className="button button--primary"
             type="button"
             onClick={startMicrophone}
           >
-            마이크 허용하고 시작
+            {detector.testModeEnabled ? '테스트 모드로 시작' : '마이크 허용하고 시작'}
           </button>
           <button className="text-button" type="button" onClick={goHome}>
             다음에 할게요
@@ -228,10 +304,18 @@ export default function App() {
                 <i />
                 <span>쉿</span>
               </div>
-              <p className="eyebrow">주변 소음 확인 중</p>
-              <h1>잠시만 조용히 있어주세요</h1>
+              <p className="eyebrow">
+                {detector.testModeEnabled ? '테스트 입력 준비 중' : '주변 소음 확인 중'}
+              </p>
+              <h1>
+                {detector.testModeEnabled
+                  ? '바람 버튼을 준비하고 있어요'
+                  : '잠시만 조용히 있어주세요'}
+              </h1>
               <p className="body-copy">
-                휴대폰마다 다른 마이크 감도를 맞추고 있어요.
+                {detector.testModeEnabled
+                  ? '곧 화면의 바람 불기 버튼으로 풍선을 키울 수 있어요.'
+                  : '휴대폰마다 다른 마이크 감도를 맞추고 있어요.'}
               </p>
               <div className="loading-dots" aria-label="보정 중">
                 <i />
@@ -245,7 +329,7 @@ export default function App() {
 
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
-          <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '60초 준비!'}</p>
+          <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '30초 준비!'}</p>
           <strong key={countdown}>{countdown > 0 ? countdown : '후—!'}</strong>
           <WindMeter strength={detector.frame.windStrength} />
         </main>
@@ -288,6 +372,22 @@ export default function App() {
             )}
             <WindMeter strength={hud.windStrength} />
           </div>
+          {detector.testModeEnabled && (
+            <div className="test-wind-control">
+              <span>누르고 있는 동안 바람이 불어요</span>
+              <button
+                className={`test-wind-button${testWindOn ? ' is-active' : ''}`}
+                type="button"
+                onPointerDown={startTestWind}
+                onPointerUp={stopTestWind}
+                onPointerCancel={stopTestWind}
+                onPointerLeave={stopTestWind}
+              >
+                <i aria-hidden="true">〰</i>
+                바람 불기
+              </button>
+            </div>
+          )}
         </main>
       )}
 

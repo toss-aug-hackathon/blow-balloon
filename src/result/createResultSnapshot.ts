@@ -1,6 +1,7 @@
 import { createBalloonBody } from '../game/balloons/createBalloon';
 import { drawBalloon } from '../game/balloons/drawBalloon';
 import type { BalloonBody, GameResult } from '../game/types';
+import { APP_THEME } from '../styles/theme';
 import { formatSeconds } from '../utils/math';
 
 const SNAPSHOT_WIDTH = 1080;
@@ -29,13 +30,13 @@ export async function createResultSnapshot(
   if (!context) throw new Error('결과 이미지를 만들지 못했어요.');
 
   const background = context.createLinearGradient(0, 0, 0, SNAPSHOT_HEIGHT);
-  background.addColorStop(0, '#fff1d7');
-  background.addColorStop(0.55, '#fffaf4');
-  background.addColorStop(1, '#e7f8ff');
+  background.addColorStop(0, APP_THEME.paper);
+  background.addColorStop(0.55, APP_THEME.paper);
+  background.addColorStop(1, APP_THEME.paperDeep);
   context.fillStyle = background;
   context.fillRect(0, 0, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
 
-  context.fillStyle = '#4b3542';
+  context.fillStyle = APP_THEME.ink;
   context.textAlign = 'center';
   context.font = '700 46px system-ui, sans-serif';
   context.fillText('blow-balloon', SNAPSHOT_WIDTH / 2, 82);
@@ -51,14 +52,14 @@ export async function createResultSnapshot(
     context.font = '800 72px system-ui, sans-serif';
     context.fillText('폐활량 테스트', SNAPSHOT_WIDTH / 2, 180);
     context.font = '800 90px system-ui, sans-serif';
-    context.fillStyle = '#f05465';
+    context.fillStyle = APP_THEME.coral;
     context.fillText(
       `한 번에 ${formatSeconds(result.durationMs)}초!`,
       SNAPSHOT_WIDTH / 2,
       1120,
     );
     context.font = '600 42px system-ui, sans-serif';
-    context.fillStyle = '#66515e';
+    context.fillStyle = APP_THEME.inkSoft;
     context.fillText(
       `풍선 크기 ${Math.round(result.finalBalloonScale * 100)}점`,
       SNAPSHOT_WIDTH / 2,
@@ -78,17 +79,17 @@ export async function createResultSnapshot(
       );
     });
     context.font = '800 72px system-ui, sans-serif';
-    context.fillStyle = '#4b3542';
+    context.fillStyle = APP_THEME.ink;
     context.fillText('풍선 많이 만들기', SNAPSHOT_WIDTH / 2, 180);
     context.font = '800 78px system-ui, sans-serif';
-    context.fillStyle = '#f05465';
+    context.fillStyle = APP_THEME.coral;
     context.fillText(
-      `60초 동안 풍선 ${result.completedCount}개 완성!`,
+      `30초 동안 풍선 ${result.completedCount}개 완성!`,
       SNAPSHOT_WIDTH / 2,
       1160,
     );
     context.font = '600 42px system-ui, sans-serif';
-    context.fillStyle = '#66515e';
+    context.fillStyle = APP_THEME.inkSoft;
     context.fillText(
       `바람을 분 시간 ${formatSeconds(result.totalBlowingMs)}초`,
       SNAPSHOT_WIDTH / 2,

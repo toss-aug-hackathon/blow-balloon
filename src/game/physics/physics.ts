@@ -74,14 +74,16 @@ export function updateHeliumPhysics(
   width: number,
   height: number,
 ): void {
+  const maxHorizontalSpeed = 10;
   for (const balloon of balloons) {
     balloon.compressionX = lerp(balloon.compressionX, 1, 0.12);
     balloon.compressionY = lerp(balloon.compressionY, 1, 0.12);
     balloon.vy -= 72 * deltaSeconds;
     balloon.vx +=
       Math.sin(balloon.variant.seed + balloon.y * 0.015) *
-      4 *
+      (4 + balloon.depth * 2.5) *
       deltaSeconds;
+    balloon.vx = clamp(balloon.vx, -maxHorizontalSpeed, maxHorizontalSpeed);
     balloon.vx *= Math.pow(0.986, deltaSeconds * 60);
     balloon.vy *= Math.pow(0.986, deltaSeconds * 60);
     balloon.x += balloon.vx * deltaSeconds;
