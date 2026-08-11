@@ -31,8 +31,10 @@ type BalloonEngineOptions = {
   onFinish: (result: GameResult) => void;
 };
 
-const LUNG_ACTIVE_BALLOON_Y_RATIO = 0.5;
-const RUSH_ACTIVE_BALLOON_Y_RATIO = 0.64;
+const ACTIVE_BALLOON_BOTTOM_RATIO = 0.88;
+const LUNG_ACTIVE_BALLOON_START_Y_RATIO = 0.68;
+const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.5;
+const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
 
 export class BalloonEngine {
   private readonly mode: GameMode;
@@ -56,6 +58,8 @@ export class BalloonEngine {
   private hudAccumulatorMs = 0;
   private background: CanvasGradient | null = null;
   private readonly completedImageCache = new Map<number, HTMLCanvasElement>();
+  private activeSpawnXRatio = 0.5;
+  private hasChosenInitialSpawn = false;
 
   constructor(options: BalloonEngineOptions) {
     this.mode = options.mode;
@@ -75,6 +79,7 @@ export class BalloonEngine {
     if (!this.lungBreathStarted && this.completedBalloons.length === 0) {
       this.positionActiveBalloon();
     } else {
+      this.positionActiveBalloon();
       this.activeBalloon.x = clamp(
         this.activeBalloon.x,
         this.activeBalloon.radiusX,
@@ -154,13 +159,13 @@ export class BalloonEngine {
       this.totalBlowingMs += deltaMs;
       this.windIntegral += signal.windStrength * deltaMs;
       this.peakWind = Math.max(this.peakWind, signal.windStrength);
-      const maximumRadius = Math.min(this.width, this.height) * 0.48;
+      const maximumRadius = this.getMaximumActiveRadius();
       const growthPerSecond =
         Math.max(1, maximumRadius - 22) /
         (LUNG_MAX_GROWTH_DURATION_MS / 1000);
       const growth =
         growthPerSecond *
-        (0.75 + signal.windStrength * 0.25) *
+        (1.05 + signal.windStrength * 0.35) *
         deltaSeconds;
       this.growActiveBalloon(growth);
     } else if (this.lungBreathStarted) {
@@ -191,10 +196,7 @@ export class BalloonEngine {
 
   private growActiveBalloon(amount: number): void {
     const currentRadius = this.averageRadius(this.activeBalloon);
-    const maximumRadius =
-      this.mode === 'lung-test'
-        ? Math.min(this.width, this.height) * 0.48
-        : 62;
+    const maximumRadius = this.getMaximumActiveRadius();
     if (currentRadius >= maximumRadius) return;
     const factor = 1 + Math.min(amount, maximumRadius - currentRadius) / currentRadius;
     this.activeBalloon.radiusX *= factor;
@@ -210,16 +212,55 @@ export class BalloonEngine {
     this.completedBalloons.push(this.activeBalloon);
     const variant = createRandomVariant(this.activeBalloon.variant);
     this.activeBalloon = createBalloonBody(variant, 0, 0, 19);
+    this.activeSpawnXRatio = this.chooseSpawnXRatio();
     this.positionActiveBalloon();
   }
 
   private positionActiveBalloon(): void {
-    this.activeBalloon.x = this.width * 0.5;
+    if (!this.hasChosenInitialSpawn) {
+      this.activeSpawnXRatio = this.chooseSpawnXRatio();
+      this.hasChosenInitialSpawn = true;
+    }
+
+    const baseRadius = 22;
+    const maximumRadius = this.getMaximumActiveRadius();
+    const progress = clamp(
+      (this.averageRadius(this.activeBalloon) - baseRadius) /
+        Math.max(1, maximumRadius - baseRadius),
+      0,
+      1,
+    );
+    if (this.mode === 'lung-test') {
+      // Start in the lower third, then move the balloon's center to the
+      // screen center while it grows quickly and dramatically.
+      const centerMoveProgress = clamp(progress * 1.8, 0, 1);
+      this.activeBalloon.x = this.width * 0.5;
+      this.activeBalloon.y =
+        this.height *
+        (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
+          (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
+            LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO) *
+            centerMoveProgress);
+      return;
+    }
+
+    const upwardLift = this.height * 0.13 * progress;
+    this.activeBalloon.x = this.width * this.activeSpawnXRatio;
     this.activeBalloon.y =
-      this.height *
-      (this.mode === 'lung-test'
-        ? LUNG_ACTIVE_BALLOON_Y_RATIO
-        : RUSH_ACTIVE_BALLOON_Y_RATIO);
+      this.height * ACTIVE_BALLOON_BOTTOM_RATIO -
+      this.activeBalloon.radiusY * 0.68 -
+      upwardLift;
+  }
+
+  private chooseSpawnXRatio(): number {
+    if (this.mode === 'lung-test') {
+      return 0.5;
+    }
+
+    const candidates = RUSH_SPAWN_LANES.filter(
+      (lane) => Math.abs(lane - this.activeSpawnXRatio) > 0.01,
+    );
+    return candidates[Math.floor(Math.random() * candidates.length)] ?? 0.5;
   }
 
   private finishLungTest(): void {
@@ -276,17 +317,7 @@ export class BalloonEngine {
     context.fillStyle = this.background ?? APP_THEME.paper;
     context.fillRect(0, 0, this.width, this.height);
 
-    context.fillStyle = 'rgba(255,255,255,0.58)';
-    for (let index = 0; index < 5; index += 1) {
-      const x =
-        ((index * 103 + timeMs * (0.004 + index * 0.0008)) %
-          (this.width + 80)) -
-        40;
-      const y = 90 + ((index * 137) % Math.max(100, this.height - 180));
-      context.beginPath();
-      context.arc(x, y, 3 + (index % 3), 0, Math.PI * 2);
-      context.fill();
-    }
+    this.drawInteractiveBackground(timeMs);
 
     for (const balloon of this.completedBalloons) {
       drawBalloon(
@@ -301,10 +332,11 @@ export class BalloonEngine {
     }
 
     if (!this.finished) {
+      this.drawWindFlow(timeMs, windStrength);
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       const baseRadius = 22;
-      const maximumLungRadius = Math.min(this.width, this.height) * 0.48;
+      const maximumLungRadius = this.getMaximumActiveRadius();
       drawBalloon(
         context,
         this.activeBalloon,
@@ -328,6 +360,146 @@ export class BalloonEngine {
           : undefined,
       );
     }
+  }
+
+  private drawInteractiveBackground(timeMs: number): void {
+    const context = this.context;
+
+    context.save();
+
+    // Colorful paper confetti floats gently across the whole background.
+    // Each piece has its own height, phase, sway, and rotation.
+    const confettiColors = [
+      APP_THEME.coral,
+      APP_THEME.butter,
+      APP_THEME.sageDeep,
+      APP_THEME.sky,
+      APP_THEME.white,
+    ] as const;
+    for (let index = 0; index < 14; index += 1) {
+      const cycle = 2600 + index * 150;
+      const progress =
+        ((timeMs * 0.024 + index * 230) % cycle) / cycle;
+      const baseX = ((index * 83 + 24) % Math.max(90, this.width - 48)) + 24;
+      const baseY = this.height * (0.08 + ((index * 0.271) % 0.84));
+      const x =
+        baseX +
+        Math.sin(timeMs * 0.0015 + index * 2) * 16 +
+        progress * 30;
+      const y =
+        baseY -
+        progress * this.height * 0.16 +
+        Math.sin(timeMs * 0.0012 + index * 1.4) * 18;
+      const width = 5 + (index % 3) * 2;
+      const height = 3 + (index % 2) * 2;
+
+      context.save();
+      context.translate(x, y);
+      context.rotate(
+        timeMs * 0.0018 * (index % 2 === 0 ? 1 : -1) +
+          Math.sin(timeMs * 0.002 + index) * 0.45,
+      );
+      context.globalAlpha = 0.42;
+      context.fillStyle = confettiColors[index % confettiColors.length]!;
+      context.fillRect(-width / 2, -height / 2, width, height);
+      context.globalAlpha = 0.3;
+      context.strokeStyle = APP_THEME.white;
+      context.lineWidth = 0.8;
+      context.strokeRect(-width / 2, -height / 2, width, height);
+      context.restore();
+    }
+    context.restore();
+  }
+
+  private drawWindFlow(timeMs: number, windStrength: number): void {
+    if (windStrength < 0.035) return;
+
+    const context = this.context;
+    const strength = clamp(windStrength, 0, 1);
+    const originY = this.height * 0.99;
+    const targetY = this.activeBalloon.y + this.activeBalloon.radiusY * 0.72;
+    const distance = Math.max(100, originY - targetY);
+    const flowSpeed = timeMs * (0.0009 + strength * 0.0014);
+    const ribbonGradient = context.createLinearGradient(
+      0,
+      originY,
+      0,
+      targetY,
+    );
+    ribbonGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    ribbonGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.08)');
+    ribbonGradient.addColorStop(0.82, 'rgba(255, 255, 255, 0.28)');
+    ribbonGradient.addColorStop(1, 'rgba(255, 225, 211, 0.48)');
+
+    context.save();
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.strokeStyle = ribbonGradient;
+
+    for (let index = 0; index < 3; index += 1) {
+      const offset = (index - 1) * (18 + strength * 5);
+      const phase = flowSpeed + index * 1.9;
+      const sway = Math.sin(phase) * (13 + strength * 10);
+      const startX = this.activeBalloon.x + offset + sway;
+      const endX = this.activeBalloon.x + offset * 0.42;
+      const controlOneX = startX - sway * 0.8;
+      const controlTwoX = endX + Math.sin(phase + 1.2) * 22;
+      const startY = originY + index * 12;
+      const endPointY = targetY + index * 4;
+
+      context.globalAlpha = 0.62 - index * 0.09;
+      context.lineWidth = 4 + strength * 5 - index * 0.65;
+      context.beginPath();
+      context.moveTo(startX, startY);
+      context.bezierCurveTo(
+        controlOneX,
+        startY - distance * 0.28,
+        controlTwoX,
+        startY - distance * 0.72,
+        endX,
+        endPointY,
+      );
+      context.stroke();
+
+      context.globalAlpha = 0.18 + strength * 0.12;
+      context.lineWidth = 1.2;
+      context.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      context.beginPath();
+      context.moveTo(startX, startY - 2);
+      context.bezierCurveTo(
+        controlOneX + 3,
+        startY - distance * 0.28,
+        controlTwoX - 3,
+        startY - distance * 0.72,
+        endX,
+        endPointY,
+      );
+      context.stroke();
+      context.strokeStyle = ribbonGradient;
+    }
+
+    // Small bubbles drift along the upper part of the breeze as it reaches
+    // the balloon, making the air feel soft instead of like rigid lines.
+    context.fillStyle = 'rgba(255, 255, 255, 0.52)';
+    for (let index = 0; index < 4; index += 1) {
+      const progress = (flowSpeed * 0.8 + index * 0.23) % 1;
+      const x =
+        this.activeBalloon.x +
+        Math.sin(timeMs * 0.002 + index * 2.4) * (12 + strength * 12);
+      const y = targetY + distance * (0.12 + progress * 0.42);
+      const radius = 1.8 + ((index + 1) % 2) * 1.1;
+      context.globalAlpha = (1 - progress) * (0.22 + strength * 0.28);
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.restore();
+  }
+
+  private getMaximumActiveRadius(): number {
+    return this.mode === 'lung-test'
+      ? Math.max(this.width, this.height) * 0.36
+      : 62;
   }
 
 
