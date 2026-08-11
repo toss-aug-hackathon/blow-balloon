@@ -54,6 +54,7 @@ export class BalloonEngine {
   private finished = false;
   private paused = false;
   private hudAccumulatorMs = 0;
+  private safeTopInset = 0;
   private background: CanvasGradient | null = null;
   private readonly completedImageCache = new Map<number, HTMLCanvasElement>();
 
@@ -86,6 +87,10 @@ export class BalloonEngine {
   setPaused(paused: boolean): void {
     this.paused = paused;
     this.previousFrameTime = null;
+  }
+
+  setSafeTopInset(topInset: number): void {
+    this.safeTopInset = Math.max(0, topInset);
   }
 
   hasStartedLungBreath(): boolean {
@@ -127,6 +132,7 @@ export class BalloonEngine {
       deltaSeconds,
       this.width,
       this.height,
+      this.safeTopInset,
     );
     this.draw(timeMs, signal.windStrength);
     this.publishHud(deltaMs, signal);

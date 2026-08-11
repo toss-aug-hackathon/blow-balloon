@@ -5,6 +5,7 @@ export function constrainToBounds(
   balloon: BalloonBody,
   width: number,
   height: number,
+  topInset = 0,
 ): void {
   const radiusX = balloon.radiusX * 0.86;
   const radiusY = balloon.radiusY * 0.86;
@@ -15,8 +16,8 @@ export function constrainToBounds(
     balloon.x = width - radiusX;
     balloon.vx = -Math.abs(balloon.vx) * 0.32;
   }
-  if (balloon.y - radiusY < 0) {
-    balloon.y = radiusY;
+  if (balloon.y - radiusY < topInset) {
+    balloon.y = topInset + radiusY;
     balloon.vy = Math.abs(balloon.vy) * 0.18;
   }
   if (balloon.y + radiusY > height) {
@@ -73,6 +74,7 @@ export function updateHeliumPhysics(
   deltaSeconds: number,
   width: number,
   height: number,
+  topInset = 0,
 ): void {
   const maxHorizontalSpeed = 10;
   for (const balloon of balloons) {
@@ -90,7 +92,7 @@ export function updateHeliumPhysics(
     balloon.y += balloon.vy * deltaSeconds;
     balloon.rotation += balloon.angularVelocity * deltaSeconds;
     balloon.angularVelocity *= Math.pow(0.98, deltaSeconds * 60);
-    constrainToBounds(balloon, width, height);
+    constrainToBounds(balloon, width, height, topInset);
   }
 
   const cellSize = 140;
@@ -130,7 +132,7 @@ export function updateHeliumPhysics(
       }
     }
     balloons.forEach((balloon) =>
-      constrainToBounds(balloon, width, height),
+      constrainToBounds(balloon, width, height, topInset),
     );
   }
 }
