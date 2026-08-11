@@ -84,12 +84,6 @@ export default function App() {
     };
   }, []);
 
-  const detector = useBlowDetector();
-  const {
-    stop: stopDetector,
-    requestPermission,
-    resetBreath,
-  } = detector;
   const [screen, setScreen] = useState<AppScreen>('home');
   const [mode, setMode] = useState<GameMode | null>(null);
   const [countdown, setCountdown] = useState(3);
@@ -106,6 +100,12 @@ export default function App() {
       new URLSearchParams(window.location.search).has('debug'),
     [],
   );
+  const detector = useBlowDetector(screen !== 'game' || debugEnabled);
+  const {
+    stop: stopDetector,
+    requestPermission,
+    resetBreath,
+  } = detector;
 
   const goHome = useCallback(() => {
     stopDetector();

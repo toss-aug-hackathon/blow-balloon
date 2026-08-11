@@ -10,6 +10,14 @@ import {
   type BalloonFaceMotion,
 } from './drawBalloonFace';
 
+const ASSET_SCALE: Readonly<Record<number, number>> = {
+  3: 1.2,
+  8: 1.45,
+  11: 1.4,
+  14: 1.12,
+  15: 1.5,
+};
+
 export function drawBalloon(
   context: CanvasRenderingContext2D,
   balloon: BalloonBody,
@@ -17,6 +25,7 @@ export function drawBalloon(
   alpha = 1,
   windStrength = 0,
   faceMotion?: BalloonFaceMotion,
+  cachedImage?: CanvasImageSource,
 ): void {
   const asset = getBalloonAsset(balloon.variant.assetId);
   const thumbnail = getBalloonImage(asset.id);
@@ -24,17 +33,25 @@ export function drawBalloon(
     ? null
     : getFullResolutionBalloonImage(asset.id);
   const image =
-    fullResolutionImage?.complete && fullResolutionImage.naturalWidth > 0
+    cachedImage ??
+    (fullResolutionImage?.complete && fullResolutionImage.naturalWidth > 0
       ? fullResolutionImage
-      : thumbnail;
-  if (!image?.complete || image.naturalWidth === 0) return;
+      : thumbnail);
+  if (
+    !image ||
+    (image instanceof HTMLImageElement &&
+      (!image.complete || image.naturalWidth === 0))
+  ) {
+    return;
+  }
 
   const wobble =
     Math.sin(timeMs * 0.0022 + balloon.variant.seed) *
       (balloon.completed ? 0.022 : 0.012) +
     Math.sin(timeMs * 0.005 + balloon.variant.seed) * windStrength * 0.012;
   const depthAlpha = clamp(0.84 + (balloon.depth - 0.94) * 1.35, 0.8, 1);
-  const drawWidth = balloon.radiusX * 2 * balloon.depth;
+  const drawWidth =
+    balloon.radiusX * 2 * balloon.depth * (ASSET_SCALE[asset.id] ?? 1);
   const drawHeight = drawWidth * (asset.height / asset.width);
   const bodyTop = -balloon.radiusY * balloon.depth;
 
@@ -45,14 +62,7 @@ export function drawBalloon(
   context.rotate(balloon.compressionAngle);
   context.scale(balloon.compressionX, balloon.compressionY);
   context.rotate(-balloon.compressionAngle);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
-  const softening = balloon.completed
-    ? 0
-    : clamp((drawWidth - 150) / 700, 0, 0.42);
-  if (softening > 0) context.filter = `blur(${softening}px)`;
   context.drawImage(image, -drawWidth / 2, bodyTop, drawWidth, drawHeight);
-  context.filter = 'none';
   if (faceMotion) {
     const faceScale = drawWidth * asset.face.scale;
     context.save();

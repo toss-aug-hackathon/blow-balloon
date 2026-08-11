@@ -93,17 +93,40 @@ export function updateHeliumPhysics(
     constrainToBounds(balloon, width, height);
   }
 
+  const cellSize = 140;
+  const neighborOffsets = [
+    [1, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+  ] as const;
   for (let pass = 0; pass < 2; pass += 1) {
-    for (let firstIndex = 0; firstIndex < balloons.length; firstIndex += 1) {
-      for (
-        let secondIndex = firstIndex + 1;
-        secondIndex < balloons.length;
-        secondIndex += 1
-      ) {
-        resolveBalloonCollision(
-          balloons[firstIndex]!,
-          balloons[secondIndex]!,
-        );
+    const cells = new Map<string, BalloonBody[]>();
+    for (const balloon of balloons) {
+      const key = `${Math.floor(balloon.x / cellSize)},${Math.floor(
+        balloon.y / cellSize,
+      )}`;
+      const cell = cells.get(key);
+      if (cell) cell.push(balloon);
+      else cells.set(key, [balloon]);
+    }
+    for (const [key, cell] of cells) {
+      const [cellX, cellY] = key.split(',').map(Number);
+      for (let firstIndex = 0; firstIndex < cell.length; firstIndex += 1) {
+        for (
+          let secondIndex = firstIndex + 1;
+          secondIndex < cell.length;
+          secondIndex += 1
+        ) {
+          resolveBalloonCollision(cell[firstIndex]!, cell[secondIndex]!);
+        }
+      }
+      for (const [offsetX, offsetY] of neighborOffsets) {
+        const neighbor = cells.get(`${cellX! + offsetX},${cellY! + offsetY}`);
+        if (!neighbor) continue;
+        for (const first of cell) {
+          for (const second of neighbor) resolveBalloonCollision(first, second);
+        }
       }
     }
     balloons.forEach((balloon) =>

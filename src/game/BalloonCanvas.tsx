@@ -42,10 +42,12 @@ export function BalloonCanvas({
 
     const resize = () => {
       const bounds = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.max(1, Math.round(bounds.width * dpr));
       canvas.height = Math.max(1, Math.round(bounds.height * dpr));
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
       engine.resize(bounds.width, bounds.height);
     };
     const resizeObserver = new ResizeObserver(resize);
@@ -85,6 +87,7 @@ export function BalloonCanvas({
       cancelAnimationFrame(animationId);
       resizeObserver.disconnect();
       document.removeEventListener('visibilitychange', handleVisibility);
+      engine.dispose();
       engineRef.current = null;
     };
   }, [mode, onFinish, onHudChange, onInterrupted, signalRef]);
