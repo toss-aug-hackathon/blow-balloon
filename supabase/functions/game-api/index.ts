@@ -4,10 +4,16 @@ type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 
 const GAME_TYPES = new Set<GameType>(['BALLOON_COUNT', 'LUNG_CAPACITY'])
 const SCORE_LIMITS: Record<GameType, number> = {
-  BALLOON_COUNT: 10_000,
-  LUNG_CAPACITY: 86_400_000,
+  BALLOON_COUNT: 30,
+  LUNG_CAPACITY: 999,
 }
 const USER_KEY_HEADER = 'x-game-user-key'
+const BLOCKED_NICKNAME_TERMS = [
+  '시발', '시이발', '씨발', '씨이발', 'ㅅㅂ', '개새끼', '개새', '새끼', '병신', '븅신',
+  '지랄', '존나', '좆', '씹', '섹스', '야동', '포르노', '자지', '보지',
+  '성기', '강간', '창녀', '걸레', 'fuck', 'shit', 'bitch', 'asshole',
+  'dick', 'pussy', 'porn', 'sex',
+] as const
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')
 const secretKeys = Deno.env.get('SUPABASE_SECRET_KEYS')
@@ -83,11 +89,25 @@ function parseScore(value: unknown, gameType: GameType): number | null {
   return (value as number) <= SCORE_LIMITS[gameType] ? value as number : null
 }
 
+function parseDurationMs(value: unknown): number | null | undefined {
+  if (value === null || value === undefined) return null
+  if (!Number.isSafeInteger(value) || (value as number) < 0 || (value as number) > 86_400_000) {
+    return undefined
+  }
+  return value as number
+}
+
 function parseNickname(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const nickname = value.trim()
   const length = Array.from(nickname).length
   if (length < 2 || length > 12 || /[#\p{Cc}]/u.test(nickname)) return null
+  const normalized = nickname
+    .normalize('NFKC')
+    .toLocaleLowerCase()
+    .replace(/[\s\p{P}\p{S}\p{Cf}]+/gu, '')
+    .replace(/(.)\1+/gu, '$1')
+  if (BLOCKED_NICKNAME_TERMS.some((term) => normalized.includes(term))) return null
   return nickname
 }
 
@@ -161,6 +181,28 @@ async function registerNickname(req: Request, userKey: string): Promise<Response
   }, 201)
 }
 
+async function updateNickname(req: Request, userKey: string): Promise<Response> {
+  const body = await parseJson(req)
+  const nickname = parseNickname(body?.nickname)
+  if (!nickname) {
+    return error('INVALID_NICKNAME', '별명은 # 없이 2~12자로 입력해 주세요.', 400)
+  }
+
+  const { data, error: dbError } = await supabase.rpc('update_game_nickname', {
+    p_user_key: userKey,
+    p_nickname: nickname,
+  })
+  if (dbError) return databaseError(dbError.message)
+
+  const user = data?.[0]
+  return json({
+    success: true,
+    displayName: `${user.nickname} #${user.display_id}`,
+    nickname: user.nickname,
+    displayId: user.display_id,
+  })
+}
+
 async function submitScore(req: Request, userKey: string): Promise<Response> {
   const body = await parseJson(req)
   const gameType = parseGameType(body?.gameType)
@@ -176,11 +218,16 @@ async function submitScore(req: Request, userKey: string): Promise<Response> {
       400,
     )
   }
+  const durationMs = parseDurationMs(body?.durationMs)
+  if (durationMs === undefined) {
+    return error('INVALID_DURATION', '기록 시간을 확인해 주세요.', 400)
+  }
 
   const { data, error: dbError } = await supabase.rpc('submit_best_score', {
     p_user_key: userKey,
     p_game_type: gameType,
     p_score: score,
+    p_duration_ms: durationMs,
   })
   if (dbError) return databaseError(dbError.message)
 
@@ -189,6 +236,7 @@ async function submitScore(req: Request, userKey: string): Promise<Response> {
     gameType,
     submittedScore: score,
     bestScore: data[0].best_score,
+    bestDurationMs: data[0].best_duration_ms,
     isNewBest: data[0].is_new_best,
   })
 }
@@ -215,6 +263,7 @@ async function getRanking(url: URL): Promise<Response> {
     rank: row.rank,
     displayName: `${row.nickname} #${row.display_id}`,
     score: row.score,
+    durationMs: row.duration_ms ?? null,
   })))
 }
 
@@ -227,13 +276,18 @@ async function getMyRecords(userKey: string): Promise<Response> {
     return error('USER_NOT_REGISTERED', '랭킹에 등록된 사용자가 아니에요.', 404)
   }
 
-  const records: Record<GameType, { bestScore: number | null; rank: number | null }> = {
-    BALLOON_COUNT: { bestScore: null, rank: null },
-    LUNG_CAPACITY: { bestScore: null, rank: null },
+  const records: Record<GameType, {
+    bestScore: number | null;
+    bestDurationMs: number | null;
+    rank: number | null;
+  }> = {
+    BALLOON_COUNT: { bestScore: null, bestDurationMs: null, rank: null },
+    LUNG_CAPACITY: { bestScore: null, bestDurationMs: null, rank: null },
   }
   for (const row of data) {
     records[row.game_type as GameType] = {
       bestScore: row.best_score,
+      bestDurationMs: row.best_duration_ms ?? null,
       rank: row.rank,
     }
   }
@@ -260,6 +314,9 @@ Deno.serve(async (req) => {
   if (route === '/game-user' && req.method === 'GET') return getGameUser(userKey)
   if (route === '/register-nickname' && req.method === 'POST') {
     return registerNickname(req, userKey)
+  }
+  if (route === '/update-nickname' && req.method === 'POST') {
+    return updateNickname(req, userKey)
   }
   if (route === '/submit-score' && req.method === 'POST') return submitScore(req, userKey)
   if (route === '/my-records' && req.method === 'GET') return getMyRecords(userKey)

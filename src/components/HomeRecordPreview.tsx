@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getMyRecords, type MyRecordsResponse } from '../api/gameApi';
+import {
+  getCachedMyRecords,
+  getMyRecords,
+  type MyRecordsResponse,
+} from '../api/gameApi';
 import { formatSeconds } from '../utils/math';
 
 type HomeRecordPreviewProps = {
@@ -13,7 +17,12 @@ export function HomeRecordPreview({
   isRegistered,
   onOpenRanking,
 }: HomeRecordPreviewProps) {
-  const [records, setRecords] = useState<MyRecordsResponse | null>(null);
+  const [records, setRecords] = useState<MyRecordsResponse | null>(() =>
+    userKey ? getCachedMyRecords(userKey) : null,
+  );
+  const displayedRecords = userKey
+    ? getCachedMyRecords(userKey) ?? records
+    : records;
 
   useEffect(() => {
     if (!userKey || !isRegistered) return;
@@ -34,11 +43,11 @@ export function HomeRecordPreview({
     };
   }, [isRegistered, userKey]);
 
-  if (!isRegistered || !records) {
+  if (!isRegistered || !displayedRecords) {
     return (
       <button className="home-ranking-entry" type="button" onClick={onOpenRanking}>
         <span>
-          <small>내 기록</small>
+          <small>나의 기록</small>
           <b>게임 후 내 랭킹을 확인해봐요.</b>
         </span>
         <strong>랭킹 <i aria-hidden="true">→</i></strong>
@@ -46,24 +55,26 @@ export function HomeRecordPreview({
     );
   }
 
-  const lung = records.records.LUNG_CAPACITY;
-  const rush = records.records.BALLOON_COUNT;
+  const lung = displayedRecords.records.LUNG_CAPACITY;
+  const rush = displayedRecords.records.BALLOON_COUNT;
 
   return (
     <button className="home-record-preview" type="button" onClick={onOpenRanking}>
       <span className="home-record-preview__heading">
-        <small>{records.displayName}의 기록</small>
+        <small>{displayedRecords.displayName}의 기록</small>
         <i aria-hidden="true">→</i>
       </span>
       <span className="home-record-preview__items">
         <span>
-          <small>폐활량</small>
-          <strong>{lung.bestScore === null ? '기록 없음' : `${formatSeconds(lung.bestScore)}초`}</strong>
+          <small>크게 불기</small>
+          <strong>{lung.bestScore === null ? '기록 없음' : `${lung.bestScore}점`}</strong>
+          {lung.bestDurationMs !== null && <i>{formatSeconds(lung.bestDurationMs)}초</i>}
           {lung.rank !== null && <em>{lung.rank}위</em>}
         </span>
         <span>
-          <small>풍선 많이</small>
+          <small>스피드런</small>
           <strong>{rush.bestScore === null ? '기록 없음' : `${rush.bestScore}개`}</strong>
+          {rush.bestDurationMs !== null && <i>{formatSeconds(rush.bestDurationMs)}초</i>}
           {rush.rank !== null && <em>{rush.rank}위</em>}
         </span>
       </span>

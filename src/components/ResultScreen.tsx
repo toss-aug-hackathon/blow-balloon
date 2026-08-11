@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   registerNickname,
+  syncRankingAfterScore,
   submitScore,
   type GameUser,
   type RegisteredGameUser,
@@ -9,11 +10,13 @@ import {
 import type { GameResult } from '../game/types';
 import { createResultSnapshot } from '../result/createResultSnapshot';
 import { formatSeconds } from '../utils/math';
+import { getNicknameValidationError } from '../utils/nicknamePolicy';
 
 type ResultScreenProps = {
   result: GameResult;
   onRetry: () => void;
   onHome: () => void;
+  onOpenRanking: () => void;
   userKey: string | null;
   user: GameUser | null;
   onRegistered: (user: RegisteredGameUser) => void;
@@ -30,6 +33,7 @@ export function ResultScreen({
   result,
   onRetry,
   onHome,
+  onOpenRanking,
   userKey,
   user,
   onRegistered,
@@ -48,15 +52,29 @@ export function ResultScreen({
   const gameType = result.mode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
   const score =
     result.mode === 'lung-test'
-      ? Math.round(result.durationMs)
+      ? Math.round(result.finalBalloonScale * 100)
       : Math.round(result.completedCount);
-  const resultKey = `${gameType}-${score}`;
+  const durationMs =
+    result.mode === 'lung-test'
+      ? result.durationMs
+      : result.completionTimeMs;
+  const resultKey = `${gameType}-${score}-${durationMs ?? 'none'}`;
 
   const saveScore = useCallback(async (key: string) => {
     setIsSubmitting(true);
     setRankingError(null);
     try {
-      setSubmission(await submitScore(gameType, score, key));
+      const nextSubmission = await submitScore(gameType, score, durationMs, key);
+      setSubmission(nextSubmission);
+      if (user?.isRegistered) {
+        syncRankingAfterScore({
+          gameType,
+          bestScore: nextSubmission.bestScore,
+          bestDurationMs: nextSubmission.bestDurationMs,
+          displayName: user.displayName,
+          userKey: key,
+        });
+      }
     } catch (error) {
       setRankingError(
         error instanceof Error ? error.message : '기록을 저장하지 못했어요.',
@@ -64,7 +82,7 @@ export function ResultScreen({
     } finally {
       setIsSubmitting(false);
     }
-  }, [gameType, score]);
+  }, [durationMs, gameType, score, user]);
 
   useEffect(
     () => () => {
@@ -99,17 +117,9 @@ export function ResultScreen({
 
   const handleRegister = async () => {
     const trimmedNickname = nickname.trim();
-    const length = Array.from(trimmedNickname).length;
-    if (
-      length < 2 ||
-      length > 12 ||
-      trimmedNickname.includes('#') ||
-      Array.from(trimmedNickname).some((character) => {
-        const code = character.charCodeAt(0);
-        return code < 32 || code === 127;
-      })
-    ) {
-      setRankingError('별명은 공백을 제외하고 2~12자이며 # 없이 입력해 주세요.');
+    const nicknameError = getNicknameValidationError(trimmedNickname);
+    if (nicknameError) {
+      setRankingError(nicknameError);
       return;
     }
     if (!userKey) {
@@ -122,7 +132,15 @@ export function ResultScreen({
     try {
       const registeredUser = await registerNickname(trimmedNickname, userKey);
       onRegistered(registeredUser);
-      setSubmission(await submitScore(gameType, score, userKey));
+      const nextSubmission = await submitScore(gameType, score, durationMs, userKey);
+      setSubmission(nextSubmission);
+      syncRankingAfterScore({
+        gameType,
+        bestScore: nextSubmission.bestScore,
+        bestDurationMs: nextSubmission.bestDurationMs,
+        displayName: registeredUser.displayName,
+        userKey,
+      });
     } catch (error) {
       setRankingError(
         error instanceof Error ? error.message : '랭킹 등록을 완료하지 못했어요.',
@@ -170,7 +188,7 @@ export function ResultScreen({
         <p className="result-title">
           {result.mode === 'lung-test'
             ? getLungGrade(result.durationMs)
-            : '30초 풍선 공장이 문을 닫았어요'}
+            : '30초 스피드런 기록이에요'}
         </p>
       </header>
 
@@ -201,10 +219,24 @@ export function ResultScreen({
               <dd>{result.completedCount}개</dd>
             </div>
             <div>
-              <dt>실제로 분 시간</dt>
-              <dd>{formatSeconds(result.totalBlowingMs)}초</dd>
+              <dt>마지막 풍선까지</dt>
+              <dd>
+                {result.completionTimeMs === null
+                  ? '30초 내 미달성'
+                  : `${formatSeconds(result.completionTimeMs)}초`}
+              </dd>
             </div>
           </dl>
+        )}
+        {result.mode === 'lung-test' ? (
+          <p className="result-mode-guide">
+            풍선 크기 점수가 높을수록, 같은 점수라면 시간이 짧을수록 높은 기록이에요.
+          </p>
+        ) : (
+          <p className="result-mode-guide">
+            30개 미만은 현재 개수와 마지막 풍선까지의 시간으로 기록해요.
+            30개를 만들면 30번째 풍선까지 걸린 시간으로 겨뤄요.
+          </p>
         )}
         <p className="medical-note">
           마이크 입력을 이용한 재미용 기록이에요.
@@ -227,9 +259,9 @@ export function ResultScreen({
               {submission.isNewBest ? '새로운 최고 기록이에요!' : '최고 기록을 유지했어요.'}
             </strong>
             <span>
-              내 최고 기록 {result.mode === 'lung-test'
-                ? `${formatSeconds(submission.bestScore)}초`
-                : `${submission.bestScore}개`}
+              {result.mode === 'lung-test'
+                ? `풍선 크기 ${submission.bestScore}점 · ${submission.bestDurationMs === null ? '-' : `${formatSeconds(submission.bestDurationMs)}초`}`
+                : `${submission.bestScore}개 · ${submission.bestDurationMs === null ? '-' : `${formatSeconds(submission.bestDurationMs)}초`}`}
             </span>
           </>
         ) : user?.isRegistered ? (
@@ -293,6 +325,13 @@ export function ResultScreen({
       </section>
 
       <div className="button-stack">
+        <button
+          className="button button--primary"
+          type="button"
+          onClick={onOpenRanking}
+        >
+          랭킹 보러 가기
+        </button>
         {!snapshotUrl && (
           <button
             className="button button--primary"
