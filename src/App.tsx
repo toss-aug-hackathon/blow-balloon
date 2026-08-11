@@ -380,7 +380,7 @@ export default function App() {
               </div>
             ) : (
               <>
-                <div className="game-stat">
+                <div className="game-stat game-stat--timer">
                   <small>남은 시간</small>
                   <strong>{Math.ceil(hud.remainingMs / 1000)}<em>초</em></strong>
                 </div>

@@ -2768,6 +2768,78 @@ h1 {
   font-weight: 600;
 }
 
+/* Restore the original test-control copy treatment inside the new panel. */
+.game-screen > .game-control-panel > .game-control-guide {
+  display: none;
+}
+
+.game-screen > .game-control-panel > .test-wind-control > span {
+  display: block;
+  margin-bottom: 12px;
+  color: rgba(38, 51, 58, 0.68);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Align both top stats to one visual baseline and use compact, legible icons. */
+.game-screen > .game-hud > .game-stat--timer {
+  width: 116px;
+  grid-template-columns: 30px auto;
+  column-gap: 8px;
+}
+
+.game-screen > .game-hud > .game-stat--timer::before {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f2768e;
+  border-radius: 50%;
+  background: transparent;
+  content: '';
+}
+
+.game-screen > .game-hud > .game-stat--timer::after {
+  position: absolute;
+  top: 8px;
+  left: 13px;
+  display: block;
+  width: 8px;
+  height: 10px;
+  border-bottom: 3px solid #f2768e;
+  border-left: 3px solid #f2768e;
+  border-radius: 1px 0 2px 2px;
+  background: transparent;
+  content: '';
+  transform: rotate(-20deg);
+}
+
+.game-screen > .game-hud > .game-stat--right {
+  width: 82px;
+  grid-template-columns: 22px auto;
+  column-gap: 6px;
+}
+
+.game-screen > .game-hud > .game-stat--right::before {
+  width: 25px;
+  height: 29px;
+}
+
+.game-screen > .game-hud > .game-stat--right::after {
+  top: 24px;
+  left: 12px;
+}
+
+.game-screen > .game-hud > .game-stat > strong {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.game-screen > .game-hud > .game-stat > small {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
 .game-screen > .game-control-panel ~ .game-screen::after {
   display: none;
 }
@@ -2835,6 +2907,26 @@ h1 {
   font-size: 21px;
   letter-spacing: normal;
   line-height: normal;
+}
+
+/* Keep the two rush stats on the same header baseline on narrow phones. */
+.game-screen > .game-hud > .game-stat--timer {
+  position: absolute;
+  top: 0;
+  right: auto;
+  left: 50%;
+  width: 116px;
+  padding: 0;
+  transform: translateX(-50%);
+}
+
+.game-screen > .game-hud > .game-stat--right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: auto;
+  width: 82px;
+  padding: 0;
 }
 
 .game-hud .wind-meter {
