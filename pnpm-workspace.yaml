@@ -1,6 +1,6 @@
 allowBuilds:
-  '@sentry/cli': set this to true or false
-  '@swc/core': set this to true or false
+  '@sentry/cli': true
+  '@swc/core': true
   cloudflared: true
   esbuild: true
   protobufjs: true

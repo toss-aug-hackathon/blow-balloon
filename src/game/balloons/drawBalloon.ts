@@ -1,6 +1,10 @@
 import type { BalloonBody } from '../types';
 import { clamp } from '../../utils/math';
 import { getBalloonAsset, getBalloonImage } from './balloonAssets';
+import {
+  drawBalloonFace,
+  type BalloonFaceMotion,
+} from './drawBalloonFace';
 
 export function drawBalloon(
   context: CanvasRenderingContext2D,
@@ -8,6 +12,7 @@ export function drawBalloon(
   timeMs: number,
   alpha = 1,
   windStrength = 0,
+  faceMotion?: BalloonFaceMotion,
 ): void {
   const asset = getBalloonAsset(balloon.variant.assetId);
   const image = getBalloonImage(asset.id);
@@ -30,5 +35,13 @@ export function drawBalloon(
   context.scale(balloon.compressionX, balloon.compressionY);
   context.rotate(-balloon.compressionAngle);
   context.drawImage(image, -drawWidth / 2, bodyTop, drawWidth, drawHeight);
+  if (faceMotion) {
+    const faceScale = drawWidth * 0.62;
+    context.save();
+    context.translate(0, bodyTop + drawWidth * 0.58);
+    context.scale(faceScale, faceScale);
+    drawBalloonFace(context, timeMs, balloon.variant.seed, faceMotion);
+    context.restore();
+  }
   context.restore();
 }
