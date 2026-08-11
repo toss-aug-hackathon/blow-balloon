@@ -1,8 +1,67 @@
-node_modules
-dist
-.DS_Store
-*.local
-coverage
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.pnp.*
+
+# Build artifacts
+dist/
+build/
+out/
 *.ait
-.granite
+.granite/
+.vite/
+*.tsbuildinfo
+
+# Test and coverage artifacts
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.nyc_output/
+
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+.envrc
+.direnv/
+
+# Supabase local state
+supabase/.temp/
+supabase/.branches/
+
+# Logs and runtime files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.pid
+*.pid.lock
+
+# Editor and IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating-system files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+.cache/
+
+# Project-local generated assets
 /replace_balloons/
