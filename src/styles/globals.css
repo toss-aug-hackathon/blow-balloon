@@ -3220,7 +3220,7 @@ h1 {
 .result-screen .result-card {
   padding: 8px 0;
   border: solid var(--line);
-  border-width: 1px 0;
+  border-width: 1px;
 }
 
 .result-grid {
@@ -3274,4 +3274,15 @@ h1 {
 .result-screen .medical-note,
 .result-screen .snapshot-preview figcaption {
   font-size: 14px;
+}
+
+/* The image icons own the header artwork; disable legacy pseudo-icons to prevent overlap. */
+.game-screen > .game-hud > .game-stat--timer::before,
+.game-screen > .game-hud > .game-stat--timer::after,
+.game-screen > .game-hud > .game-stat--right::before,
+.game-screen > .game-hud > .game-stat--right::after,
+.game-screen > .game-hud > .game-stat--center::before,
+.game-screen > .game-hud > .game-stat--center::after {
+  display: none !important;
+  content: none;
 }
