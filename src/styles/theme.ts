@@ -5,14 +5,14 @@
 export const APP_THEME = {
   ink: '#331e28',
   inkSoft: '#67454f',
-  paper: '#ff6b74',
-  paperDeep: '#ef5c69',
+  paper: '#fff9f4',
+  paperDeep: '#fff0e8',
   coral: '#ff6b74',
   coralDeep: '#df4f5d',
   butter: '#ffd7aa',
-  butterLight: '#ff9aa1',
+  butterLight: '#fff0d4',
   sage: '#d6efe7',
   sageDeep: '#9dc9bd',
-  sky: '#ff858c',
+  sky: '#f7b9bc',
   white: '#ffffff',
 } as const;

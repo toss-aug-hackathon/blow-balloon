@@ -195,16 +195,12 @@ export default function App() {
       {screen === 'home' && (
         <main className="screen home-screen">
           <header className="home-header">
-            <div className="brand-mark" aria-hidden="true">
-              <span />
-            </div>
-            <p className="eyebrow">후— 불면 시작!</p>
             <h1>
               오늘은 어떤 풍선을
               <br />
               불어볼까요?
             </h1>
-            <p>마이크에 바람을 불어 말랑한 풍선을 키워보세요.</p>
+            <p>바람을 불어 나만의 기록을 만들어보세요.</p>
           </header>
 
           <section className="mode-list" aria-label="게임 모드 선택">
@@ -215,13 +211,13 @@ export default function App() {
             >
               <img
                 className="mode-card__art balloon-art balloon-art--lung"
-                src="/balloons/balloon_08.png"
+                src="/selection/heart-balloon.png"
                 alt=""
               />
-              <span className="mode-card__number">01</span>
               <strong>폐활량 테스트</strong>
               <small>한 번의 숨으로 풍선을 얼마나 크게 만들 수 있을까요?</small>
-              <span className="mode-card__arrow">시작하기 →</span>
+              <span className="mode-card__arrow" aria-hidden="true">→</span>
+              <span className="sr-only">폐활량 테스트 시작하기</span>
             </button>
             <button
               type="button"
@@ -229,17 +225,17 @@ export default function App() {
               onClick={() => selectMode('balloon-rush')}
             >
               <img
-                className="mode-card__art balloon-art balloon-art--rush"
-                src="/balloons/balloon_22.png"
+                className="mode-card__art balloon-art balloon-art--bunch"
+                src="/selection/balloon-bunch.png"
                 alt=""
               />
-              <span className="mode-card__number">02</span>
               <strong>풍선 많이 만들기</strong>
               <small>30초 동안 풍선을 최대한 많이 만들어보세요.</small>
-              <span className="mode-card__arrow">도전하기 →</span>
+              <span className="mode-card__arrow" aria-hidden="true">→</span>
+              <span className="sr-only">풍선 많이 만들기 시작하기</span>
             </button>
           </section>
-          <p className="privacy-note">소리는 저장하거나 전송하지 않아요.</p>
+          <p className="privacy-note">마이크 소리는 저장하지 않아요.</p>
         </main>
       )}
 
@@ -342,7 +338,7 @@ export default function App() {
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
           <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '30초 준비!'}</p>
-          <strong key={countdown}>{countdown > 0 ? countdown : '후—!'}</strong>
+          <strong key={countdown}>{countdown > 0 ? countdown : '후!'}</strong>
           <WindMeter strength={detector.frame.windStrength} />
         </main>
       )}
