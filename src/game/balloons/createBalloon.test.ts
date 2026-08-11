@@ -3,6 +3,11 @@ import { BALLOON_ASSETS } from './balloonAssets';
 import { createRandomVariant } from './createBalloon';
 
 describe('createRandomVariant', () => {
+  it('only registers the WebP assets shipped with the app', () => {
+    expect(BALLOON_ASSETS).toHaveLength(16);
+    expect(BALLOON_ASSETS.every(({ url }) => url.endsWith('.webp'))).toBe(true);
+  });
+
   it('avoids immediately repeating the same image', () => {
     const values = [0, 0.25];
     let index = 0;

@@ -211,12 +211,12 @@ export default function App() {
             >
               <img
                 className="mode-card__art balloon-art balloon-art--lung balloon-art--open"
-                src="/selection/heart-balloon.png"
+                src="/selection/heart-balloon.webp"
                 alt=""
               />
               <img
                 className="mode-card__art balloon-art balloon-art--lung balloon-art--blink"
-                src="/selection/heart-balloon-blink.png"
+                src="/selection/heart-balloon-blink.webp"
                 alt=""
               />
               <strong>폐활량 테스트</strong>
@@ -231,7 +231,7 @@ export default function App() {
             >
               <img
                 className="mode-card__art balloon-art balloon-art--bunch"
-                src="/selection/balloon-bunch.png"
+                src="/selection/balloon-bunch.webp"
                 alt=""
               />
               <strong>풍선 많이 만들기</strong>
@@ -253,7 +253,7 @@ export default function App() {
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
-              src="/balloons/balloon_03.png"
+              src="/balloons/balloon_03.webp"
               alt=""
             />
           </div>

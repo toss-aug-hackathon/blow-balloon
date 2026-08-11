@@ -58,7 +58,7 @@ pnpm build:web  # 웹 빌드만 실행
 ## 주요 경로
 
 ```text
-public/balloons/  35종 풍선 PNG와 고해상도 에셋
+public/balloons/  16종 풍선 WebP 에셋
 src/audio/        마이크 입력과 바람 감지
 src/game/         Canvas 렌더링과 풍선 물리
 src/result/       결과 이미지 생성
