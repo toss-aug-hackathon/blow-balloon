@@ -59,17 +59,14 @@ export function useBlowDetector() {
     setPermission('requesting');
     setErrorMessage(null);
     try {
-      let readSignal: () => { rms: number; breathiness: number };
+      let readRms: () => number;
       if (simulationEnabled) {
-        readSignal = () => ({
-          rms: 0.005 + simulatedWindRef.current * 0.18,
-          breathiness: 1,
-        });
+        readRms = () => 0.005 + simulatedWindRef.current * 0.18;
       } else {
         const microphone = new MicrophoneInput();
         microphoneRef.current = microphone;
         await microphone.start();
-        readSignal = () => microphone.readSignal();
+        readRms = () => microphone.readRms();
       }
       setPermission('granted');
       const calibrationSamples: number[] = [];
@@ -77,7 +74,7 @@ export function useBlowDetector() {
       let lastUiUpdate = 0;
 
       const readFrame = (now: number) => {
-        const { rms, breathiness } = readSignal();
+        const rms = readRms();
         if (now - calibrationStartedAt < BLOW_CONFIG.calibrationMs) {
           calibrationSamples.push(rms);
           signalRef.current = { ...EMPTY_FRAME, rawRms: rms };
@@ -86,7 +83,7 @@ export function useBlowDetector() {
             detectorRef.current.setBaseline(calibrationSamples);
             setIsCalibrated(true);
           }
-          signalRef.current = detectorRef.current.update(rms, now, breathiness);
+          signalRef.current = detectorRef.current.update(rms, now);
         }
 
         if (now - lastUiUpdate >= BLOW_CONFIG.uiUpdateIntervalMs) {
