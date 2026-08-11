@@ -23,6 +23,12 @@ describe('BlowDetector', () => {
     expect(detector.update(0.005, 50).state).toBe('idle');
   });
 
+  it('ignores loud speech-like signals without enough high-frequency noise', () => {
+    const detector = createDetector();
+    expect(detector.update(0.08, 0, 0.08).state).toBe('idle');
+    expect(detector.update(0.08, 200, 0.08).state).toBe('idle');
+  });
+
   it('starts after a sustained signal and tolerates a short gap', () => {
     const detector = createDetector();
     detector.update(0.04, 0);
