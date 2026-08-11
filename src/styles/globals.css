@@ -647,9 +647,11 @@ h1 {
 }
 
 .snapshot-preview figcaption {
-  margin-top: 8px;
-  color: #8c7883;
-  font-size: 11px;
+  margin-top: 12px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
 }
 
 .button-stack {
@@ -1325,6 +1327,46 @@ h1 {
 
 .result-screen .result-title {
   margin: 10px 0 24px;
+}
+
+/* Keep the score readable without adding another visual card. */
+.result-record-heading {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 390px);
+  margin-bottom: 24px;
+  padding: 6px 0 0;
+}
+
+.result-record-heading .eyebrow {
+  margin: 0 0 8px;
+  color: rgba(255, 248, 249, 0.92);
+  font-size: 12px;
+}
+
+.result-record-heading h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(48px, 14vw, 70px);
+  line-height: 1;
+}
+
+.result-record-heading .result-title {
+  margin: 10px 0 0;
+  color: var(--ink);
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.result-screen .result-card,
+.result-screen .snapshot-preview,
+.result-screen .button-stack {
+  position: relative;
+  z-index: 1;
+}
+
+.result-confetti {
+  pointer-events: none;
 }
 
 .result-screen .result-card,

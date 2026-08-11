@@ -54,13 +54,13 @@ export async function createResultSnapshot(
     context.font = '800 72px system-ui, sans-serif';
     context.fillText('폐활량 테스트', SNAPSHOT_WIDTH / 2, 180);
     context.font = '800 90px system-ui, sans-serif';
-    context.fillStyle = APP_THEME.coral;
+    context.fillStyle = APP_THEME.ink;
     context.fillText(
       `한 번에 ${formatSeconds(result.durationMs)}초!`,
       SNAPSHOT_WIDTH / 2,
       1120,
     );
-    context.font = '600 42px system-ui, sans-serif';
+    context.font = '700 42px system-ui, sans-serif';
     context.fillStyle = APP_THEME.inkSoft;
     context.fillText(
       `풍선 크기 ${Math.round(result.finalBalloonScale * 100)}점`,
@@ -84,13 +84,13 @@ export async function createResultSnapshot(
     context.fillStyle = APP_THEME.ink;
     context.fillText('풍선 많이 만들기', SNAPSHOT_WIDTH / 2, 180);
     context.font = '800 78px system-ui, sans-serif';
-    context.fillStyle = APP_THEME.coral;
+    context.fillStyle = APP_THEME.ink;
     context.fillText(
       `30초 동안 풍선 ${result.completedCount}개 완성!`,
       SNAPSHOT_WIDTH / 2,
       1160,
     );
-    context.font = '600 42px system-ui, sans-serif';
+    context.font = '700 42px system-ui, sans-serif';
     context.fillStyle = APP_THEME.inkSoft;
     context.fillText(
       `바람을 분 시간 ${formatSeconds(result.totalBlowingMs)}초`,
