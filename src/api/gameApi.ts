@@ -62,6 +62,41 @@ const myRecordsRequests = new Map<string, Promise<MyRecordsResponse>>();
 const myRecordsRequestTokens = new Map<string, symbol>();
 const MAX_VISIBLE_RANKING_ITEMS = 15;
 const MY_RECORDS_STORAGE_PREFIX = 'blow-balloon:my-records:';
+const REGISTERED_USER_STORAGE_PREFIX = 'blow-balloon:registered-user:';
+
+function saveRegisteredGameUser(userKey: string, user: RegisteredGameUser): void {
+  try {
+    window.localStorage.setItem(
+      `${REGISTERED_USER_STORAGE_PREFIX}${userKey}`,
+      JSON.stringify(user),
+    );
+  } catch {
+    // Local storage may be unavailable in a WebView.
+  }
+}
+
+export function getCachedRegisteredGameUser(
+  userKey: string,
+): RegisteredGameUser | null {
+  try {
+    const stored = window.localStorage.getItem(
+      `${REGISTERED_USER_STORAGE_PREFIX}${userKey}`,
+    );
+    if (!stored) return null;
+    const parsed: unknown = JSON.parse(stored);
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      (parsed as Partial<RegisteredGameUser>).isRegistered !== true ||
+      typeof (parsed as Partial<RegisteredGameUser>).displayName !== 'string'
+    ) {
+      return null;
+    }
+    return parsed as RegisteredGameUser;
+  } catch {
+    return null;
+  }
+}
 
 function isMyRecordsResponse(value: unknown): value is MyRecordsResponse {
   if (!value || typeof value !== 'object') return false;
@@ -157,7 +192,10 @@ async function gameApi<T>(
 }
 
 export function getGameUser(userKey: string): Promise<GameUser> {
-  return gameApi<GameUser>('/game-user', {}, userKey);
+  return gameApi<GameUser>('/game-user', {}, userKey).then((user) => {
+    if (user.isRegistered) saveRegisteredGameUser(userKey, user);
+    return user;
+  });
 }
 
 export function registerNickname(
@@ -168,7 +206,10 @@ export function registerNickname(
     '/register-nickname',
     { method: 'POST', body: JSON.stringify({ nickname }) },
     userKey,
-  );
+  ).then((user) => {
+    saveRegisteredGameUser(userKey, user);
+    return user;
+  });
 }
 
 export function updateNickname(
@@ -179,7 +220,10 @@ export function updateNickname(
     '/update-nickname',
     { method: 'POST', body: JSON.stringify({ nickname }) },
     userKey,
-  );
+  ).then((user) => {
+    saveRegisteredGameUser(userKey, user);
+    return user;
+  });
 }
 
 export function submitScore(

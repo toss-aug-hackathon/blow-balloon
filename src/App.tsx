@@ -15,7 +15,10 @@ import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
 import { useGameUser } from './hooks/useGameUser';
-import { prefetchRankings } from './api/gameApi';
+import {
+  getCachedRegisteredGameUser,
+  prefetchRankings,
+} from './api/gameApi';
 
 type AppScreen =
   | 'home'
@@ -127,6 +130,11 @@ export default function App() {
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
   const gameUser = useGameUser();
+  const effectiveUser =
+    gameUser.user ??
+    (gameUser.userKey
+      ? getCachedRegisteredGameUser(gameUser.userKey)
+      : null);
   const isPlaying = screen === 'game';
   useScreenAwake(isPlaying);
 
@@ -526,7 +534,7 @@ export default function App() {
           onHome={goHome}
           onOpenRanking={openRanking}
           userKey={gameUser.userKey}
-          user={gameUser.user}
+          user={effectiveUser}
           onRegistered={gameUser.setUser}
         />
       )}
@@ -534,7 +542,7 @@ export default function App() {
       {screen === 'ranking' && (
         <RankingScreen
           userKey={gameUser.userKey}
-          isRegistered={gameUser.user?.isRegistered === true}
+          isRegistered={effectiveUser?.isRegistered === true}
           onHome={goHome}
           onUserUpdated={gameUser.setUser}
         />
