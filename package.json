@@ -13,6 +13,7 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
+    "@apps-in-toss/web-bridge": "2.10.8",
     "@apps-in-toss/web-framework": "2.10.8",
     "react": "19.2.8",
     "react-dom": "19.2.8"

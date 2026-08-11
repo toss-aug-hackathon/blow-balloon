@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@apps-in-toss/web-bridge':
+        specifier: 2.10.8
+        version: 2.10.8
       '@apps-in-toss/web-framework':
         specifier: 2.10.8
         version: 2.10.8(4d8c1d4b07c3a24119f2cea9ba40361c)
