@@ -1,6 +1,10 @@
 import type { BalloonBody } from '../types';
 import { clamp } from '../../utils/math';
-import { getBalloonAsset, getBalloonImage } from './balloonAssets';
+import {
+  getBalloonAsset,
+  getBalloonImage,
+  getFullResolutionBalloonImage,
+} from './balloonAssets';
 import {
   drawBalloonFace,
   type BalloonFaceMotion,
@@ -15,7 +19,14 @@ export function drawBalloon(
   faceMotion?: BalloonFaceMotion,
 ): void {
   const asset = getBalloonAsset(balloon.variant.assetId);
-  const image = getBalloonImage(asset.id);
+  const thumbnail = getBalloonImage(asset.id);
+  const fullResolutionImage = balloon.completed
+    ? null
+    : getFullResolutionBalloonImage(asset.id);
+  const image =
+    fullResolutionImage?.complete && fullResolutionImage.naturalWidth > 0
+      ? fullResolutionImage
+      : thumbnail;
   if (!image?.complete || image.naturalWidth === 0) return;
 
   const wobble =
@@ -34,7 +45,14 @@ export function drawBalloon(
   context.rotate(balloon.compressionAngle);
   context.scale(balloon.compressionX, balloon.compressionY);
   context.rotate(-balloon.compressionAngle);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  const softening = balloon.completed
+    ? 0
+    : clamp((drawWidth - 150) / 700, 0, 0.42);
+  if (softening > 0) context.filter = `blur(${softening}px)`;
   context.drawImage(image, -drawWidth / 2, bodyTop, drawWidth, drawHeight);
+  context.filter = 'none';
   if (faceMotion) {
     const faceScale = drawWidth * 0.62;
     context.save();
