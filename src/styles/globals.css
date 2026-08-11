@@ -3688,3 +3688,7 @@ h1 {
 .calibrating-screen > .eyebrow {
   font-size: 14px;
 }
+
+.calibration-eyebrow {
+  font-size: 14px !important;
+}

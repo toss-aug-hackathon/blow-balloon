@@ -334,7 +334,7 @@ export default function App() {
                 <i />
                 <span>쉿</span>
               </div>
-              <p className="eyebrow">
+              <p className="eyebrow calibration-eyebrow">
                 {detector.testModeEnabled ? '테스트 입력 준비 중' : '주변 소음 확인 중'}
               </p>
               <h1 className="calibration-title">
