@@ -5,14 +5,14 @@ export function createRandomVariant(
   previous?: BalloonVariant,
   random: () => number = Math.random,
 ): BalloonVariant {
-  const assetId = previous
-    ? ((previous.assetId + Math.floor(random() * (BALLOON_ASSETS.length - 1))) %
-        BALLOON_ASSETS.length) +
-      1
-    : Math.floor(random() * BALLOON_ASSETS.length) + 1;
+  const candidates = previous
+    ? BALLOON_ASSETS.filter(({ id }) => id !== previous.assetId)
+    : BALLOON_ASSETS;
+  const selected =
+    candidates[Math.floor(random() * candidates.length)] ?? BALLOON_ASSETS[0]!;
 
   return {
-    assetId,
+    assetId: selected.id,
     seed: Math.floor(random() * 1_000_000),
   };
 }

@@ -3,33 +3,41 @@ export type BalloonAsset = {
   width: number;
   height: number;
   url: string;
+  fullResolutionUrl: string;
 };
 
 const DIMENSIONS: ReadonlyArray<readonly [number, number]> = [
-  [144, 215], [99, 230], [128, 218], [87, 238], [160, 216], [131, 214],
-  [130, 215], [148, 222], [167, 203], [136, 229], [159, 213], [125, 206],
-  [153, 210], [194, 202], [134, 215], [157, 195], [143, 190], [143, 194],
-  [100, 224], [101, 212], [157, 206], [93, 210], [157, 198], [131, 194],
-  [116, 195], [152, 202], [162, 168], [138, 200], [129, 193], [146, 202],
-  [130, 199], [141, 185], [133, 207], [150, 199], [123, 199], [194, 181],
+  [6069, 9589], [7172, 9589], [5294, 9589], [7027, 9589], [3614, 10541],
+  [5346, 9775], [3895, 10341], [5004, 9589], [5631, 7976],
+  [3991, 9853], [5921, 8939], [5921, 7831], [4914, 8359], [4914, 8359],
+  [4914, 8649], [4432, 8649], [4145, 9250], [5590, 8396], [6266, 8951],
+  [6266, 8951], [6266, 8951], [5207, 8614], [8243, 8559], [6556, 9186],
+  [4917, 8872], [6406, 8376], [8434, 8086], [6847, 6977], [6484, 8176],
+  [5544, 9859], [5683, 8269], [6165, 8733], [4313, 9029], [5329, 9444],
+  [6429, 9099],
 ];
 
 export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
   ([width, height], index) => {
     const id = index + 1;
+    const filename = `balloon_${String(id).padStart(2, '0')}.png`;
     return {
       id,
       width,
       height,
-      url: `/balloons/balloon_${String(id).padStart(2, '0')}.svg`,
+      url: `/balloons/${filename}`,
+      fullResolutionUrl: `/balloons/full/${filename}`,
     };
   },
 );
 
 const imageCache = new Map<number, HTMLImageElement>();
+let fullResolutionImage: { assetId: number; image: HTMLImageElement } | null = null;
 
 export function getBalloonAsset(assetId: number): BalloonAsset {
-  return BALLOON_ASSETS[assetId - 1] ?? BALLOON_ASSETS[0]!;
+  return (
+    BALLOON_ASSETS.find(({ id }) => id === assetId) ?? BALLOON_ASSETS[0]!
+  );
 }
 
 export function getBalloonImage(assetId: number): HTMLImageElement | null {
@@ -42,6 +50,22 @@ export function getBalloonImage(assetId: number): HTMLImageElement | null {
   image.decoding = 'async';
   image.src = asset.url;
   imageCache.set(asset.id, image);
+  return image;
+}
+
+export function getFullResolutionBalloonImage(
+  assetId: number,
+): HTMLImageElement | null {
+  if (typeof Image === 'undefined') return null;
+  const asset = getBalloonAsset(assetId);
+  if (fullResolutionImage?.assetId === asset.id) {
+    return fullResolutionImage.image;
+  }
+
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = asset.fullResolutionUrl;
+  fullResolutionImage = { assetId: asset.id, image };
   return image;
 }
 

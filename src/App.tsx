@@ -215,7 +215,7 @@ export default function App() {
             >
               <img
                 className="mode-card__art balloon-art balloon-art--lung"
-                src="/balloons/balloon_09.svg"
+                src="/balloons/balloon_08.png"
                 alt=""
               />
               <span className="mode-card__number">01</span>
@@ -230,7 +230,7 @@ export default function App() {
             >
               <img
                 className="mode-card__art balloon-art balloon-art--rush"
-                src="/balloons/balloon_30.svg"
+                src="/balloons/balloon_22.png"
                 alt=""
               />
               <span className="mode-card__number">02</span>
@@ -252,7 +252,7 @@ export default function App() {
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
-              src="/balloons/balloon_03.svg"
+              src="/balloons/balloon_03.png"
               alt=""
             />
           </div>
