@@ -3292,14 +3292,16 @@ h1 {
 .game-screen > .game-hud > .game-stat--right > small,
 .game-screen > .game-hud > .game-stat--center > small {
   grid-row: 1;
+  grid-column: 1 / -1;
   margin-top: 0;
-  align-self: end;
+  text-align: center;
 }
 
 .game-screen > .game-hud > .game-stat--timer > strong,
 .game-screen > .game-hud > .game-stat--right > strong,
 .game-screen > .game-hud > .game-stat--center > strong {
   grid-row: 2;
+  grid-column: 2;
   margin-top: 2px;
   align-self: start;
 }
@@ -3307,7 +3309,8 @@ h1 {
 .game-screen > .game-hud > .game-stat--timer > .game-stat__icon,
 .game-screen > .game-hud > .game-stat--right > .game-stat__icon,
 .game-screen > .game-hud > .game-stat--center > .game-stat__icon {
-  grid-row: 1 / span 2;
+  grid-row: 2;
+  grid-column: 1;
   align-self: center;
 }
 
