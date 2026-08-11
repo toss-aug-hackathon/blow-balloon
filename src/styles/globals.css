@@ -2376,6 +2376,10 @@ h1 {
   display: none;
 }
 
+.game-screen > .test-wind-control {
+  bottom: calc(116px + var(--ait-safe-bottom));
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
