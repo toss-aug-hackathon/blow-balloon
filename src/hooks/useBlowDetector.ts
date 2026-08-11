@@ -29,10 +29,12 @@ export function useBlowDetector() {
   const animationRef = useRef<number | null>(null);
   const signalRef = useRef<DetectorFrame>({ ...EMPTY_FRAME });
   const simulatedWindRef = useRef(0);
+  const testModeEnabled = import.meta.env.VITE_BLOW_BALLOON_TEST_MODE === 'true';
   const [simulationEnabled] = useState(
     () =>
-      import.meta.env.DEV &&
-      new URLSearchParams(window.location.search).has('simulate'),
+      (import.meta.env.DEV &&
+        new URLSearchParams(window.location.search).has('simulate')) ||
+      testModeEnabled,
   );
   const [permission, setPermission] =
     useState<MicrophonePermission>('idle');
@@ -47,6 +49,7 @@ export function useBlowDetector() {
     }
     microphoneRef.current?.stop();
     microphoneRef.current = null;
+    simulatedWindRef.current = 0;
     detectorRef.current.reset();
     signalRef.current = { ...EMPTY_FRAME };
     setFrame(EMPTY_FRAME);
@@ -141,6 +144,7 @@ export function useBlowDetector() {
     resume,
     stop,
     simulationEnabled,
+    testModeEnabled,
     setSimulatedWind,
   };
 }
