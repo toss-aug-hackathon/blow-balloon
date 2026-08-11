@@ -5,10 +5,14 @@ describe('getBalloonFacePose', () => {
   it('moves from surprise to strain and then relief without jumps', () => {
     const surprised = getBalloonFacePose(0.4, 0);
     const strained = getBalloonFacePose(1, 0);
+    const sweating = getBalloonFacePose(0.75, 0);
+    const squeezed = getBalloonFacePose(0.96, 0);
     const relieved = getBalloonFacePose(1, 1);
 
     expect(surprised.eyeOpen).toBeGreaterThan(strained.eyeOpen);
     expect(strained.strain).toBe(1);
+    expect(sweating.squeeze).toBe(0);
+    expect(squeezed.squeeze).toBeGreaterThan(0.9);
     expect(relieved.relief).toBe(1);
     expect(relieved.mouthOpen).toBe(0);
   });
