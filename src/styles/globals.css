@@ -2502,6 +2502,57 @@ h1 {
   background-image: url('/header-balloon.png');
 }
 
+.game-screen > .game-hud > .game-stat--center {
+  display: grid;
+  grid-template-columns: 30px auto;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  text-align: left;
+}
+
+.game-screen > .game-hud > .game-stat--center > small,
+.game-screen > .game-hud > .game-stat--center > strong {
+  grid-column: 2;
+}
+
+.game-screen > .game-hud > .game-stat--center > .game-stat__icon {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.result-screen .result-card {
+  border: 1px solid rgba(255, 255, 255, 0.95);
+}
+
+.result-confetti i:nth-child(10) {
+  top: 9%;
+  left: 9%;
+  background: #f39a63;
+  transform: rotate(22deg);
+}
+
+.result-confetti i:nth-child(11) {
+  top: 15%;
+  right: 8%;
+  background: #70cdb1;
+  transform: rotate(-28deg);
+}
+
+.result-confetti i:nth-child(12) {
+  top: 27%;
+  left: 24%;
+  background: #e88bc0;
+  transform: rotate(64deg);
+}
+
+.result-confetti i:nth-child(13) {
+  top: 34%;
+  right: 28%;
+  background: #f4cb57;
+  transform: rotate(-52deg);
+}
+
 .game-screen > .game-wind-meter .wind-meter__heading {
   margin-bottom: 10px;
 }

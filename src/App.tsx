@@ -375,6 +375,7 @@ export default function App() {
             </button>
             {mode === 'lung-test' ? (
               <div className="game-stat game-stat--center">
+                <span className="game-stat__icon game-stat__icon--timer" aria-hidden="true" />
                 <small>{hud.isWaitingForBreath ? '바람을 불어주세요' : '현재 호흡'}</small>
                 <strong>{formatSeconds(hud.elapsedMs)}초</strong>
               </div>
