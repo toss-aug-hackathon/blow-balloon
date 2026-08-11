@@ -62,8 +62,9 @@ export function BalloonCanvas({
       .then(() => {
         if (!disposed) animationId = requestAnimationFrame(animate);
       })
-      .catch(() => {
-        if (!disposed) onInterrupted();
+      .catch((error: unknown) => {
+        console.error('풍선 이미지를 미리 불러오지 못했어요.', error);
+        if (!disposed) animationId = requestAnimationFrame(animate);
       });
 
     const handleVisibility = () => {
