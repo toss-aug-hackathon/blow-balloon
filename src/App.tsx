@@ -10,8 +10,11 @@ import { useSafeArea } from './hooks/useSafeArea';
 import { useScreenAwake } from './hooks/useScreenAwake';
 import { formatSeconds } from './utils/math';
 import { ResultScreen } from './components/ResultScreen';
+import { RankingScreen } from './components/RankingScreen';
+import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
+import { useGameUser } from './hooks/useGameUser';
 
 type AppScreen =
   | 'home'
@@ -20,6 +23,7 @@ type AppScreen =
   | 'countdown'
   | 'game'
   | 'result'
+  | 'ranking'
   | 'interrupted';
 
 const INITIAL_HUD: GameHudState = {
@@ -91,6 +95,7 @@ export default function App() {
   const [result, setResult] = useState<GameResult | null>(null);
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
+  const gameUser = useGameUser();
   const isPlaying = screen === 'game';
   useScreenAwake(isPlaying);
 
@@ -123,6 +128,11 @@ export default function App() {
     setResult(null);
     setHud(INITIAL_HUD);
     setScreen('mic-permission');
+  };
+
+  const openRanking = () => {
+    stopDetector();
+    setScreen('ranking');
   };
 
   const startMicrophone = async () => {
@@ -240,6 +250,11 @@ export default function App() {
               <span className="sr-only">풍선 많이 만들기 시작하기</span>
             </button>
           </section>
+          <HomeRecordPreview
+            userKey={gameUser.userKey}
+            isRegistered={gameUser.user?.isRegistered === true}
+            onOpenRanking={openRanking}
+          />
           <p className="privacy-note">마이크 소리는 저장하지 않아요.</p>
         </main>
       )}
@@ -426,7 +441,22 @@ export default function App() {
       )}
 
       {screen === 'result' && result && (
-        <ResultScreen result={result} onRetry={retry} onHome={goHome} />
+        <ResultScreen
+          result={result}
+          onRetry={retry}
+          onHome={goHome}
+          userKey={gameUser.userKey}
+          user={gameUser.user}
+          onRegistered={gameUser.setUser}
+        />
+      )}
+
+      {screen === 'ranking' && (
+        <RankingScreen
+          userKey={gameUser.userKey}
+          isRegistered={gameUser.user?.isRegistered === true}
+          onHome={goHome}
+        />
       )}
 
       {debugEnabled && screen !== 'home' && (
