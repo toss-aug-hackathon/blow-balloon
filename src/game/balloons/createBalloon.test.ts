@@ -4,7 +4,7 @@ import { createRandomVariant } from './createBalloon';
 
 describe('createRandomVariant', () => {
   it('only registers the WebP assets shipped with the app', () => {
-    expect(BALLOON_ASSETS).toHaveLength(16);
+    expect(BALLOON_ASSETS).toHaveLength(15);
     expect(
       BALLOON_ASSETS.every(
         ({ lungTestUrl, balloonRushUrl }) =>

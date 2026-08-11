@@ -1,5 +1,6 @@
 export type BalloonAsset = {
   id: number;
+  sourceId: number;
   width: number;
   height: number;
   lungTestUrl: string;
@@ -20,16 +21,16 @@ const DIMENSIONS: ReadonlyArray<readonly [number, number]> = [
 
 const FACE_PLACEMENTS: ReadonlyArray<readonly [number, number, number]> = [
   [0.5, 0.39, 0.3], // 01 star
-  [0.5, 0.18, 0.18], // 02 clover
+  [0.5, 0.12, 0.28], // 02 clover
   [0.5, 0.3, 0.18], // 03 twist
   [0.5, 0.32, 0.32], // 04 patterned round
   [0.5, 0.34, 0.36], // 05 round
-  [0.5, 0.34, 0.34], // 06 heart
+  [0.5, 0.27, 0.4], // 06 heart with surrounding balloons
   [0.5, 0.33, 0.36], // 07 round
   [0.5, 0.32, 0.24], // 08 cloud
-  [0.5, 0.37, 0.24], // 09 flower
+  [0.5, 0.42, 0.24], // 09 flower
   [0.5, 0.31, 0.28], // 10 shell
-  [0.5, 0.32, 0.24], // 11 candy
+  [0.5, 0.25, 0.24], // 11 candy
   [0.3, 0.29, 0.21], // 12 bow
   [0.5, 0.34, 0.35], // 13 heart
   [0.5, 0.38, 0.3], // 14 bunny
@@ -37,14 +38,20 @@ const FACE_PLACEMENTS: ReadonlyArray<readonly [number, number, number]> = [
   [0.36, 0.36, 0.22], // 16 crescent
 ];
 
-export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
-  ([width, height], index) => {
+const SOURCE_ASSET_IDS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16,
+] as const;
+
+export const BALLOON_ASSETS: readonly BalloonAsset[] = SOURCE_ASSET_IDS.map(
+  (sourceId, index) => {
+    const [width, height] = DIMENSIONS[sourceId - 1] ?? DIMENSIONS[0]!;
     const id = index + 1;
-    const filename = `balloon_${String(id).padStart(2, '0')}.webp`;
+    const filename = `balloon_${String(sourceId).padStart(2, '0')}.webp`;
     const [faceX, faceY, faceScale] =
-      FACE_PLACEMENTS[index] ?? FACE_PLACEMENTS[0]!;
+      FACE_PLACEMENTS[sourceId - 1] ?? FACE_PLACEMENTS[0]!;
     return {
       id,
+      sourceId,
       width,
       height,
       lungTestUrl: `/balloons/lung-test/${filename}`,

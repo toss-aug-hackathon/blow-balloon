@@ -6,6 +6,13 @@ export type BalloonFaceMotion = {
   settlingProgress: number;
 };
 
+export type BalloonFaceCharacter =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4;
+
 export type BalloonFacePose = {
   eyeOpen: number;
   mouthCurve: number;
@@ -52,7 +59,52 @@ function blinkOpenness(timeMs: number, seed: number): number {
   return position < 90 ? 1 - position / 90 : (position - 90) / 90;
 }
 
-export function drawBalloonFace(
+function getCharacterEffort(motion: BalloonFaceMotion): number {
+  const growthEffort = smoothstep(0.5, 0.86, motion.growthProgress);
+  return clamp(
+    growthEffort * (0.72 + motion.windStrength * 0.28) *
+      (1 - motion.settlingProgress),
+    0,
+    1,
+  );
+}
+
+function drawCharacterStrain(
+  context: CanvasRenderingContext2D,
+  timeMs: number,
+  seed: number,
+  motion: BalloonFaceMotion,
+  character: BalloonFaceCharacter,
+): void {
+  const effort = getCharacterEffort(motion);
+  if (effort < 0.03) return;
+
+  // The character itself owns its eyes and mouth. Do not draw a second face
+  // here; this layer is intentionally limited to one small character cue.
+  context.save();
+  if (effort > 0.62) {
+    const cycle = ((timeMs + seed * 13) % 1100) / 1100;
+    const sweatX = character === 1 ? -0.4 : character === 2 ? 0.38 : character === 4 ? -0.38 : 0.4;
+    const sweatScale = character === 3 ? 1.18 : character === 1 ? 0.86 : 1;
+    context.globalAlpha = (effort - 0.62) * 1.9;
+    context.translate(sweatX, -0.22 + cycle * 0.035);
+    context.scale(sweatScale, sweatScale);
+    context.fillStyle = '#2f9fbd';
+    context.beginPath();
+    context.moveTo(0, -0.09);
+    context.bezierCurveTo(-0.06, -0.01, -0.055, 0.06, 0, 0.07);
+    context.bezierCurveTo(0.055, 0.06, 0.06, -0.01, 0, -0.09);
+    context.fill();
+    context.fillStyle = 'rgba(236, 255, 255, 0.9)';
+    context.globalAlpha *= 0.9;
+    context.beginPath();
+    context.ellipse(-0.018, -0.025, 0.012, 0.025, 0.35, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawClassicFace(
   context: CanvasRenderingContext2D,
   timeMs: number,
   seed: number,
@@ -262,5 +314,180 @@ export function drawBalloonFace(
     context.fill();
     context.restore();
   }
+  drawCharacterStrain(context, timeMs, seed, motion, 0);
   context.restore();
+}
+
+function drawSleepyFace(
+  context: CanvasRenderingContext2D,
+  timeMs: number,
+  seed: number,
+  motion: BalloonFaceMotion,
+): void {
+  const pose = getBalloonFacePose(motion.growthProgress, motion.settlingProgress);
+  const blink = blinkOpenness(timeMs, seed);
+  const effort = getCharacterEffort(motion);
+  const eyeLift = 0.02 + pose.strain * 0.02 + effort * 0.05;
+
+  context.save();
+  context.strokeStyle = '#4a1d30';
+  context.fillStyle = '#4a1d30';
+  context.lineCap = 'round';
+  context.lineWidth = 0.055;
+  for (const side of [-1, 1]) {
+    const x = side * 0.2;
+    context.globalAlpha = 0.95;
+    context.beginPath();
+    context.moveTo(x - side * 0.1, 0.02 - eyeLift * blink);
+    context.quadraticCurveTo(x, -0.08 - eyeLift * blink, x + side * 0.1, 0.02 - eyeLift * blink);
+    context.stroke();
+  }
+  context.globalAlpha = 0.8;
+  context.beginPath();
+  context.arc(0, 0.23, 0.07 + pose.mouthOpen * 0.7 + effort * 0.035, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 0.3 + pose.cheekPuff * 2;
+  context.fillStyle = '#ff7280';
+  context.beginPath();
+  context.arc(-0.31, 0.18, 0.09, 0, Math.PI * 2);
+  context.arc(0.31, 0.18, 0.09, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+  drawCharacterStrain(context, timeMs, seed, motion, 1);
+}
+
+function drawWinkFace(
+  context: CanvasRenderingContext2D,
+  timeMs: number,
+  seed: number,
+  motion: BalloonFaceMotion,
+): void {
+  const pose = getBalloonFacePose(motion.growthProgress, motion.settlingProgress);
+  const blink = blinkOpenness(timeMs, seed);
+  const effort = getCharacterEffort(motion);
+  const winkTremble = Math.sin(timeMs * 0.032 + seed) * effort * 0.018;
+
+  context.save();
+  context.strokeStyle = '#432036';
+  context.fillStyle = '#432036';
+  context.lineCap = 'round';
+  context.lineWidth = 0.045;
+  context.beginPath();
+  context.ellipse(-0.2, 0.01, 0.09, 0.13 * blink, 0, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.moveTo(0.1, 0.02 + winkTremble);
+  context.quadraticCurveTo(0.2, -0.08 - effort * 0.035, 0.3, 0.02 - winkTremble);
+  context.stroke();
+  context.lineWidth = 0.035;
+  context.beginPath();
+  context.moveTo(-0.16, 0.24);
+  context.quadraticCurveTo(0, 0.3 + pose.strain * 0.08, 0.16, 0.24);
+  context.stroke();
+  context.globalAlpha = 0.45;
+  context.fillStyle = '#ff6472';
+  context.beginPath();
+  context.arc(-0.32, 0.2, 0.08, 0, Math.PI * 2);
+  context.arc(0.32, 0.2, 0.08, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+  drawCharacterStrain(context, timeMs, seed, motion, 2);
+}
+
+function drawStarryFace(
+  context: CanvasRenderingContext2D,
+  timeMs: number,
+  seed: number,
+  motion: BalloonFaceMotion,
+): void {
+  const blink = blinkOpenness(timeMs, seed);
+  const effort = getCharacterEffort(motion);
+  const twinkle =
+    (0.8 + Math.sin(timeMs * 0.006 + seed) * 0.2) * (1 - effort * 0.82);
+  const starPulse = 1 + Math.sin(timeMs * 0.009 + seed) * 0.08 * (1 - effort);
+
+  context.save();
+  context.fillStyle = '#482039';
+  context.strokeStyle = '#482039';
+  context.lineWidth = 0.03;
+  for (const side of [-1, 1]) {
+    const x = side * 0.2;
+    context.globalAlpha = 0.95;
+    context.beginPath();
+    context.arc(x, 0.02, 0.105 * blink, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = '#fffaf6';
+    context.globalAlpha = twinkle;
+    context.beginPath();
+    context.arc(x - 0.03, -0.025, 0.028 * starPulse, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = '#482039';
+  }
+  context.globalAlpha = 0.9;
+  context.beginPath();
+  context.arc(0, 0.25, 0.07, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+  drawCharacterStrain(context, timeMs, seed, motion, 3);
+}
+
+function drawFlusteredFace(
+  context: CanvasRenderingContext2D,
+  timeMs: number,
+  seed: number,
+  motion: BalloonFaceMotion,
+): void {
+  const blink = blinkOpenness(timeMs, seed);
+  const effort = getCharacterEffort(motion);
+  const gasp = 0.035 + effort * 0.045;
+
+  context.save();
+  context.strokeStyle = '#432036';
+  context.fillStyle = '#432036';
+  context.lineCap = 'round';
+  context.lineWidth = 0.045;
+  context.beginPath();
+  context.ellipse(-0.2, 0.02, 0.075, 0.12 * blink, 0, 0, Math.PI * 2);
+  context.ellipse(0.2, 0.02, 0.075, 0.12 * blink, 0, 0, Math.PI * 2);
+  context.fill();
+
+  // A small startled mouth replaces the tongue character.
+  context.fillStyle = '#5b1732';
+  context.beginPath();
+  context.ellipse(0, 0.26, 0.065 + effort * 0.02, gasp, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = '#ff6978';
+  context.globalAlpha = 0.5 + effort * 0.3;
+  context.beginPath();
+  context.arc(-0.31, 0.2, 0.085 + effort * 0.025, 0, Math.PI * 2);
+  context.arc(0.31, 0.2, 0.085 + effort * 0.025, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+  drawCharacterStrain(context, timeMs, seed, motion, 4);
+}
+
+export function drawBalloonFace(
+  context: CanvasRenderingContext2D,
+  timeMs: number,
+  seed: number,
+  faceId: number,
+  motion: BalloonFaceMotion,
+): void {
+  switch ((faceId % 5 + 5) % 5 as BalloonFaceCharacter) {
+    case 1:
+      drawSleepyFace(context, timeMs, seed, motion);
+      return;
+    case 2:
+      drawWinkFace(context, timeMs, seed, motion);
+      return;
+    case 3:
+      drawStarryFace(context, timeMs, seed, motion);
+      return;
+    case 4:
+      drawFlusteredFace(context, timeMs, seed, motion);
+      return;
+    default:
+      drawClassicFace(context, timeMs, seed, motion);
+  }
 }

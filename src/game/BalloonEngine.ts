@@ -326,7 +326,11 @@ export class BalloonEngine {
         timeMs,
         0.96,
         0,
-        undefined,
+        {
+          growthProgress: 1,
+          windStrength: 0,
+          settlingProgress: 1,
+        },
         this.getCompletedImage(balloon.variant.assetId),
       );
     }
@@ -337,24 +341,26 @@ export class BalloonEngine {
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       const baseRadius = 22;
       const maximumLungRadius = this.getMaximumActiveRadius();
+      const growthProgress = clamp(
+        (this.averageRadius(this.activeBalloon) - baseRadius) /
+          Math.max(1, maximumLungRadius - baseRadius),
+        0,
+        1,
+      );
       drawBalloon(
         context,
         this.activeBalloon,
         timeMs,
         1,
         windStrength,
-        this.mode === 'lung-test'
-          ? {
-              growthProgress: clamp(
-                (this.averageRadius(this.activeBalloon) - baseRadius) /
-                  Math.max(1, maximumLungRadius - baseRadius),
-                0,
-                1,
-              ),
-              windStrength,
-              settlingProgress: clamp(this.lungSettlingMs / 700, 0, 1),
-            }
-          : undefined,
+        {
+          growthProgress,
+          windStrength,
+          settlingProgress:
+            this.mode === 'lung-test'
+              ? clamp(this.lungSettlingMs / 700, 0, 1)
+              : 0,
+        },
         this.mode === 'balloon-rush'
           ? (getBalloonImage(this.activeBalloon.variant.assetId) ?? undefined)
           : undefined,
