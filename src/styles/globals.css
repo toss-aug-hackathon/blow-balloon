@@ -3481,7 +3481,7 @@ h1 {
 
 .ranking-choice .text-button {
   grid-row: 3;
-  justify-self: start;
+  justify-self: center;
 }
 
 .ranking-choice small {
@@ -3494,6 +3494,22 @@ h1 {
 
 .ranking-choice .text-button {
   margin-top: 9px;
+}
+
+/* Keep the celebration layer above the result composition. */
+.result-screen {
+  position: relative;
+}
+
+.result-screen > .result-confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.result-screen > .result-confetti i {
+  z-index: inherit;
 }
 
 .nickname-form {
