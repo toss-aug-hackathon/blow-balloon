@@ -35,7 +35,6 @@ const ACTIVE_BALLOON_BOTTOM_RATIO = 0.88;
 const LUNG_ACTIVE_BALLOON_START_Y_RATIO = 0.68;
 const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.5;
 const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
-
 export class BalloonEngine {
   private readonly mode: GameMode;
   private readonly context: CanvasRenderingContext2D;
@@ -56,6 +55,8 @@ export class BalloonEngine {
   private finished = false;
   private paused = false;
   private hudAccumulatorMs = 0;
+  private safeTopInset = 0;
+  private playBottomInset = 300;
   private background: CanvasGradient | null = null;
   private readonly completedImageCache = new Map<number, HTMLCanvasElement>();
   private activeSpawnXRatio = 0.5;
@@ -91,6 +92,14 @@ export class BalloonEngine {
   setPaused(paused: boolean): void {
     this.paused = paused;
     this.previousFrameTime = null;
+  }
+
+  setSafeTopInset(topInset: number): void {
+    this.safeTopInset = Math.max(0, topInset);
+  }
+
+  setPlayBottomInset(bottomInset: number): void {
+    this.playBottomInset = Math.max(0, bottomInset);
   }
 
   hasStartedLungBreath(): boolean {
@@ -132,6 +141,7 @@ export class BalloonEngine {
       deltaSeconds,
       this.width,
       this.height,
+      this.safeTopInset,
     );
     this.draw(timeMs, signal.windStrength);
     this.publishHud(deltaMs, signal);
@@ -230,24 +240,26 @@ export class BalloonEngine {
       0,
       1,
     );
+    const playHeight = this.getPlayHeight();
     if (this.mode === 'lung-test') {
       // Start in the lower third, then move the balloon's center to the
       // screen center while it grows quickly and dramatically.
       const centerMoveProgress = clamp(progress * 1.8, 0, 1);
       this.activeBalloon.x = this.width * 0.5;
       this.activeBalloon.y =
-        this.height *
-        (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
+        this.safeTopInset +
+        (playHeight - this.safeTopInset) *
           (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
-            LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO) *
-            centerMoveProgress);
+            (LUNG_ACTIVE_BALLOON_START_Y_RATIO -
+              LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO) *
+              centerMoveProgress);
       return;
     }
 
-    const upwardLift = this.height * 0.13 * progress;
+    const upwardLift = playHeight * 0.13 * progress;
     this.activeBalloon.x = this.width * this.activeSpawnXRatio;
     this.activeBalloon.y =
-      this.height * ACTIVE_BALLOON_BOTTOM_RATIO -
+      playHeight * ACTIVE_BALLOON_BOTTOM_RATIO -
       this.activeBalloon.radiusY * 0.68 -
       upwardLift;
   }
@@ -511,6 +523,10 @@ export class BalloonEngine {
 
   private averageRadius(balloon: BalloonBody): number {
     return (balloon.radiusX + balloon.radiusY) / 2;
+  }
+
+  private getPlayHeight(): number {
+    return Math.max(220, this.height - this.playBottomInset);
   }
 
   private getCompletedImage(assetId: number): CanvasImageSource | undefined {

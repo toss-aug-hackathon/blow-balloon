@@ -49,6 +49,12 @@ export function BalloonCanvas({
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = 'high';
       engine.resize(bounds.width, bounds.height);
+      engine.setPlayBottomInset(300);
+      const safeTop = Number.parseFloat(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--ait-safe-top'),
+      );
+      engine.setSafeTopInset(Number.isFinite(safeTop) ? safeTop : 0);
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);

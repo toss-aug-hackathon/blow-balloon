@@ -10,8 +10,11 @@ import { useSafeArea } from './hooks/useSafeArea';
 import { useScreenAwake } from './hooks/useScreenAwake';
 import { formatSeconds } from './utils/math';
 import { ResultScreen } from './components/ResultScreen';
+import { RankingScreen } from './components/RankingScreen';
+import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
+import { useGameUser } from './hooks/useGameUser';
 
 type AppScreen =
   | 'home'
@@ -20,6 +23,7 @@ type AppScreen =
   | 'countdown'
   | 'game'
   | 'result'
+  | 'ranking'
   | 'interrupted';
 
 const INITIAL_HUD: GameHudState = {
@@ -86,11 +90,13 @@ export default function App() {
 
   const [screen, setScreen] = useState<AppScreen>('home');
   const [mode, setMode] = useState<GameMode | null>(null);
+  const [permissionBalloonId, setPermissionBalloonId] = useState(1);
   const [countdown, setCountdown] = useState(3);
   const [hud, setHud] = useState<GameHudState>(INITIAL_HUD);
   const [result, setResult] = useState<GameResult | null>(null);
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
+  const gameUser = useGameUser();
   const isPlaying = screen === 'game';
   useScreenAwake(isPlaying);
 
@@ -120,9 +126,15 @@ export default function App() {
     stopDetector();
     setTestWindOn(false);
     setMode(nextMode);
+    setPermissionBalloonId(Math.floor(Math.random() * 16) + 1);
     setResult(null);
     setHud(INITIAL_HUD);
     setScreen('mic-permission');
+  };
+
+  const openRanking = () => {
+    stopDetector();
+    setScreen('ranking');
   };
 
   const startMicrophone = async () => {
@@ -240,6 +252,11 @@ export default function App() {
               <span className="sr-only">풍선 많이 만들기 시작하기</span>
             </button>
           </section>
+          <HomeRecordPreview
+            userKey={gameUser.userKey}
+            isRegistered={gameUser.user?.isRegistered === true}
+            onOpenRanking={openRanking}
+          />
           <p className="privacy-note">마이크 소리는 저장하지 않아요.</p>
         </main>
       )}
@@ -253,11 +270,11 @@ export default function App() {
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
-              src="/balloons/balloon-rush/balloon_03.webp"
+              src={`/balloons/${mode === 'lung-test' ? 'lung-test' : 'balloon-rush'}/balloon_${String(permissionBalloonId).padStart(2, '0')}.webp`}
               alt=""
             />
           </div>
-          <p className="eyebrow">
+          <p className="eyebrow mode-eyebrow">
             {mode === 'lung-test' ? '폐활량 테스트' : '풍선 많이 만들기'}
           </p>
           <h1>
@@ -288,7 +305,7 @@ export default function App() {
       )}
 
       {screen === 'calibrating' && (
-        <main className="screen center-screen">
+        <main className="screen center-screen calibration-screen">
           {detector.permission === 'denied' ||
           detector.permission === 'error' ? (
             <>
@@ -320,7 +337,7 @@ export default function App() {
               <p className="eyebrow">
                 {detector.testModeEnabled ? '테스트 입력 준비 중' : '주변 소음 확인 중'}
               </p>
-              <h1>
+              <h1 className="calibration-title">
                 {detector.testModeEnabled
                   ? '바람 버튼을 준비하고 있어요'
                   : '잠시만 조용히 있어주세요'}
@@ -343,7 +360,12 @@ export default function App() {
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
           <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '30초 준비!'}</p>
-          <strong key={countdown}>{countdown > 0 ? countdown : '후!'}</strong>
+          <strong
+            key={countdown}
+            data-countdown={countdown > 0 ? countdown : '후—!'}
+          >
+            {countdown > 0 ? countdown : '후—!'}
+          </strong>
           <WindMeter strength={detector.frame.windStrength} />
         </main>
       )}
@@ -368,21 +390,31 @@ export default function App() {
             </button>
             {mode === 'lung-test' ? (
               <div className="game-stat game-stat--center">
+                <span className="game-stat__icon game-stat__icon--timer" aria-hidden="true" />
                 <small>{hud.isWaitingForBreath ? '바람을 불어주세요' : '현재 호흡'}</small>
                 <strong>{formatSeconds(hud.elapsedMs)}초</strong>
               </div>
             ) : (
               <>
-                <div className="game-stat">
+                <div className="game-stat game-stat--timer">
+                  <span className="game-stat__icon game-stat__icon--timer" aria-hidden="true" />
                   <small>남은 시간</small>
-                  <strong>{Math.ceil(hud.remainingMs / 1000)}</strong>
+                  <strong>{Math.ceil(hud.remainingMs / 1000)}<em>초</em></strong>
                 </div>
                 <div className="game-stat game-stat--right">
+                  <span className="game-stat__icon game-stat__icon--balloon" aria-hidden="true" />
                   <small>완성</small>
-                  <strong>{hud.completedCount}개</strong>
+                  <strong>{hud.completedCount}<em>개</em></strong>
                 </div>
               </>
             )}
+          </div>
+          <div className="game-control-panel">
+          <p className="game-control-guide">
+            <span aria-hidden="true">〰</span>
+            <span>누르고 있는 동안 <strong>바람</strong>이 불어요</span>
+          </p>
+          <div className="game-wind-meter">
             <WindMeter strength={hud.windStrength} />
           </div>
           {detector.testModeEnabled && (
@@ -401,6 +433,7 @@ export default function App() {
               </button>
             </div>
           )}
+          </div>
         </main>
       )}
 
@@ -426,7 +459,22 @@ export default function App() {
       )}
 
       {screen === 'result' && result && (
-        <ResultScreen result={result} onRetry={retry} onHome={goHome} />
+        <ResultScreen
+          result={result}
+          onRetry={retry}
+          onHome={goHome}
+          userKey={gameUser.userKey}
+          user={gameUser.user}
+          onRegistered={gameUser.setUser}
+        />
+      )}
+
+      {screen === 'ranking' && (
+        <RankingScreen
+          userKey={gameUser.userKey}
+          isRegistered={gameUser.user?.isRegistered === true}
+          onHome={goHome}
+        />
       )}
 
       {debugEnabled && screen !== 'home' && (
