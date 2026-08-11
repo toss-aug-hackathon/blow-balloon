@@ -2578,6 +2578,67 @@ h1 {
   font-weight: 600;
 }
 
+.countdown-screen > p {
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #ffe4e1;
+  color: #d84d66;
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.05em;
+}
+
+.game-screen > .game-hud > .game-stat::before {
+  position: relative;
+  border: 3px solid #ff8190;
+  background: transparent;
+  color: transparent;
+  content: '';
+}
+
+.game-screen > .game-hud > .game-stat--timer::after {
+  position: absolute;
+  top: 9px;
+  left: 16px;
+  width: 3px;
+  height: 10px;
+  border-radius: 3px;
+  background: #ff8190;
+  content: '';
+  transform: rotate(-25deg);
+  transform-origin: bottom center;
+}
+
+.game-screen > .game-hud > .game-stat {
+  position: relative;
+}
+
+.game-screen > .game-hud > .game-stat--right::before {
+  position: relative;
+  border: 0;
+  border-radius: 55% 55% 52% 52%;
+  background: linear-gradient(145deg, #ff9ba6, #ff7182);
+  content: '';
+  box-shadow: inset 3px 3px 4px rgba(255, 255, 255, 0.35);
+}
+
+.game-screen > .game-hud > .game-stat--right::after {
+  position: absolute;
+  top: 30px;
+  left: 16px;
+  width: 2px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ff7182;
+  content: '';
+  transform: rotate(15deg);
+}
+
+.game-screen > .test-wind-control {
+  bottom: calc(156px + var(--ait-safe-bottom));
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
