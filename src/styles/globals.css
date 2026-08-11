@@ -3443,14 +3443,23 @@ h1 {
 
 .ranking-choice {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
   align-items: center;
   column-gap: 12px;
 }
 
 .ranking-choice p,
-.ranking-choice > .button {
+.ranking-choice > .button:not(.text-button) {
   grid-column: 1 / -1;
+}
+
+.ranking-choice p {
+  grid-row: 1;
+}
+
+.ranking-choice > .button:not(.text-button) {
+  grid-row: 2;
 }
 
 .ranking-choice .text-button,
@@ -3461,10 +3470,12 @@ h1 {
 }
 
 .ranking-choice .text-button {
+  grid-column: 1;
   justify-self: start;
 }
 
 .ranking-choice small {
+  grid-column: 2;
   justify-self: end;
   font-size: 14px;
   line-height: 1.2;
