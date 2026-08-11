@@ -3292,29 +3292,29 @@ h1 {
 }
 
 .home-ranking-entry {
-  position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  column-gap: 10px;
   min-height: 56px;
-  padding: 0 17px 0 58px;
+  padding: 10px 14px;
 }
 
 .home-ranking-entry::before {
-  position: absolute;
-  top: 50%;
-  left: 18px;
   display: grid;
   width: 28px;
   height: 28px;
   place-items: center;
+  grid-column: 1;
+  grid-row: 1;
   content: '🏆';
   font-size: 23px;
   line-height: 1;
-  transform: translateY(-50%);
 }
 
 .home-ranking-entry > span {
+  grid-column: 2;
+  min-width: 0;
   display: grid;
   gap: 2px;
 }
@@ -3331,6 +3331,8 @@ h1 {
 }
 
 .home-ranking-entry > strong {
+  grid-column: 3;
+  white-space: nowrap;
   font-size: 14px;
 }
 
@@ -3674,6 +3676,13 @@ h1 {
   grid-row: 2;
   grid-column: 1;
   align-self: center;
+}
+
+.game-screen > .game-hud > .game-stat--timer,
+.game-screen > .game-hud > .game-stat--right,
+.game-screen > .game-hud > .game-stat--center {
+  grid-template-columns: auto auto;
+  justify-content: center;
 }
 
 .calibrating-screen > .eyebrow {
