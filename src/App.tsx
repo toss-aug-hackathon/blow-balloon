@@ -381,10 +381,12 @@ export default function App() {
             ) : (
               <>
                 <div className="game-stat game-stat--timer">
+                  <span className="game-stat__icon game-stat__icon--timer" aria-hidden="true" />
                   <small>남은 시간</small>
                   <strong>{Math.ceil(hud.remainingMs / 1000)}<em>초</em></strong>
                 </div>
                 <div className="game-stat game-stat--right">
+                  <span className="game-stat__icon game-stat__icon--balloon" aria-hidden="true" />
                   <small>완성</small>
                   <strong>{hud.completedCount}<em>개</em></strong>
                 </div>

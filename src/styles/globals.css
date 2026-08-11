@@ -2476,6 +2476,32 @@ h1 {
   box-shadow: none;
 }
 
+.game-screen > .game-hud > .game-stat::before,
+.game-screen > .game-hud > .game-stat::after {
+  display: none;
+}
+
+.game-screen > .game-hud > .game-stat > .game-stat__icon {
+  display: block;
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  width: 30px;
+  height: 30px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.game-screen > .game-hud > .game-stat > .game-stat__icon--timer {
+  background-image: url('/header-clock.png');
+}
+
+.game-screen > .game-hud > .game-stat > .game-stat__icon--balloon {
+  width: 25px;
+  height: 30px;
+  background-image: url('/header-balloon.png');
+}
+
 .game-screen > .game-wind-meter .wind-meter__heading {
   margin-bottom: 10px;
 }
@@ -2869,11 +2895,10 @@ h1 {
   border: 0;
   border-radius: 0;
   background-color: transparent;
-  background-image: url('/header-icons.png');
-  background-position: -5px -8px;
+  background-image: url('/header-clock.png');
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: 76px 51px;
-  mix-blend-mode: screen;
+  background-size: contain;
 }
 
 .game-screen > .game-hud > .game-stat--timer::after {
@@ -2883,12 +2908,40 @@ h1 {
 .game-screen > .game-hud > .game-stat--right::before {
   border-radius: 0;
   background-color: transparent;
-  background-image: url('/header-icons.png');
-  background-position: -57px -9px;
+  background-image: url('/header-balloon.png');
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: 92px 61px;
+  background-size: contain;
   box-shadow: none;
-  mix-blend-mode: screen;
+}
+
+/* A fuller celebratory field behind the result composition. */
+.result-confetti i:nth-child(6) {
+  top: 12%;
+  left: 26%;
+  background: #f39a63;
+  transform: rotate(-24deg);
+}
+
+.result-confetti i:nth-child(7) {
+  top: 21%;
+  right: 25%;
+  background: #e88bc0;
+  transform: rotate(42deg);
+}
+
+.result-confetti i:nth-child(8) {
+  top: 34%;
+  left: 14%;
+  background: #f4cb57;
+  transform: rotate(58deg);
+}
+
+.result-confetti i:nth-child(9) {
+  top: 38%;
+  right: 15%;
+  background: #8d83e8;
+  transform: rotate(-48deg);
 }
 
 /* Restore the original test-control copy treatment inside the new panel. */
@@ -3156,4 +3209,18 @@ h1 {
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.56);
   color: var(--ink);
+}
+
+/* Center the complete result composition and keep its text comfortably readable. */
+.result-screen {
+  justify-content: center;
+  padding-top: calc(24px + var(--ait-safe-top));
+  padding-bottom: calc(24px + var(--ait-safe-bottom));
+}
+
+.result-screen .result-record-heading .eyebrow,
+.result-screen .result-grid dt,
+.result-screen .medical-note,
+.result-screen .snapshot-preview figcaption {
+  font-size: 14px;
 }

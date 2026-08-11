@@ -56,6 +56,10 @@ export function ResultScreen({
         <i />
         <i />
         <i />
+        <i />
+        <i />
+        <i />
+        <i />
       </div>
       <header className="result-record-heading">
         <p className="eyebrow">오늘의 기록</p>
