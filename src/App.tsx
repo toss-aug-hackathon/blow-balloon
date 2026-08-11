@@ -322,7 +322,7 @@ export default function App() {
               <p className="eyebrow">
                 {detector.testModeEnabled ? '테스트 입력 준비 중' : '주변 소음 확인 중'}
               </p>
-              <h1>
+              <h1 className="calibration-title">
                 {detector.testModeEnabled
                   ? '바람 버튼을 준비하고 있어요'
                   : '잠시만 조용히 있어주세요'}
@@ -382,11 +382,11 @@ export default function App() {
               <>
                 <div className="game-stat">
                   <small>남은 시간</small>
-                  <strong>{Math.ceil(hud.remainingMs / 1000)}</strong>
+                  <strong>{Math.ceil(hud.remainingMs / 1000)}<em>초</em></strong>
                 </div>
                 <div className="game-stat game-stat--right">
                   <small>완성</small>
-                  <strong>{hud.completedCount}개</strong>
+                  <strong>{hud.completedCount}<em>개</em></strong>
                 </div>
               </>
             )}

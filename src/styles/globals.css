@@ -2201,6 +2201,113 @@ h1 {
   45%, 55% { opacity: 1; }
 }
 
+/* Detail HUD: keep the countdown/calibration copy and game feedback readable. */
+.calibration-title {
+  white-space: nowrap;
+  font-size: clamp(22px, 6.5vw, 30px);
+  letter-spacing: -0.08em;
+}
+
+.game-hud {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.game-hud > .game-exit {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.game-hud > .game-stat {
+  position: static;
+  min-width: 86px;
+  padding: 8px 12px;
+  border: 1px solid rgba(242, 242, 247, 0.95);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.game-hud > .game-stat:not(.game-stat--right) {
+  grid-column: 2;
+}
+
+.game-hud > .game-stat--right {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.game-hud .game-stat small {
+  font-size: 12px;
+}
+
+.game-hud .game-stat strong {
+  margin-top: 2px;
+  color: #1c1c1e;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.game-hud .game-stat em {
+  margin-left: 2px;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.game-hud .wind-meter {
+  position: absolute;
+  top: 62px;
+  right: 16px;
+  left: 16px;
+  width: auto;
+  transform: none;
+}
+
+.wind-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 11px 14px;
+  border: 1px solid rgba(242, 242, 247, 0.95);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #8e8e93;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
+}
+
+.wind-meter__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.wind-meter__heading strong {
+  color: #1c1c1e;
+  font-size: 13px;
+}
+
+.wind-meter__track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(51, 30, 40, 0.1);
+}
+
+.wind-meter__track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd600, #ff69b4);
+  transition: width 120ms ease-out;
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
