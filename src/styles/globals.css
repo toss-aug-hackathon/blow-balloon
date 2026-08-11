@@ -2558,6 +2558,18 @@ h1 {
   transform: rotate(-52deg);
 }
 
+.result-confetti i:nth-child(14) { top: 6%; left: 38%; background: #8d83e8; transform: rotate(18deg); }
+.result-confetti i:nth-child(15) { top: 11%; right: 38%; background: #70cdb1; transform: rotate(-61deg); }
+.result-confetti i:nth-child(16) { top: 22%; left: 4%; background: #e88bc0; transform: rotate(48deg); }
+.result-confetti i:nth-child(17) { top: 29%; right: 30%; background: #f39a63; transform: rotate(-18deg); }
+.result-confetti i:nth-child(18) { top: 37%; left: 34%; background: #f4cb57; transform: rotate(72deg); }
+.result-confetti i:nth-child(19) { top: 43%; right: 3%; background: #8d83e8; transform: rotate(36deg); }
+.result-confetti i:nth-child(20) { top: 50%; left: 4%; background: #70cdb1; transform: rotate(-42deg); }
+.result-confetti i:nth-child(21) { top: 57%; right: 37%; background: #e88bc0; transform: rotate(20deg); }
+.result-confetti i:nth-child(22) { top: 65%; left: 11%; background: #f39a63; transform: rotate(-66deg); }
+.result-confetti i:nth-child(23) { top: 70%; right: 7%; background: #f4cb57; transform: rotate(54deg); }
+.result-confetti i:nth-child(24) { top: 78%; left: 29%; background: #8d83e8; transform: rotate(-26deg); }
+
 .game-screen > .game-wind-meter .wind-meter__heading {
   margin-bottom: 10px;
 }
@@ -3443,15 +3455,14 @@ h1 {
 
 .ranking-choice {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: auto auto auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
   align-items: center;
-  column-gap: 12px;
 }
 
 .ranking-choice p,
 .ranking-choice > .button:not(.text-button) {
-  grid-column: 1 / -1;
+  grid-column: 1;
 }
 
 .ranking-choice p {
@@ -3464,22 +3475,21 @@ h1 {
 
 .ranking-choice .text-button,
 .ranking-choice small {
-  grid-row: 3;
+  grid-column: 1;
   margin: 0;
-  white-space: nowrap;
 }
 
 .ranking-choice .text-button {
-  grid-column: 1;
+  grid-row: 3;
   justify-self: start;
 }
 
 .ranking-choice small {
-  grid-column: 2;
-  justify-self: end;
+  grid-row: 4;
+  justify-self: center;
   font-size: 14px;
   line-height: 1.2;
-  text-align: right;
+  text-align: center;
 }
 
 .ranking-choice .text-button {
