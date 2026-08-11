@@ -6,6 +6,11 @@ describe('createRandomVariant', () => {
   it('only registers the WebP assets shipped with the app', () => {
     expect(BALLOON_ASSETS).toHaveLength(16);
     expect(BALLOON_ASSETS.every(({ url }) => url.endsWith('.webp'))).toBe(true);
+    expect(
+      BALLOON_ASSETS.every(({ previewUrl }) =>
+        previewUrl.startsWith('/balloons/preview/'),
+      ),
+    ).toBe(true);
   });
 
   it('avoids immediately repeating the same image', () => {
@@ -26,6 +31,13 @@ describe('createRandomVariant', () => {
       expect(asset.face.y).toBeLessThan(1);
       expect(asset.face.scale).toBeGreaterThan(0);
       expect(asset.face.scale).toBeLessThanOrEqual(0.52);
+      const halfWidth = asset.face.scale * 0.58;
+      const halfHeight =
+        asset.face.scale * 0.52 * (asset.width / asset.height);
+      expect(asset.face.x - halfWidth).toBeGreaterThanOrEqual(0);
+      expect(asset.face.x + halfWidth).toBeLessThanOrEqual(1);
+      expect(asset.face.y - halfHeight).toBeGreaterThanOrEqual(0);
+      expect(asset.face.y + halfHeight).toBeLessThanOrEqual(1);
     }
   });
 });

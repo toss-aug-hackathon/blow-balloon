@@ -36,11 +36,13 @@ pnpm dev
 `.env.local`에서 다음 값을 설정합니다.
 
 ```dotenv
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_BLOW_BALLOON_TEST_MODE=false
 ```
 
-- `false`: 실제 마이크 입력을 사용합니다.
-- `true`: 마이크 권한을 요청하지 않고 게임 화면의 `바람 불기` 버튼으로 입력을 테스트합니다.
+- `VITE_SUPABASE_URL`: Supabase 프로젝트 URL입니다.
+- `VITE_BLOW_BALLOON_TEST_MODE=false`: 실제 마이크 입력을 사용합니다.
+- `VITE_BLOW_BALLOON_TEST_MODE=true`: 마이크 권한 없이 게임 화면의 `바람 불기` 버튼으로 입력을 테스트합니다.
 
 환경 변수를 변경한 뒤에는 개발 서버를 다시 시작해야 합니다. `.env.local`은 Git에 포함되지 않습니다.
 

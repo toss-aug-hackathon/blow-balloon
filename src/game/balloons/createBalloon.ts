@@ -43,6 +43,6 @@ export function createBalloonBody(
     compressionY: 1,
     compressionAngle: 0,
     completed: false,
-    depth: 0.94 + Math.random() * 0.12,
+    depth: 1.06,
   };
 }

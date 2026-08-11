@@ -3,6 +3,7 @@ export type BalloonAsset = {
   width: number;
   height: number;
   url: string;
+  previewUrl: string;
   face: {
     x: number;
     y: number;
@@ -18,22 +19,22 @@ const DIMENSIONS: ReadonlyArray<readonly [number, number]> = [
 ];
 
 const FACE_PLACEMENTS: ReadonlyArray<readonly [number, number, number]> = [
-  [0.5, 0.31, 0.52], // 01 round
-  [0.5, 0.3, 0.46], // 02 heart
-  [0.5, 0.32, 0.5], // 03 oval
-  [0.5, 0.3, 0.36], // 04 star
-  [0.5, 0.32, 0.5], // 05 long
-  [0.5, 0.31, 0.5], // 06 oval
-  [0.5, 0.32, 0.34], // 07 twist
-  [0.5, 0.32, 0.5], // 08 pear
-  [0.5, 0.37, 0.28], // 09 clover
-  [0.5, 0.31, 0.34], // 10 twist
-  [0.5, 0.32, 0.46], // 11 clear round
-  [0.5, 0.31, 0.38], // 12 shell
-  [0.5, 0.32, 0.46], // 13 patterned oval
-  [0.5, 0.31, 0.5], // 14 oval
-  [0.5, 0.31, 0.5], // 15 oval
-  [0.5, 0.31, 0.5], // 16 oval
+  [0.5, 0.39, 0.3], // 01 star
+  [0.5, 0.18, 0.18], // 02 clover
+  [0.5, 0.3, 0.18], // 03 twist
+  [0.5, 0.32, 0.32], // 04 patterned round
+  [0.5, 0.34, 0.36], // 05 round
+  [0.5, 0.34, 0.34], // 06 heart
+  [0.5, 0.33, 0.36], // 07 round
+  [0.5, 0.32, 0.24], // 08 cloud
+  [0.5, 0.37, 0.24], // 09 flower
+  [0.5, 0.31, 0.28], // 10 shell
+  [0.5, 0.32, 0.24], // 11 candy
+  [0.3, 0.29, 0.21], // 12 bow
+  [0.5, 0.34, 0.35], // 13 heart
+  [0.5, 0.38, 0.3], // 14 bunny
+  [0.5, 0.34, 0.18], // 15 wave
+  [0.36, 0.36, 0.22], // 16 crescent
 ];
 
 export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
@@ -47,6 +48,7 @@ export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
       width,
       height,
       url: `/balloons/${filename}`,
+      previewUrl: `/balloons/preview/${filename}`,
       face: { x: faceX, y: faceY, scale: faceScale },
     };
   },
@@ -69,7 +71,7 @@ export function getBalloonImage(assetId: number): HTMLImageElement | null {
 
   const image = new Image();
   image.decoding = 'async';
-  image.src = asset.url;
+  image.src = asset.previewUrl;
   imageCache.set(asset.id, image);
   return image;
 }

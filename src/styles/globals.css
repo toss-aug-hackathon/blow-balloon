@@ -2411,9 +2411,9 @@ h1 {
   left: 56px;
   padding: 6px 13px;
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.9);
   text-align: left;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .game-stat--right {
@@ -2448,8 +2448,10 @@ h1 {
   flex-direction: row;
   gap: 9px;
   padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
   color: #75616c;
   font-size: 10px;
+  backdrop-filter: none;
   transform: translateX(-50%);
 }
 

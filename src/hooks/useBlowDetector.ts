@@ -23,12 +23,13 @@ const EMPTY_FRAME: DetectorFrame = {
   currentBreathDurationMs: 0,
 };
 
-export function useBlowDetector() {
+export function useBlowDetector(publishUiFrames = true) {
   const microphoneRef = useRef<MicrophoneInput | null>(null);
   const detectorRef = useRef(new BlowDetector());
   const animationRef = useRef<number | null>(null);
   const signalRef = useRef<DetectorFrame>({ ...EMPTY_FRAME });
   const simulatedWindRef = useRef(0);
+  const publishUiFramesRef = useRef(publishUiFrames);
   const testModeEnabled = import.meta.env.VITE_BLOW_BALLOON_TEST_MODE === 'true';
   const [simulationEnabled] = useState(
     () =>
@@ -41,6 +42,10 @@ export function useBlowDetector() {
   const [isCalibrated, setIsCalibrated] = useState(false);
   const [frame, setFrame] = useState<DetectorFrame>(EMPTY_FRAME);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    publishUiFramesRef.current = publishUiFrames;
+  }, [publishUiFrames]);
 
   const stop = useCallback(() => {
     if (animationRef.current !== null) {
@@ -92,7 +97,10 @@ export function useBlowDetector() {
           signalRef.current = detectorRef.current.update(rms, now, breathiness);
         }
 
-        if (now - lastUiUpdate >= BLOW_CONFIG.uiUpdateIntervalMs) {
+        if (
+          publishUiFramesRef.current &&
+          now - lastUiUpdate >= BLOW_CONFIG.uiUpdateIntervalMs
+        ) {
           setFrame({ ...signalRef.current });
           lastUiUpdate = now;
         }
