@@ -31,9 +31,6 @@ type BalloonEngineOptions = {
   onFinish: (result: GameResult) => void;
 };
 
-const LUNG_ACTIVE_BALLOON_Y_RATIO = 0.5;
-const RUSH_ACTIVE_BALLOON_Y_RATIO = 0.64;
-
 export class BalloonEngine {
   private readonly mode: GameMode;
   private readonly context: CanvasRenderingContext2D;
@@ -54,6 +51,8 @@ export class BalloonEngine {
   private finished = false;
   private paused = false;
   private hudAccumulatorMs = 0;
+  private safeTopInset = 0;
+  private playBottomInset = 300;
   private background: CanvasGradient | null = null;
   private readonly completedImageCache = new Map<number, HTMLCanvasElement>();
 
@@ -86,6 +85,14 @@ export class BalloonEngine {
   setPaused(paused: boolean): void {
     this.paused = paused;
     this.previousFrameTime = null;
+  }
+
+  setSafeTopInset(topInset: number): void {
+    this.safeTopInset = Math.max(0, topInset);
+  }
+
+  setPlayBottomInset(bottomInset: number): void {
+    this.playBottomInset = Math.max(0, bottomInset);
   }
 
   hasStartedLungBreath(): boolean {
@@ -127,6 +134,7 @@ export class BalloonEngine {
       deltaSeconds,
       this.width,
       this.height,
+      this.safeTopInset,
     );
     this.draw(timeMs, signal.windStrength);
     this.publishHud(deltaMs, signal);
@@ -154,7 +162,8 @@ export class BalloonEngine {
       this.totalBlowingMs += deltaMs;
       this.windIntegral += signal.windStrength * deltaMs;
       this.peakWind = Math.max(this.peakWind, signal.windStrength);
-      const maximumRadius = Math.min(this.width, this.height) * 0.48;
+      const maximumRadius =
+        Math.min(this.width, this.getPlayHeight()) * 0.48;
       const growthPerSecond =
         Math.max(1, maximumRadius - 22) /
         (LUNG_MAX_GROWTH_DURATION_MS / 1000);
@@ -193,7 +202,7 @@ export class BalloonEngine {
     const currentRadius = this.averageRadius(this.activeBalloon);
     const maximumRadius =
       this.mode === 'lung-test'
-        ? Math.min(this.width, this.height) * 0.48
+        ? Math.min(this.width, this.getPlayHeight()) * 0.48
         : 62;
     if (currentRadius >= maximumRadius) return;
     const factor = 1 + Math.min(amount, maximumRadius - currentRadius) / currentRadius;
@@ -215,11 +224,20 @@ export class BalloonEngine {
 
   private positionActiveBalloon(): void {
     this.activeBalloon.x = this.width * 0.5;
-    this.activeBalloon.y =
-      this.height *
-      (this.mode === 'lung-test'
-        ? LUNG_ACTIVE_BALLOON_Y_RATIO
-        : RUSH_ACTIVE_BALLOON_Y_RATIO);
+    const playHeight = this.getPlayHeight();
+    const floorGap = 24;
+    if (this.mode === 'lung-test') {
+      const centerY = this.safeTopInset + (playHeight - this.safeTopInset) * 0.6;
+      this.activeBalloon.y = Math.max(
+        this.activeBalloon.radiusY + 12,
+        Math.min(playHeight - this.activeBalloon.radiusY - 12, centerY),
+      );
+      return;
+    }
+    this.activeBalloon.y = Math.max(
+      this.activeBalloon.radiusY + 12,
+      playHeight - this.activeBalloon.radiusY - floorGap,
+    );
   }
 
   private finishLungTest(): void {
@@ -304,7 +322,8 @@ export class BalloonEngine {
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       const baseRadius = 22;
-      const maximumLungRadius = Math.min(this.width, this.height) * 0.48;
+      const maximumLungRadius =
+        Math.min(this.width, this.getPlayHeight()) * 0.48;
       drawBalloon(
         context,
         this.activeBalloon,
@@ -333,6 +352,10 @@ export class BalloonEngine {
 
   private averageRadius(balloon: BalloonBody): number {
     return (balloon.radiusX + balloon.radiusY) / 2;
+  }
+
+  private getPlayHeight(): number {
+    return Math.max(220, this.height - this.playBottomInset);
   }
 
   private getCompletedImage(assetId: number): CanvasImageSource | undefined {
