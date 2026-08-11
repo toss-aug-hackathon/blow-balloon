@@ -78,8 +78,8 @@ export function drawBalloonFace(
     0.012;
 
   context.save();
-  context.globalAlpha = 0.2 + pose.cheekPuff * 2.5;
-  context.fillStyle = '#ff4968';
+  context.globalAlpha = 0.24 + pose.cheekPuff * 2.2;
+  context.fillStyle = '#ff5d67';
   context.beginPath();
   context.arc(-0.3, 0.2, cheekRadius, 0, Math.PI * 2);
   context.arc(0.3, 0.2, cheekRadius, 0, Math.PI * 2);
@@ -97,24 +97,60 @@ export function drawBalloonFace(
   if (normalAlpha > 0) {
     for (const side of [-1, 1]) {
       const x = side * 0.2;
+      const eyeY = 0.015;
       context.save();
       context.globalAlpha = normalAlpha;
-      context.fillStyle = 'rgba(255,255,255,0.9)';
+      const openHeight = Math.max(0.008, eyeOpen * 1.12);
+      context.fillStyle = 'rgba(255,252,248,0.96)';
+      context.strokeStyle = '#4a1d30';
+      context.lineWidth = 0.025;
       context.beginPath();
-      context.ellipse(x, -0.02, 0.105, Math.max(0.008, eyeOpen), 0, 0, Math.PI * 2);
+      context.ellipse(x, eyeY, 0.125, openHeight, 0, 0, Math.PI * 2);
       context.fill();
-      context.fillStyle = '#3f2433';
+      context.stroke();
+
+      const iris = context.createRadialGradient(
+        x + pupilShift - 0.018,
+        eyeY - 0.05,
+        0.008,
+        x + pupilShift,
+        eyeY + 0.015,
+        0.07,
+      );
+      iris.addColorStop(0, '#8f2948');
+      iris.addColorStop(0.5, '#5a1732');
+      iris.addColorStop(1, '#2f1022');
+      context.fillStyle = iris;
       context.beginPath();
       context.ellipse(
         x + pupilShift,
-        -0.01,
-        0.045,
-        Math.max(0.006, eyeOpen * 0.62),
+        eyeY + 0.015,
+        0.066,
+        Math.max(0.006, openHeight * 0.76),
         0,
         0,
         Math.PI * 2,
       );
       context.fill();
+
+      if (openHeight > 0.055) {
+        context.fillStyle = 'rgba(255,255,255,0.94)';
+        context.beginPath();
+        context.ellipse(
+          x + pupilShift - 0.026,
+          eyeY - 0.05,
+          0.018,
+          0.026,
+          -0.35,
+          0,
+          Math.PI * 2,
+        );
+        context.fill();
+        context.globalAlpha = normalAlpha * 0.72;
+        context.beginPath();
+        context.arc(x + pupilShift + 0.025, eyeY + 0.055, 0.009, 0, Math.PI * 2);
+        context.fill();
+      }
       context.restore();
     }
   }
@@ -150,22 +186,23 @@ export function drawBalloonFace(
   for (const side of [-1, 1]) {
     const x = side * 0.2;
     context.beginPath();
-    context.moveTo(x - side * 0.07, -0.2 + browTension);
+    context.moveTo(x - side * 0.07, -0.22 + browTension);
     context.quadraticCurveTo(
       x,
-      -0.24 - pose.relief * 0.025,
+      -0.265 - pose.relief * 0.025,
       x + side * 0.07,
-      -0.2 - browTension,
+      -0.22 - browTension,
     );
     context.stroke();
   }
 
-  const mouthWidth = 0.1 + pose.strain * 0.07 + pose.relief * 0.08;
+  const mouthWidth = 0.105 + pose.strain * 0.07 + pose.relief * 0.08;
   const mouthY = 0.24 + mouthTremble;
   if (normalAlpha > 0) {
     context.save();
     context.globalAlpha = normalAlpha;
     if (pose.mouthOpen > 0.012) {
+      context.fillStyle = '#681a32';
       context.beginPath();
       context.ellipse(
         0,
