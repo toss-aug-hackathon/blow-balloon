@@ -2768,6 +2768,129 @@ h1 {
   font-weight: 600;
 }
 
+/* Make the live meter label readable at a glance. */
+.game-screen > .game-control-panel .wind-meter__label {
+  color: #51474d;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.game-screen > .game-control-panel .wind-meter__heading strong {
+  color: #292329;
+  font-size: 24px;
+  font-weight: 850;
+}
+
+/* Carry the game panel language into the result screen. */
+.result-screen {
+  padding-right: 16px;
+  padding-left: 16px;
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
+}
+
+.result-record-heading {
+  width: min(100%, 358px);
+  margin-bottom: 18px;
+  padding: 0;
+}
+
+.result-record-heading .eyebrow {
+  display: inline-flex;
+  margin-bottom: 10px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(255, 126, 143, 0.14);
+  color: #e66b7e;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.result-record-heading h1 {
+  color: var(--ink);
+  font-size: clamp(48px, 14vw, 64px);
+}
+
+.result-record-heading .result-title {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.result-screen .result-card {
+  width: min(100%, 358px);
+  padding: 18px 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 14px 36px rgba(91, 46, 58, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.result-screen .result-grid {
+  gap: 8px;
+}
+
+.result-screen .result-grid > div {
+  padding: 13px 7px;
+  border-radius: 16px;
+  background: rgba(255, 248, 247, 0.72);
+}
+
+.result-screen .result-grid dt {
+  color: #8a777f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.result-screen .result-grid dd {
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 850;
+}
+
+.result-screen .medical-note {
+  margin: 14px 0 0;
+  color: #8a777f;
+  font-size: 11px;
+}
+
+.result-screen .button-stack {
+  width: min(100%, 358px);
+  margin-top: 20px;
+}
+
+/* Use the supplied glossy header icons as a small image sprite. */
+.game-screen > .game-hud > .game-stat--timer::before {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('/header-icons.png');
+  background-position: -5px -8px;
+  background-repeat: no-repeat;
+  background-size: 76px 51px;
+  mix-blend-mode: screen;
+}
+
+.game-screen > .game-hud > .game-stat--timer::after {
+  display: none;
+}
+
+.game-screen > .game-hud > .game-stat--right::before {
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('/header-icons.png');
+  background-position: -57px -9px;
+  background-repeat: no-repeat;
+  background-size: 92px 61px;
+  box-shadow: none;
+  mix-blend-mode: screen;
+}
+
 /* Restore the original test-control copy treatment inside the new panel. */
 .game-screen > .game-control-panel > .game-control-guide {
   display: none;
