@@ -71,9 +71,10 @@ export default defineConfig({
     withHomeButton: false,
     withTitle: false,
     transparentBackground: true,
-    theme: "dark",
+    theme: "light",
   },
   webViewProps: {
+    type: "game",
     bounces: false,
     pullToRefreshEnabled: false,
     overScrollMode: "never",
