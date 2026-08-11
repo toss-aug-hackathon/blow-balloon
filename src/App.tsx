@@ -345,7 +345,12 @@ export default function App() {
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
           <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '30초 준비!'}</p>
-          <strong key={countdown}>{countdown > 0 ? countdown : '후—!'}</strong>
+          <strong
+            key={countdown}
+            data-countdown={countdown > 0 ? countdown : '후—!'}
+          >
+            {countdown > 0 ? countdown : '후—!'}
+          </strong>
           <WindMeter strength={detector.frame.windStrength} />
         </main>
       )}

@@ -1236,6 +1236,7 @@ h1 {
 }
 
 .home-header h1 {
+  margin: 0 auto;
   max-width: 430px;
   font-size: clamp(39px, 10.8vw, 54px);
   line-height: 1.16;
@@ -2104,6 +2105,24 @@ h1 {
   right: auto;
   left: 50%;
   transform: translateX(-50%) rotate(2deg);
+}
+
+.countdown-screen > strong {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  text-shadow: none;
+}
+
+.countdown-screen > strong::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  color: #fff0a8;
+  content: attr(data-countdown);
+  transform: translate(11px, 11px) scale(1.06);
+  transform-origin: center;
+  filter: blur(0.2px);
 }
 
 @media (max-height: 680px) {
