@@ -15,6 +15,7 @@ import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
 import { useGameUser } from './hooks/useGameUser';
+import { prefetchRankings } from './api/gameApi';
 
 type AppScreen =
   | 'home'
@@ -56,6 +57,10 @@ function readMicStartButtonState(): boolean {
 
 export default function App() {
   useSafeArea();
+
+  useEffect(() => {
+    prefetchRankings();
+  }, []);
 
   useEffect(() => {
     let startX = 0;
@@ -265,6 +270,12 @@ export default function App() {
             <p>바람을 불어 나만의 기록을 만들어보세요.</p>
           </header>
 
+          <HomeRecordPreview
+            userKey={gameUser.userKey}
+            isRegistered={gameUser.user?.isRegistered === true}
+            onOpenRanking={openRanking}
+          />
+
           <section className="mode-list" aria-label="게임 모드 선택">
             <button
               type="button"
@@ -281,10 +292,10 @@ export default function App() {
                 src="/selection/heart-balloon-blink.webp"
                 alt=""
               />
-              <strong>폐활량 테스트</strong>
-              <small>한 번의 숨으로 풍선을 얼마나 크게 만들 수 있을까요?</small>
+              <strong>풍선 크게 불기</strong>
+              <small>풍선 크기를 키우고, 같은 크기라면 더 빠르게 기록해요.</small>
               <span className="mode-card__arrow" aria-hidden="true">→</span>
-              <span className="sr-only">폐활량 테스트 시작하기</span>
+              <span className="sr-only">풍선 크게 불기 시작하기</span>
             </button>
             <button
               type="button"
@@ -296,17 +307,12 @@ export default function App() {
                 src="/selection/balloon-bunch.webp"
                 alt=""
               />
-              <strong>풍선 많이 만들기</strong>
-              <small>30초 동안 풍선을 최대한 많이 만들어보세요.</small>
+              <strong>풍선 스피드런</strong>
+              <small>30초 동안 최대한 많이 만들고 마지막 풍선까지의 시간을 겨뤄요.</small>
               <span className="mode-card__arrow" aria-hidden="true">→</span>
-              <span className="sr-only">풍선 많이 만들기 시작하기</span>
+              <span className="sr-only">풍선 스피드런 시작하기</span>
             </button>
           </section>
-          <HomeRecordPreview
-            userKey={gameUser.userKey}
-            isRegistered={gameUser.user?.isRegistered === true}
-            onOpenRanking={openRanking}
-          />
           <p className="privacy-note">마이크 소리는 저장하지 않아요.</p>
         </main>
       )}
@@ -325,7 +331,7 @@ export default function App() {
             />
           </div>
           <p className="eyebrow mode-eyebrow">
-            {mode === 'lung-test' ? '폐활량 테스트' : '풍선 많이 만들기'}
+            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
           </p>
           <h1>
             {detector.testModeEnabled
@@ -518,6 +524,7 @@ export default function App() {
           result={result}
           onRetry={retry}
           onHome={goHome}
+          onOpenRanking={openRanking}
           userKey={gameUser.userKey}
           user={gameUser.user}
           onRegistered={gameUser.setUser}
@@ -529,6 +536,7 @@ export default function App() {
           userKey={gameUser.userKey}
           isRegistered={gameUser.user?.isRegistered === true}
           onHome={goHome}
+          onUserUpdated={gameUser.setUser}
         />
       )}
 
