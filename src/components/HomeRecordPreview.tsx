@@ -39,7 +39,7 @@ export function HomeRecordPreview({
       <button className="home-ranking-entry" type="button" onClick={onOpenRanking}>
         <span>
           <small>내 기록</small>
-          <b>게임 후 랭킹에 등록하면 여기서 볼 수 있어요.</b>
+          <b>게임 후 내 랭킹을 확인해봐요.</b>
         </span>
         <strong>랭킹 <i aria-hidden="true">→</i></strong>
       </button>
