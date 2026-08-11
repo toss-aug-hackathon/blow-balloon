@@ -92,6 +92,7 @@ export default function App() {
   } = detector;
   const [screen, setScreen] = useState<AppScreen>('home');
   const [mode, setMode] = useState<GameMode | null>(null);
+  const [permissionBalloonId, setPermissionBalloonId] = useState(1);
   const [countdown, setCountdown] = useState(3);
   const [hud, setHud] = useState<GameHudState>(INITIAL_HUD);
   const [result, setResult] = useState<GameResult | null>(null);
@@ -120,6 +121,7 @@ export default function App() {
     stopDetector();
     setTestWindOn(false);
     setMode(nextMode);
+    setPermissionBalloonId(Math.floor(Math.random() * 16) + 1);
     setResult(null);
     setHud(INITIAL_HUD);
     setScreen('mic-permission');
@@ -253,11 +255,11 @@ export default function App() {
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
-              src="/balloons/balloon_03.webp"
+              src={`/balloons/balloon_${String(permissionBalloonId).padStart(2, '0')}.webp`}
               alt=""
             />
           </div>
-          <p className="eyebrow">
+          <p className="eyebrow mode-eyebrow">
             {mode === 'lung-test' ? '폐활량 테스트' : '풍선 많이 만들기'}
           </p>
           <h1>
@@ -343,7 +345,7 @@ export default function App() {
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
           <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '30초 준비!'}</p>
-          <strong key={countdown}>{countdown > 0 ? countdown : '후!'}</strong>
+          <strong key={countdown}>{countdown > 0 ? countdown : '후—!'}</strong>
           <WindMeter strength={detector.frame.windStrength} />
         </main>
       )}

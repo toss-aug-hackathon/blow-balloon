@@ -9,6 +9,7 @@ const IGNORED_INTERFACE_PREFIXES = [
   "bridge",
   "docker",
   "vbox",
+  "tailscale",
 ];
 
 function getLocalDevelopmentHost(): string {
@@ -29,6 +30,9 @@ function getLocalDevelopmentHost(): string {
 
   candidates.sort((a, b) => {
     const priority = (name: string) => {
+      const normalizedName = name.toLowerCase();
+      if (normalizedName === "wi-fi" || normalizedName === "wifi") return 4;
+      if (normalizedName === "ethernet") return 3;
       if (name === "en0") return 3;
       if (name === "en1") return 2;
       if (name.startsWith("en") || name.startsWith("eth")) return 1;

@@ -74,6 +74,7 @@ button:focus-visible {
 
 .home-header {
   padding: 18px 5px 22px;
+  margin-bottom: 30px;
 }
 
 .brand-mark {
@@ -2060,6 +2061,49 @@ h1 {
   margin-top: 12px;
   padding-top: 0;
   font-size: 11px;
+}
+
+/* Home readability and artwork balance. */
+.home-header {
+  text-align: center;
+}
+
+.home-screen .mode-card small {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.home-screen .privacy-note {
+  color: #6f6266;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.home-screen .mode-card--lung .balloon-art {
+  right: 0px;
+}
+
+.home-screen .mode-card--rush .balloon-art {
+  right: -7px;
+}
+
+.center-screen .mode-eyebrow {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 7px 13px 6px;
+  border-radius: 999px;
+  color: #c94b5f;
+  background: rgba(255, 224, 218, 0.82);
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.permission-art .permission-art__balloon {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
 }
 
 @media (max-height: 680px) {

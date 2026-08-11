@@ -85,7 +85,13 @@ export class BlowDetector {
     this.smoothedWind +=
       (normalized - this.smoothedWind) * this.options.smoothingFactor;
 
-    const looksLikeBreath = breathiness >= BLOW_CONFIG.minimumBreathiness;
+    // Frequency data is not reliable on every mobile WebView. Some devices
+    // report an almost empty spectrum even while the time-domain RMS clearly
+    // shows a blow. RMS is calibrated per device, so use breathiness only as
+    // an optional signal instead of making it a hard gate for gameplay.
+    const looksLikeBreath =
+      breathiness >= BLOW_CONFIG.minimumBreathiness ||
+      rawRms >= startThreshold;
 
     if (this.state === 'idle') {
       if (rawRms >= startThreshold && looksLikeBreath) {
