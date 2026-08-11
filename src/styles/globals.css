@@ -3293,7 +3293,17 @@ h1 {
 .game-screen > .game-hud > .game-stat--center > small {
   grid-row: 1;
   grid-column: 1 / -1;
-  margin-top: 0;
+  justify-self: center;
+  margin: 0 0 4px;
+  padding: 3px 9px 4px;
+  border: 1px solid rgba(242, 118, 142, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 126, 143, 0.12);
+  color: #d9687d;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
   text-align: center;
 }
 
