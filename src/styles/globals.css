@@ -273,7 +273,7 @@ h1 {
 }
 
 .center-screen .body-copy {
-  margin-bottom: 34px;
+  margin-bottom: 42px;
 }
 
 .back-button,
@@ -2558,6 +2558,18 @@ h1 {
   transform: rotate(-52deg);
 }
 
+.result-confetti i:nth-child(14) { top: 6%; left: 38%; background: #8d83e8; transform: rotate(18deg); }
+.result-confetti i:nth-child(15) { top: 11%; right: 38%; background: #70cdb1; transform: rotate(-61deg); }
+.result-confetti i:nth-child(16) { top: 22%; left: 4%; background: #e88bc0; transform: rotate(48deg); }
+.result-confetti i:nth-child(17) { top: 29%; right: 30%; background: #f39a63; transform: rotate(-18deg); }
+.result-confetti i:nth-child(18) { top: 37%; left: 34%; background: #f4cb57; transform: rotate(72deg); }
+.result-confetti i:nth-child(19) { top: 43%; right: 3%; background: #8d83e8; transform: rotate(36deg); }
+.result-confetti i:nth-child(20) { top: 50%; left: 4%; background: #70cdb1; transform: rotate(-42deg); }
+.result-confetti i:nth-child(21) { top: 57%; right: 37%; background: #e88bc0; transform: rotate(20deg); }
+.result-confetti i:nth-child(22) { top: 65%; left: 11%; background: #f39a63; transform: rotate(-66deg); }
+.result-confetti i:nth-child(23) { top: 70%; right: 7%; background: #f4cb57; transform: rotate(54deg); }
+.result-confetti i:nth-child(24) { top: 78%; left: 29%; background: #8d83e8; transform: rotate(-26deg); }
+
 .game-screen > .game-wind-meter .wind-meter__heading {
   margin-bottom: 10px;
 }
@@ -3258,7 +3270,7 @@ h1 {
 }
 
 .result-screen .button-stack {
-  margin-top: 95px;
+  margin-top: 24px;
 }
 
 .result-screen .button-stack .button--secondary {
@@ -3292,30 +3304,47 @@ h1 {
 }
 
 .home-ranking-entry {
-  display: flex;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  column-gap: 10px;
   min-height: 56px;
-  padding: 0 17px;
+  padding: 10px 14px;
+}
+
+.home-ranking-entry::before {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  grid-column: 1;
+  grid-row: 1;
+  content: '🏆';
+  font-size: 23px;
+  line-height: 1;
 }
 
 .home-ranking-entry > span {
+  grid-column: 2;
+  min-width: 0;
   display: grid;
   gap: 2px;
 }
 
 .home-ranking-entry > span small {
   color: #806873;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .home-ranking-entry > span b {
   color: #5d4751;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .home-ranking-entry > strong {
+  grid-column: 3;
+  white-space: nowrap;
   font-size: 14px;
 }
 
@@ -3424,8 +3453,63 @@ h1 {
   margin-top: 14px;
 }
 
+.ranking-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  align-items: center;
+}
+
+.ranking-choice p,
+.ranking-choice > .button:not(.text-button) {
+  grid-column: 1;
+}
+
+.ranking-choice p {
+  grid-row: 1;
+}
+
+.ranking-choice > .button:not(.text-button) {
+  grid-row: 2;
+}
+
+.ranking-choice .text-button,
+.ranking-choice small {
+  grid-column: 1;
+  margin: 0;
+}
+
+.ranking-choice .text-button {
+  grid-row: 3;
+  justify-self: center;
+}
+
+.ranking-choice small {
+  grid-row: 4;
+  justify-self: center;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .ranking-choice .text-button {
   margin-top: 9px;
+}
+
+/* Keep the celebration layer above the result composition. */
+.result-screen {
+  position: relative;
+}
+
+.result-screen > .result-confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.result-screen > .result-confetti i {
+  z-index: inherit;
 }
 
 .nickname-form {
@@ -3631,6 +3715,17 @@ h1 {
   align-self: center;
 }
 
+.game-screen > .game-hud > .game-stat--timer,
+.game-screen > .game-hud > .game-stat--right,
+.game-screen > .game-hud > .game-stat--center {
+  grid-template-columns: auto auto;
+  justify-content: center;
+}
+
 .calibrating-screen > .eyebrow {
   font-size: 14px;
+}
+
+.calibration-eyebrow {
+  font-size: 14px !important;
 }

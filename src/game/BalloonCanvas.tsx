@@ -10,6 +10,7 @@ import type {
 
 type BalloonCanvasProps = {
   mode: GameMode;
+  initialBalloonId: number;
   signalRef: React.RefObject<DetectorFrame>;
   onHudChange: (hud: GameHudState) => void;
   onFinish: (result: GameResult) => void;
@@ -18,6 +19,7 @@ type BalloonCanvasProps = {
 
 export function BalloonCanvas({
   mode,
+  initialBalloonId,
   signalRef,
   onHudChange,
   onFinish,
@@ -34,6 +36,7 @@ export function BalloonCanvas({
 
     const engine = new BalloonEngine({
       mode,
+      initialBalloonId,
       context,
       onHudChange,
       onFinish,
@@ -96,7 +99,7 @@ export function BalloonCanvas({
       engine.dispose();
       engineRef.current = null;
     };
-  }, [mode, onFinish, onHudChange, onInterrupted, signalRef]);
+  }, [initialBalloonId, mode, onFinish, onHudChange, onInterrupted, signalRef]);
 
   return <canvas ref={canvasRef} className="balloon-canvas" />;
 }

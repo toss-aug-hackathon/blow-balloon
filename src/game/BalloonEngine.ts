@@ -3,6 +3,7 @@ import { clamp } from '../utils/math';
 import {
   createBalloonBody,
   createRandomVariant,
+  createVariantForAsset,
 } from './balloons/createBalloon';
 import { getBalloonAsset, getBalloonImage } from './balloons/balloonAssets';
 import { drawBalloon } from './balloons/drawBalloon';
@@ -26,6 +27,7 @@ import type {
 
 type BalloonEngineOptions = {
   mode: GameMode;
+  initialBalloonId?: number;
   context: CanvasRenderingContext2D;
   onHudChange: (hud: GameHudState) => void;
   onFinish: (result: GameResult) => void;
@@ -67,7 +69,10 @@ export class BalloonEngine {
     this.context = options.context;
     this.onHudChange = options.onHudChange;
     this.onFinish = options.onFinish;
-    this.activeBalloon = createBalloonBody(createRandomVariant(), 0, 0);
+    const initialVariant = options.initialBalloonId
+      ? createVariantForAsset(options.initialBalloonId)
+      : createRandomVariant();
+    this.activeBalloon = createBalloonBody(initialVariant, 0, 0);
   }
 
   resize(width: number, height: number): void {
