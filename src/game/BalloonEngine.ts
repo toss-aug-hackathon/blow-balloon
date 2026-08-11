@@ -264,7 +264,27 @@ export class BalloonEngine {
     if (!this.finished) {
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
-      drawBalloon(context, this.activeBalloon, timeMs, 1, windStrength);
+      const baseRadius = 22;
+      const maximumLungRadius = Math.min(this.width, this.height) * 0.48;
+      drawBalloon(
+        context,
+        this.activeBalloon,
+        timeMs,
+        1,
+        windStrength,
+        this.mode === 'lung-test'
+          ? {
+              growthProgress: clamp(
+                (this.averageRadius(this.activeBalloon) - baseRadius) /
+                  Math.max(1, maximumLungRadius - baseRadius),
+                0,
+                1,
+              ),
+              windStrength,
+              settlingProgress: clamp(this.lungSettlingMs / 700, 0, 1),
+            }
+          : undefined,
+      );
     }
   }
 
