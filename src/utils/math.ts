@@ -7,5 +7,5 @@ export function lerp(from: number, to: number, amount: number): number {
 }
 
 export function formatSeconds(milliseconds: number): string {
-  return (milliseconds / 1000).toFixed(1);
+  return (milliseconds / 1000).toFixed(2);
 }

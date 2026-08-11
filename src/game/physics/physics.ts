@@ -77,15 +77,18 @@ export function updateHeliumPhysics(
   topInset = 0,
 ): void {
   const maxHorizontalSpeed = 10;
+  const heliumBuoyancy = 28;
+  const maxVerticalSpeed = 34;
   for (const balloon of balloons) {
     balloon.compressionX = lerp(balloon.compressionX, 1, 0.12);
     balloon.compressionY = lerp(balloon.compressionY, 1, 0.12);
-    balloon.vy -= 72 * deltaSeconds;
+    balloon.vy -= heliumBuoyancy * deltaSeconds;
     balloon.vx +=
       Math.sin(balloon.variant.seed + balloon.y * 0.015) *
       (4 + balloon.depth * 2.5) *
       deltaSeconds;
     balloon.vx = clamp(balloon.vx, -maxHorizontalSpeed, maxHorizontalSpeed);
+    balloon.vy = clamp(balloon.vy, -maxVerticalSpeed, maxVerticalSpeed);
     balloon.vx *= Math.pow(0.986, deltaSeconds * 60);
     balloon.vy *= Math.pow(0.986, deltaSeconds * 60);
     balloon.x += balloon.vx * deltaSeconds;
