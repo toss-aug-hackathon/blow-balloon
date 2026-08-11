@@ -2,6 +2,11 @@ import { clamp } from '../utils/math';
 
 export const BALLOON_RUSH_DURATION_MS = 30_000;
 export const RUSH_COMPLETION_RADIUS = 59;
+export const LUNG_END_GRACE_MS = 150;
+
+export function hasLungBreathEnded(gapMs: number): boolean {
+  return gapMs >= LUNG_END_GRACE_MS;
+}
 
 export function hasRushTimeExpired(elapsedMs: number): boolean {
   return elapsedMs >= BALLOON_RUSH_DURATION_MS;

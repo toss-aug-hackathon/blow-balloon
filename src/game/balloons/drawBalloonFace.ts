@@ -12,6 +12,7 @@ export type BalloonFacePose = {
   mouthOpen: number;
   cheekPuff: number;
   strain: number;
+  squeeze: number;
   relief: number;
 };
 
@@ -30,6 +31,7 @@ export function getBalloonFacePose(
   const delight =
     smoothstep(0.04, 0.22, growth) * (1 - smoothstep(0.3, 0.5, growth));
   const strain = smoothstep(0.52, 0.94, growth);
+  const squeeze = smoothstep(0.78, 0.94, growth);
   const relief = smoothstep(0.12, 0.78, settlingProgress);
 
   return {
@@ -38,6 +40,7 @@ export function getBalloonFacePose(
     mouthOpen: lerp(0.008 + surprise * 0.075, 0.012, strain) * (1 - relief),
     cheekPuff: delight * 0.035 + strain * 0.085,
     strain,
+    squeeze,
     relief,
   };
 }
@@ -60,7 +63,9 @@ export function drawBalloonFace(
     motion.settlingProgress,
   );
   const blink = blinkOpenness(timeMs, seed);
-  const eyeOpen = pose.eyeOpen * blink * (1 - pose.relief);
+  const normalAlpha = clamp(1 - pose.squeeze - pose.relief, 0, 1);
+  const squeezeAlpha = pose.squeeze * (1 - pose.relief);
+  const eyeOpen = pose.eyeOpen * blink;
   const pupilShift = Math.sin(timeMs * 0.0008 + seed) * 0.014;
   const cheekPulse =
     Math.sin(timeMs * 0.012 + seed) * motion.windStrength * 0.012;
@@ -89,11 +94,11 @@ export function drawBalloonFace(
   context.lineJoin = 'round';
   context.lineWidth = 0.05;
 
-  if (pose.relief < 1) {
+  if (normalAlpha > 0) {
     for (const side of [-1, 1]) {
       const x = side * 0.2;
       context.save();
-      context.globalAlpha = 1 - pose.relief;
+      context.globalAlpha = normalAlpha;
       context.fillStyle = 'rgba(255,255,255,0.9)';
       context.beginPath();
       context.ellipse(x, -0.02, 0.105, Math.max(0.008, eyeOpen), 0, 0, Math.PI * 2);
@@ -112,6 +117,20 @@ export function drawBalloonFace(
       context.fill();
       context.restore();
     }
+  }
+
+  if (squeezeAlpha > 0) {
+    context.save();
+    context.globalAlpha = squeezeAlpha;
+    for (const side of [-1, 1]) {
+      const x = side * 0.2;
+      context.beginPath();
+      context.moveTo(x + side * 0.075, -0.1);
+      context.lineTo(x - side * 0.04, -0.01);
+      context.lineTo(x + side * 0.075, 0.08);
+      context.stroke();
+    }
+    context.restore();
   }
 
   if (pose.relief > 0) {
@@ -143,38 +162,68 @@ export function drawBalloonFace(
 
   const mouthWidth = 0.1 + pose.strain * 0.07 + pose.relief * 0.08;
   const mouthY = 0.24 + mouthTremble;
-  context.beginPath();
-  context.moveTo(-mouthWidth, mouthY);
-  context.quadraticCurveTo(
-    0,
-    mouthY + lerp(pose.mouthCurve, 0.075, pose.relief),
-    mouthWidth,
-    mouthY,
-  );
-  context.stroke();
-  if (pose.mouthOpen > 0.012) {
+  if (normalAlpha > 0) {
+    context.save();
+    context.globalAlpha = normalAlpha;
+    if (pose.mouthOpen > 0.012) {
+      context.beginPath();
+      context.ellipse(
+        0,
+        mouthY + 0.018,
+        mouthWidth * 0.52,
+        pose.mouthOpen,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      context.fill();
+    } else {
+      context.beginPath();
+      context.moveTo(-mouthWidth, mouthY);
+      context.quadraticCurveTo(0, mouthY + pose.mouthCurve, mouthWidth, mouthY);
+      context.stroke();
+    }
+    context.restore();
+  }
+
+  if (squeezeAlpha > 0) {
+    context.save();
+    context.globalAlpha = squeezeAlpha;
     context.beginPath();
-    context.ellipse(
-      0,
-      mouthY + 0.018,
-      mouthWidth * 0.52,
-      pose.mouthOpen,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    context.fill();
+    context.moveTo(-0.12, mouthY);
+    context.quadraticCurveTo(-0.06, mouthY - 0.055, 0, mouthY);
+    context.quadraticCurveTo(0.06, mouthY + 0.055, 0.12, mouthY);
+    context.stroke();
+    context.restore();
+  }
+
+  if (pose.relief > 0) {
+    context.save();
+    context.globalAlpha = pose.relief;
+    context.beginPath();
+    context.moveTo(-mouthWidth, mouthY);
+    context.quadraticCurveTo(0, mouthY + 0.075, mouthWidth, mouthY);
+    context.stroke();
+    context.restore();
   }
 
   if (pose.strain > 0) {
     const sweatCycle = ((timeMs + seed) % 1500) / 1500;
-    context.globalAlpha = pose.strain * (1 - pose.relief);
-    context.fillStyle = 'rgba(255,255,255,0.82)';
+    context.save();
+    context.globalAlpha = pose.strain * (1 - pose.squeeze) * (1 - pose.relief);
+    context.translate(0.39, -0.26 + sweatCycle * 0.06);
+    context.rotate(0.18);
+    context.fillStyle = '#70d7ff';
     context.beginPath();
-    context.moveTo(0.38, -0.3 + sweatCycle * 0.08);
-    context.quadraticCurveTo(0.31, -0.18, 0.38, -0.14 + sweatCycle * 0.08);
-    context.quadraticCurveTo(0.45, -0.18, 0.38, -0.3 + sweatCycle * 0.08);
+    context.moveTo(0, -0.11);
+    context.bezierCurveTo(-0.075, -0.015, -0.065, 0.07, 0, 0.085);
+    context.bezierCurveTo(0.065, 0.07, 0.075, -0.015, 0, -0.11);
     context.fill();
+    context.fillStyle = 'rgba(255,255,255,0.78)';
+    context.beginPath();
+    context.ellipse(-0.02, -0.025, 0.012, 0.026, 0.35, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
   }
   context.restore();
 }
