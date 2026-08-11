@@ -3286,3 +3286,31 @@ h1 {
   display: none !important;
   content: none;
 }
+
+/* Put each stat label before its value for a clearer reading order. */
+.game-screen > .game-hud > .game-stat--timer > small,
+.game-screen > .game-hud > .game-stat--right > small,
+.game-screen > .game-hud > .game-stat--center > small {
+  grid-row: 1;
+  margin-top: 0;
+  align-self: end;
+}
+
+.game-screen > .game-hud > .game-stat--timer > strong,
+.game-screen > .game-hud > .game-stat--right > strong,
+.game-screen > .game-hud > .game-stat--center > strong {
+  grid-row: 2;
+  margin-top: 2px;
+  align-self: start;
+}
+
+.game-screen > .game-hud > .game-stat--timer > .game-stat__icon,
+.game-screen > .game-hud > .game-stat--right > .game-stat__icon,
+.game-screen > .game-hud > .game-stat--center > .game-stat__icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.calibrating-screen > .eyebrow {
+  font-size: 14px;
+}

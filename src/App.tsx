@@ -290,7 +290,7 @@ export default function App() {
       )}
 
       {screen === 'calibrating' && (
-        <main className="screen center-screen">
+        <main className="screen center-screen calibration-screen">
           {detector.permission === 'denied' ||
           detector.permission === 'error' ? (
             <>

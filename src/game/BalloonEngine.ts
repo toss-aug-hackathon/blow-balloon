@@ -226,6 +226,14 @@ export class BalloonEngine {
     this.activeBalloon.x = this.width * 0.5;
     const playHeight = this.getPlayHeight();
     const floorGap = 24;
+    if (this.mode === 'lung-test') {
+      const centerY = this.safeTopInset + (playHeight - this.safeTopInset) * 0.52;
+      this.activeBalloon.y = Math.max(
+        this.activeBalloon.radiusY + 12,
+        Math.min(playHeight - this.activeBalloon.radiusY - 12, centerY),
+      );
+      return;
+    }
     this.activeBalloon.y = Math.max(
       this.activeBalloon.radiusY + 12,
       playHeight - this.activeBalloon.radiusY - floorGap,
