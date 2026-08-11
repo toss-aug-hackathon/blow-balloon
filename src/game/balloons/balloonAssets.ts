@@ -3,7 +3,6 @@ export type BalloonAsset = {
   width: number;
   height: number;
   url: string;
-  fullResolutionUrl: string;
   face: {
     x: number;
     y: number;
@@ -71,7 +70,6 @@ export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
       width,
       height,
       url: `/balloons/${filename}`,
-      fullResolutionUrl: `/balloons/full/${filename}`,
       face: { x: faceX, y: faceY, scale: faceScale },
     };
   },
@@ -110,7 +108,7 @@ export function getFullResolutionBalloonImage(
 
   const image = new Image();
   image.decoding = 'async';
-  image.src = asset.fullResolutionUrl;
+  image.src = asset.url;
   fullResolutionImage = { assetId: asset.id, image };
   return image;
 }
