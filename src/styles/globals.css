@@ -2696,6 +2696,86 @@ h1 {
   left: 30px;
 }
 
+/* Keep the guide, test button, and meter in one stable layout flow. */
+.game-screen > .game-control-panel {
+  position: absolute;
+  z-index: 5;
+  right: 16px;
+  bottom: max(18px, var(--ait-safe-bottom));
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px 16px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 14px 36px rgba(91, 46, 58, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.game-screen > .game-control-panel + .test-wind-control,
+.game-screen > .game-control-panel > .test-wind-control {
+  position: static;
+  order: 2;
+  width: 100%;
+  margin: 0;
+}
+
+.game-screen > .game-control-panel > .game-control-guide {
+  position: static;
+  order: 1;
+  width: 100%;
+  margin: 0 0 13px;
+}
+
+.game-screen > .game-control-panel > .game-wind-meter {
+  position: static;
+  order: 3;
+  width: 100%;
+  margin-top: 17px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(93, 66, 76, 0.18);
+}
+
+.game-screen > .game-control-panel > .test-wind-control .test-wind-button {
+  width: 82%;
+  min-height: 62px;
+  margin: 0 auto;
+  font-size: 20px;
+}
+
+.game-screen > .game-control-panel > .test-wind-control > span {
+  display: none;
+}
+
+.game-screen > .game-control-panel > .game-wind-meter .wind-meter {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.game-screen > .game-control-panel > .game-wind-meter .wind-meter__scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  color: #92878a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.game-screen > .game-control-panel ~ .game-screen::after {
+  display: none;
+}
+
+.game-screen:has(> .game-control-panel)::after {
+  display: none;
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;

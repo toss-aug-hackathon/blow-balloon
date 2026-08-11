@@ -31,9 +31,6 @@ type BalloonEngineOptions = {
   onFinish: (result: GameResult) => void;
 };
 
-const LUNG_ACTIVE_BALLOON_Y_RATIO = 0.5;
-const RUSH_ACTIVE_BALLOON_Y_RATIO = 0.64;
-
 export class BalloonEngine {
   private readonly mode: GameMode;
   private readonly context: CanvasRenderingContext2D;
@@ -227,11 +224,12 @@ export class BalloonEngine {
 
   private positionActiveBalloon(): void {
     this.activeBalloon.x = this.width * 0.5;
-    this.activeBalloon.y =
-      this.getPlayHeight() *
-      (this.mode === 'lung-test'
-        ? LUNG_ACTIVE_BALLOON_Y_RATIO
-        : RUSH_ACTIVE_BALLOON_Y_RATIO);
+    const playHeight = this.getPlayHeight();
+    const floorGap = 24;
+    this.activeBalloon.y = Math.max(
+      this.activeBalloon.radiusY + 12,
+      playHeight - this.activeBalloon.radiusY - floorGap,
+    );
   }
 
   private finishLungTest(): void {
