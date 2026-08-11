@@ -391,6 +391,10 @@ export default function App() {
               </>
             )}
           </div>
+          <p className="game-control-guide">
+            <span aria-hidden="true">〰</span>
+            <span>누르고 있는 동안 <strong>바람</strong>이 불어요</span>
+          </p>
           <div className="game-wind-meter">
             <WindMeter strength={hud.windStrength} />
           </div>

@@ -14,6 +14,11 @@ export function WindMeter({ strength }: WindMeterProps) {
       <div className="wind-meter__track" aria-hidden="true">
         <i style={{ width: `${percentage}%` }} />
       </div>
+      <div className="wind-meter__scale" aria-hidden="true">
+        <span>0%</span>
+        <span>50%</span>
+        <span>100%</span>
+      </div>
     </div>
   );
 }

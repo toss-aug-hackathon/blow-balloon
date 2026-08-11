@@ -2519,6 +2519,65 @@ h1 {
   font-size: 25px;
 }
 
+.game-screen::after {
+  height: 300px;
+  border-radius: 28px 28px 0 0;
+}
+
+.game-screen > .game-control-guide {
+  position: absolute;
+  z-index: 6;
+  right: 24px;
+  bottom: calc(260px + var(--ait-safe-bottom));
+  left: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0;
+  color: #756b70;
+  font-size: 14px;
+  font-weight: 650;
+  pointer-events: none;
+}
+
+.game-screen > .game-control-guide > span:first-child {
+  color: #9a53e5;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.game-screen > .game-control-guide strong {
+  color: #9a53e5;
+}
+
+.game-screen > .test-wind-control > span {
+  display: none;
+}
+
+.game-screen > .test-wind-control .test-wind-button {
+  width: 82%;
+  min-height: 62px;
+  font-size: 20px;
+}
+
+.game-screen > .game-wind-meter {
+  right: 30px;
+  bottom: calc(30px + var(--ait-safe-bottom));
+  left: 30px;
+  padding-top: 17px;
+  border-top: 1px dashed rgba(93, 66, 76, 0.18);
+}
+
+.game-screen > .game-wind-meter .wind-meter__scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  color: #92878a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
