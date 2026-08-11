@@ -3,6 +3,7 @@ export type GameMode = 'lung-test' | 'balloon-rush';
 export type BalloonVariant = {
   assetId: number;
   seed: number;
+  faceId?: number;
 };
 
 export type BalloonBody = {

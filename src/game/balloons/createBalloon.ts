@@ -1,6 +1,8 @@
 import type { BalloonBody, BalloonVariant } from '../types';
 import { BALLOON_ASSETS, getBalloonAsset } from './balloonAssets';
 
+export const BALLOON_FACE_CHARACTER_COUNT = 5;
+
 export function createRandomVariant(
   previous?: BalloonVariant,
   random: () => number = Math.random,
@@ -11,9 +13,16 @@ export function createRandomVariant(
   const selected =
     candidates[Math.floor(random() * candidates.length)] ?? BALLOON_ASSETS[0]!;
 
+  const faceCandidates = Array.from(
+    { length: BALLOON_FACE_CHARACTER_COUNT },
+    (_, index) => index,
+  ).filter((faceId) => faceId !== previous?.faceId);
+
   return {
     assetId: selected.id,
     seed: Math.floor(random() * 1_000_000),
+    faceId:
+      faceCandidates[Math.floor(random() * faceCandidates.length)] ?? 0,
   };
 }
 

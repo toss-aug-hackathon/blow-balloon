@@ -51,7 +51,7 @@ export function drawBalloon(
     Math.sin(timeMs * 0.005 + balloon.variant.seed) * windStrength * 0.012;
   const depthAlpha = clamp(0.84 + (balloon.depth - 0.94) * 1.35, 0.8, 1);
   const drawWidth =
-    balloon.radiusX * 2 * balloon.depth * (ASSET_SCALE[asset.id] ?? 1);
+    balloon.radiusX * 2 * balloon.depth * (ASSET_SCALE[asset.sourceId] ?? 1);
   const drawHeight = drawWidth * (asset.height / asset.width);
   const bodyTop = -balloon.radiusY * balloon.depth;
 
@@ -66,15 +66,24 @@ export function drawBalloon(
   if (faceMotion) {
     const faceScale = drawWidth * asset.face.scale;
     context.save();
-    context.translate(
-      (asset.face.x - 0.5) * drawWidth,
-      bodyTop + asset.face.y * drawHeight,
-    );
+    // Pull unusual asset anchors slightly toward the visual center. This
+    // keeps the character readable on both tall and wide balloon artwork.
+    const faceX =
+      asset.id === 12 ? 0.5 : asset.face.x * 0.72 + 0.5 * 0.28;
+    const flowerLift = asset.id === 9 ? -0.055 : 0;
+    const faceY = asset.face.y * 0.82 + 0.34 * 0.18 + flowerLift;
+    context.translate((faceX - 0.5) * drawWidth, bodyTop + faceY * drawHeight);
     context.scale(faceScale, faceScale);
     context.beginPath();
     context.ellipse(0, 0, 0.58, 0.52, 0, 0, Math.PI * 2);
     context.clip();
-    drawBalloonFace(context, timeMs, balloon.variant.seed, faceMotion);
+    drawBalloonFace(
+      context,
+      timeMs,
+      balloon.variant.seed,
+      balloon.variant.faceId ?? balloon.variant.seed % 5,
+      faceMotion,
+    );
     context.restore();
   }
   context.restore();
