@@ -5,10 +5,13 @@ import { createRandomVariant } from './createBalloon';
 describe('createRandomVariant', () => {
   it('only registers the WebP assets shipped with the app', () => {
     expect(BALLOON_ASSETS).toHaveLength(16);
-    expect(BALLOON_ASSETS.every(({ url }) => url.endsWith('.webp'))).toBe(true);
     expect(
-      BALLOON_ASSETS.every(({ previewUrl }) =>
-        previewUrl.startsWith('/balloons/preview/'),
+      BALLOON_ASSETS.every(
+        ({ lungTestUrl, balloonRushUrl }) =>
+          lungTestUrl.startsWith('/balloons/lung-test/') &&
+          balloonRushUrl.startsWith('/balloons/balloon-rush/') &&
+          lungTestUrl.endsWith('.webp') &&
+          balloonRushUrl.endsWith('.webp'),
       ),
     ).toBe(true);
   });

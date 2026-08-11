@@ -2,8 +2,8 @@ export type BalloonAsset = {
   id: number;
   width: number;
   height: number;
-  url: string;
-  previewUrl: string;
+  lungTestUrl: string;
+  balloonRushUrl: string;
   face: {
     x: number;
     y: number;
@@ -47,8 +47,8 @@ export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
       id,
       width,
       height,
-      url: `/balloons/${filename}`,
-      previewUrl: `/balloons/preview/${filename}`,
+      lungTestUrl: `/balloons/lung-test/${filename}`,
+      balloonRushUrl: `/balloons/balloon-rush/${filename}`,
       face: { x: faceX, y: faceY, scale: faceScale },
     };
   },
@@ -71,7 +71,7 @@ export function getBalloonImage(assetId: number): HTMLImageElement | null {
 
   const image = new Image();
   image.decoding = 'async';
-  image.src = asset.previewUrl;
+  image.src = asset.balloonRushUrl;
   imageCache.set(asset.id, image);
   return image;
 }
@@ -87,7 +87,7 @@ export function getFullResolutionBalloonImage(
 
   const image = new Image();
   image.decoding = 'async';
-  image.src = asset.url;
+  image.src = asset.lungTestUrl;
   fullResolutionImage = { assetId: asset.id, image };
   return image;
 }
