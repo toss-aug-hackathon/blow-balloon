@@ -2938,7 +2938,7 @@ h1 {
 
 .result-screen .button-stack {
   width: min(100%, 358px);
-  margin-top: 20px;
+  margin-top: 95px;
 }
 
 /* Use the supplied glossy header icons as a small image sprite. */
@@ -3253,7 +3253,7 @@ h1 {
 }
 
 .result-screen .button-stack {
-  margin-top: 24px;
+  margin-top: 95px;
 }
 
 .result-screen .button-stack .button--secondary {
