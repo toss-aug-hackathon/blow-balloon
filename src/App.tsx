@@ -210,8 +210,13 @@ export default function App() {
               onClick={() => selectMode('lung-test')}
             >
               <img
-                className="mode-card__art balloon-art balloon-art--lung"
+                className="mode-card__art balloon-art balloon-art--lung balloon-art--open"
                 src="/selection/heart-balloon.png"
+                alt=""
+              />
+              <img
+                className="mode-card__art balloon-art balloon-art--lung balloon-art--blink"
+                src="/selection/heart-balloon-blink.png"
                 alt=""
               />
               <strong>폐활량 테스트</strong>
