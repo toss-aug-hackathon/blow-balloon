@@ -57,17 +57,19 @@ export function ResultScreen({
         <i />
         <i />
       </div>
-      <p className="eyebrow">오늘의 기록</p>
-      <h1>
-        {result.mode === 'lung-test'
-          ? `${formatSeconds(result.durationMs)}초!`
-          : `${result.completedCount}개 완성!`}
-      </h1>
-      <p className="result-title">
-        {result.mode === 'lung-test'
-          ? getLungGrade(result.durationMs)
-          : '30초 풍선 공장이 문을 닫았어요'}
-      </p>
+      <header className="result-record-heading">
+        <p className="eyebrow">오늘의 기록</p>
+        <h1>
+          {result.mode === 'lung-test'
+            ? `${formatSeconds(result.durationMs)}초!`
+            : `${result.completedCount}개 완성!`}
+        </h1>
+        <p className="result-title">
+          {result.mode === 'lung-test'
+            ? getLungGrade(result.durationMs)
+            : '30초 풍선 공장이 문을 닫았어요'}
+        </p>
+      </header>
 
       <section className="result-card">
         {result.mode === 'lung-test' ? (
@@ -115,14 +117,16 @@ export function ResultScreen({
       {snapshotError && <p className="error-text">{snapshotError}</p>}
 
       <div className="button-stack">
-        <button
-          className="button button--primary"
-          type="button"
-          onClick={handleCreateSnapshot}
-          disabled={isCreating}
-        >
-          {isCreating ? '이미지 만드는 중…' : '결과 이미지 만들기'}
-        </button>
+        {!snapshotUrl && (
+          <button
+            className="button button--primary"
+            type="button"
+            onClick={handleCreateSnapshot}
+            disabled={isCreating}
+          >
+            {isCreating ? '이미지 만드는 중…' : '결과 이미지 만들기'}
+          </button>
+        )}
         <button className="button button--secondary" type="button" onClick={onRetry}>
           다시 도전
         </button>
