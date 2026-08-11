@@ -3258,7 +3258,7 @@ h1 {
 }
 
 .result-screen .button-stack {
-  margin-top: 95px;
+  margin-top: 24px;
 }
 
 .result-screen .button-stack .button--secondary {
@@ -3292,11 +3292,26 @@ h1 {
 }
 
 .home-ranking-entry {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 56px;
-  padding: 0 17px;
+  padding: 0 17px 0 58px;
+}
+
+.home-ranking-entry::before {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  content: '🏆';
+  font-size: 23px;
+  line-height: 1;
+  transform: translateY(-50%);
 }
 
 .home-ranking-entry > span {
@@ -3306,12 +3321,12 @@ h1 {
 
 .home-ranking-entry > span small {
   color: #806873;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .home-ranking-entry > span b {
   color: #5d4751;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -3422,6 +3437,36 @@ h1 {
 .nickname-form .button {
   width: 100%;
   margin-top: 14px;
+}
+
+.ranking-choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+}
+
+.ranking-choice p,
+.ranking-choice > .button {
+  grid-column: 1 / -1;
+}
+
+.ranking-choice .text-button,
+.ranking-choice small {
+  grid-row: 3;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.ranking-choice .text-button {
+  justify-self: start;
+}
+
+.ranking-choice small {
+  justify-self: end;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: right;
 }
 
 .ranking-choice .text-button {
