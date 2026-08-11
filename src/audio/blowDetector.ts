@@ -67,7 +67,7 @@ export class BlowDetector {
     this.endingStartedAt = null;
   }
 
-  update(rawRms: number, nowMs: number): DetectorFrame {
+  update(rawRms: number, nowMs: number, breathiness = 1): DetectorFrame {
     const startThreshold = Math.max(
       this.options.minimumStartThreshold,
       this.baseline * this.options.baselineStartMultiplier,
@@ -85,13 +85,15 @@ export class BlowDetector {
     this.smoothedWind +=
       (normalized - this.smoothedWind) * this.options.smoothingFactor;
 
+    const looksLikeBreath = breathiness >= BLOW_CONFIG.minimumBreathiness;
+
     if (this.state === 'idle') {
-      if (rawRms >= startThreshold) {
+      if (rawRms >= startThreshold && looksLikeBreath) {
         this.state = 'candidate';
         this.candidateStartedAt = nowMs;
       }
     } else if (this.state === 'candidate') {
-      if (rawRms < startThreshold) {
+      if (rawRms < startThreshold || !looksLikeBreath) {
         this.state = 'idle';
         this.candidateStartedAt = null;
       } else if (
@@ -103,11 +105,11 @@ export class BlowDetector {
         this.endingStartedAt = null;
       }
     } else if (this.state === 'blowing') {
-      if (rawRms < endThreshold) {
+      if (rawRms < endThreshold || !looksLikeBreath) {
         this.state = 'ending';
         this.endingStartedAt = nowMs;
       }
-    } else if (rawRms >= endThreshold) {
+    } else if (rawRms >= endThreshold && looksLikeBreath) {
       this.state = 'blowing';
       this.endingStartedAt = null;
     } else if (

@@ -6,6 +6,7 @@ export class MicrophoneInput {
   private analyser: AnalyserNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
   private samples: Float32Array<ArrayBuffer> | null = null;
+  private spectrum: Uint8Array<ArrayBuffer> | null = null;
 
   async start(): Promise<void> {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -47,12 +48,29 @@ export class MicrophoneInput {
     this.source = this.context.createMediaStreamSource(this.stream);
     this.source.connect(this.analyser);
     this.samples = new Float32Array(this.analyser.fftSize);
+    this.spectrum = new Uint8Array(this.analyser.frequencyBinCount);
   }
 
-  readRms(): number {
-    if (!this.analyser || !this.samples) return 0;
+  readSignal(): { rms: number; breathiness: number } {
+    if (!this.analyser || !this.context || !this.samples || !this.spectrum) {
+      return { rms: 0, breathiness: 0 };
+    }
     this.analyser.getFloatTimeDomainData(this.samples);
-    return calculateRms(this.samples);
+    this.analyser.getByteFrequencyData(this.spectrum);
+
+    const binHz = this.context.sampleRate / this.analyser.fftSize;
+    let total = 0;
+    let high = 0;
+    const endIndex = Math.min(this.spectrum.length, Math.ceil(8000 / binHz));
+    for (let index = Math.ceil(200 / binHz); index < endIndex; index += 1) {
+      const energy = (this.spectrum[index] ?? 0) ** 2;
+      total += energy;
+      if (index * binHz >= 2000) high += energy;
+    }
+    return {
+      rms: calculateRms(this.samples),
+      breathiness: total > 0 ? high / total : 0,
+    };
   }
 
   async resume(): Promise<void> {
@@ -71,5 +89,6 @@ export class MicrophoneInput {
     this.analyser = null;
     this.source = null;
     this.samples = null;
+    this.spectrum = null;
   }
 }
