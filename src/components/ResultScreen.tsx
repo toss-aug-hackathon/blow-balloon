@@ -66,7 +66,7 @@ export function ResultScreen({
       <p className="result-title">
         {result.mode === 'lung-test'
           ? getLungGrade(result.durationMs)
-          : '60초 풍선 공장이 문을 닫았어요'}
+          : '30초 풍선 공장이 문을 닫았어요'}
       </p>
 
       <section className="result-card">
