@@ -62,7 +62,7 @@ const FACE_PLACEMENTS: ReadonlyArray<readonly [number, number, number]> = [
 export const BALLOON_ASSETS: readonly BalloonAsset[] = DIMENSIONS.map(
   ([width, height], index) => {
     const id = index + 1;
-    const filename = `balloon_${String(id).padStart(2, '0')}.png`;
+    const filename = `balloon_${String(id).padStart(2, '0')}.webp`;
     const [faceX, faceY, faceScale] =
       FACE_PLACEMENTS[index] ?? FACE_PLACEMENTS[0]!;
     return {
