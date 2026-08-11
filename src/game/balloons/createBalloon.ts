@@ -17,6 +17,17 @@ export function createRandomVariant(
   };
 }
 
+export function createVariantForAsset(
+  assetId: number,
+  random: () => number = Math.random,
+): BalloonVariant {
+  const asset = getBalloonAsset(assetId);
+  return {
+    assetId: asset.id,
+    seed: Math.floor(random() * 1_000_000),
+  };
+}
+
 export function createBalloonBody(
   variant: BalloonVariant,
   x: number,

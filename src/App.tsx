@@ -374,6 +374,7 @@ export default function App() {
         <main className="game-screen">
           <BalloonCanvas
             mode={mode}
+            initialBalloonId={permissionBalloonId}
             signalRef={detector.signalRef}
             onHudChange={setHud}
             onFinish={finishGame}
