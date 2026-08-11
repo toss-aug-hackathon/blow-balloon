@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { DetectorFrame } from '../audio/blowDetector';
 import { BalloonEngine } from './BalloonEngine';
+import { preloadBalloonAssets } from './balloons/balloonAssets';
 import type {
   GameHudState,
   GameMode,
@@ -52,11 +53,18 @@ export function BalloonCanvas({
     resize();
 
     let animationId = 0;
+    let disposed = false;
     const animate = (timeMs: number) => {
       engine.update(timeMs, signalRef.current);
       animationId = requestAnimationFrame(animate);
     };
-    animationId = requestAnimationFrame(animate);
+    void preloadBalloonAssets()
+      .then(() => {
+        if (!disposed) animationId = requestAnimationFrame(animate);
+      })
+      .catch(() => {
+        if (!disposed) onInterrupted();
+      });
 
     const handleVisibility = () => {
       if (document.hidden) {
@@ -72,6 +80,7 @@ export function BalloonCanvas({
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(animationId);
       resizeObserver.disconnect();
       document.removeEventListener('visibilitychange', handleVisibility);

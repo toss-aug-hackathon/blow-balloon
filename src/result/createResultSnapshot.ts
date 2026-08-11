@@ -1,5 +1,6 @@
 import { createBalloonBody } from '../game/balloons/createBalloon';
 import { drawBalloon } from '../game/balloons/drawBalloon';
+import { preloadBalloonAssets } from '../game/balloons/balloonAssets';
 import type { BalloonBody, GameResult } from '../game/types';
 import { APP_THEME } from '../styles/theme';
 import { formatSeconds } from '../utils/math';
@@ -23,6 +24,7 @@ function drawSnapshotBalloon(
 export async function createResultSnapshot(
   result: GameResult,
 ): Promise<string> {
+  await preloadBalloonAssets();
   const canvas = document.createElement('canvas');
   canvas.width = SNAPSHOT_WIDTH;
   canvas.height = SNAPSHOT_HEIGHT;

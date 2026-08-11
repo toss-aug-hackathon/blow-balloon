@@ -167,13 +167,7 @@ export class BalloonEngine {
     const factor = 1 + Math.min(amount, maximumRadius - currentRadius) / currentRadius;
     this.activeBalloon.radiusX *= factor;
     this.activeBalloon.radiusY *= factor;
-    this.activeBalloon.y =
-      this.mode === 'lung-test'
-        ? this.height * 0.57
-        : Math.min(
-            this.height * 0.7,
-            this.height - this.activeBalloon.radiusY - 28,
-          );
+    this.positionActiveBalloon();
   }
 
   private completeActiveBalloon(): void {
@@ -189,7 +183,7 @@ export class BalloonEngine {
 
   private positionActiveBalloon(): void {
     this.activeBalloon.x = this.width * 0.5;
-    this.activeBalloon.y = this.height * (this.mode === 'lung-test' ? 0.57 : 0.7);
+    this.activeBalloon.y = this.height * (this.mode === 'lung-test' ? 0.5 : 0.58);
   }
 
   private finishLungTest(): void {
@@ -271,27 +265,6 @@ export class BalloonEngine {
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       drawBalloon(context, this.activeBalloon, timeMs, 1, windStrength);
-      if (this.mode === 'balloon-rush') {
-        const progress = clamp(
-          (this.averageRadius(this.activeBalloon) - 19) / (59 - 19),
-          0,
-          1,
-        );
-        const barWidth = Math.min(180, this.width * 0.48);
-        const x = (this.width - barWidth) / 2;
-        const y = Math.min(
-          this.height - 42,
-          this.activeBalloon.y + this.activeBalloon.radiusY + 25,
-        );
-        context.fillStyle = 'rgba(38,51,58,0.12)';
-        context.beginPath();
-        context.roundRect(x, y, barWidth, 7, 4);
-        context.fill();
-        context.fillStyle = APP_THEME.coral;
-        context.beginPath();
-        context.roundRect(x, y, barWidth * progress, 7, 4);
-        context.fill();
-      }
     }
   }
 
