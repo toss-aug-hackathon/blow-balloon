@@ -2639,6 +2639,63 @@ h1 {
   bottom: calc(156px + var(--ait-safe-bottom));
 }
 
+/* Compact header geometry for narrow phones: timer and count get independent slots. */
+.game-screen > .game-hud {
+  display: block;
+  height: 48px;
+}
+
+.game-screen > .game-hud > .game-exit {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.game-screen > .game-hud > .game-stat {
+  top: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.game-screen > .game-hud > .game-stat:not(.game-stat--right) {
+  right: auto;
+  left: 50%;
+  width: 104px;
+  transform: translateX(-50%);
+}
+
+.game-screen > .game-hud > .game-stat--right {
+  right: 0;
+  left: auto;
+  width: 78px;
+  grid-template-columns: 24px auto;
+  column-gap: 5px;
+}
+
+.game-screen > .game-hud > .game-stat--right::before {
+  width: 24px;
+  height: 30px;
+}
+
+.game-screen > .game-hud > .game-stat--right::after {
+  top: 26px;
+  left: 12px;
+}
+
+.game-screen > .game-hud > .game-stat--right > strong {
+  font-size: 28px;
+}
+
+.game-screen > .game-hud > .game-stat--right > small {
+  font-size: 14px;
+}
+
+.game-screen > .test-wind-control {
+  right: 30px;
+  bottom: calc(150px + var(--ait-safe-bottom));
+  left: 30px;
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
