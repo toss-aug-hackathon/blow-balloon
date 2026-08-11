@@ -253,7 +253,7 @@ export default function App() {
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
-              src="/balloons/balloon_03.webp"
+              src="/balloons/balloon-rush/balloon_03.webp"
               alt=""
             />
           </div>
