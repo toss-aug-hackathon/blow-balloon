@@ -34,6 +34,26 @@ const INITIAL_HUD: GameHudState = {
   isWaitingForBreath: true,
 };
 
+const MIC_NOTICE_SESSION_KEY = 'blow-balloon:mic-notice-shown';
+const MIC_START_BUTTON_SESSION_KEY = 'blow-balloon:mic-start-button-used';
+
+function readMicNoticeState(): boolean {
+  try {
+    return window.sessionStorage.getItem(MIC_NOTICE_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function readMicStartButtonState(): boolean {
+  if (import.meta.env.DEV) return false;
+  try {
+    return window.sessionStorage.getItem(MIC_START_BUTTON_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export default function App() {
   useSafeArea();
 
@@ -94,6 +114,11 @@ export default function App() {
   const [countdown, setCountdown] = useState(3);
   const [hud, setHud] = useState<GameHudState>(INITIAL_HUD);
   const [result, setResult] = useState<GameResult | null>(null);
+  const [hasShownMicNotice, setHasShownMicNotice] = useState(readMicNoticeState);
+  const [showMicNotice, setShowMicNotice] = useState(false);
+  const [hasUsedMicStartButton, setHasUsedMicStartButton] = useState(
+    readMicStartButtonState,
+  );
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
   const gameUser = useGameUser();
@@ -126,6 +151,16 @@ export default function App() {
     stopDetector();
     setTestWindOn(false);
     setMode(nextMode);
+    const shouldShowNotice = !hasShownMicNotice;
+    setShowMicNotice(shouldShowNotice);
+    if (shouldShowNotice) {
+      setHasShownMicNotice(true);
+      try {
+        window.sessionStorage.setItem(MIC_NOTICE_SESSION_KEY, '1');
+      } catch {
+        // In-memory state still covers WebViews without session storage.
+      }
+    }
     setPermissionBalloonId(Math.floor(Math.random() * 16) + 1);
     setResult(null);
     setHud(INITIAL_HUD);
@@ -137,10 +172,24 @@ export default function App() {
     setScreen('ranking');
   };
 
-  const startMicrophone = async () => {
+  const startMicrophone = useCallback(async () => {
+    setHasUsedMicStartButton(true);
+    try {
+      window.sessionStorage.setItem(MIC_START_BUTTON_SESSION_KEY, '1');
+    } catch {
+      // In-memory state still covers WebViews without session storage.
+    }
     setScreen('calibrating');
     await requestPermission();
-  };
+  }, [requestPermission]);
+
+  useEffect(() => {
+    if (screen !== 'mic-permission' || !mode || !hasUsedMicStartButton) return;
+    const timeout = window.setTimeout(() => {
+      void startMicrophone();
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [hasUsedMicStartButton, mode, screen, startMicrophone]);
 
   const startTestWind = () => {
     detector.setSimulatedWind(1);
@@ -197,6 +246,7 @@ export default function App() {
   const retry = useCallback(() => {
     stopDetector();
     setTestWindOn(false);
+    setShowMicNotice(false);
     setResult(null);
     setHud(INITIAL_HUD);
     setScreen('mic-permission');
@@ -282,22 +332,26 @@ export default function App() {
               ? '테스트 바람을 준비할게요'
               : '마이크에 바람을 불어주세요'}
           </h1>
-          <p className="body-copy">
-            {detector.testModeEnabled
-              ? '실기기 테스트 모드에서는 화면 버튼으로 바람을 만들어요.'
-              : '풍선을 키우기 위해 마이크를 사용해요.'}
-            <br />
-            {detector.testModeEnabled
-              ? '마이크 권한 없이 바로 시작할 수 있어요.'
-              : '소리는 저장하거나 서버로 전송하지 않아요.'}
-          </p>
-          <button
-            className="button button--primary"
-            type="button"
-            onClick={startMicrophone}
-          >
-            {detector.testModeEnabled ? '테스트 모드로 시작' : '마이크 허용하고 시작'}
-          </button>
+          {showMicNotice && (
+            <p className="body-copy">
+              {detector.testModeEnabled
+                ? '실기기 테스트 모드에서는 화면 버튼으로 바람을 만들어요.'
+                : '풍선을 키우기 위해 마이크를 사용해요.'}
+              <br />
+              {detector.testModeEnabled
+                ? '마이크 권한 없이 바로 시작할 수 있어요.'
+                : '소리는 저장하거나 서버로 전송하지 않아요.'}
+            </p>
+          )}
+          {!hasUsedMicStartButton && (
+            <button
+              className="button button--primary"
+              type="button"
+              onClick={startMicrophone}
+            >
+              {detector.testModeEnabled ? '테스트 모드로 시작' : '마이크 허용하고 시작'}
+            </button>
+          )}
           <button className="text-button" type="button" onClick={goHome}>
             다음에 할게요
           </button>
