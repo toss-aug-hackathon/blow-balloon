@@ -390,6 +390,8 @@ export default function App() {
                 </div>
               </>
             )}
+          </div>
+          <div className="game-wind-meter">
             <WindMeter strength={hud.windStrength} />
           </div>
           {detector.testModeEnabled && (

@@ -2308,6 +2308,74 @@ h1 {
   transition: width 120ms ease-out;
 }
 
+/* Final game layout: top stats stay clear of the playfield; wind sits at the bottom. */
+.game-screen > .game-hud {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.game-screen > .game-hud > .game-exit {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.game-screen > .game-hud > .game-stat {
+  position: static;
+  min-width: 86px;
+  padding: 8px 12px;
+  border: 1px solid rgba(242, 242, 247, 0.95);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.game-screen > .game-hud > .game-stat:not(.game-stat--right) {
+  grid-column: 2;
+}
+
+.game-screen > .game-hud > .game-stat--right {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.game-screen > .game-hud .game-stat small {
+  font-size: 12px;
+}
+
+.game-screen > .game-hud .game-stat strong {
+  color: #1c1c1e;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.game-screen > .game-hud .game-stat em {
+  margin-left: 2px;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.game-wind-meter {
+  position: absolute;
+  z-index: 4;
+  right: 16px;
+  bottom: calc(22px + var(--ait-safe-bottom));
+  left: 16px;
+  pointer-events: none;
+}
+
+.game-wind-meter .wind-meter {
+  width: 100%;
+  padding: 11px 14px;
+}
+
+.countdown-screen > .wind-meter {
+  display: none;
+}
+
 /* Restore non-home UI while retaining the cream app background. */
 .game-hud {
   position: absolute;
