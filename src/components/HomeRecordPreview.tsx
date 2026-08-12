@@ -5,6 +5,7 @@ import {
   type GameType,
   type RankingItem,
 } from '../api/gameApi';
+import { getRankingBalloonSrc } from '../utils/rankingBalloon';
 
 type HomeRecordPreviewProps = {
   userKey: string | null;
@@ -78,7 +79,7 @@ export function HomeRecordPreview({ onOpenRanking }: HomeRecordPreviewProps) {
                   <>
                     <img
                       className="home-ranking-podium__balloon"
-                      src={`/balloons/${activeGameType === 'LUNG_CAPACITY' ? 'lung-test' : 'balloon-rush'}/balloon_${String((index % 3) + 1).padStart(2, '0')}.webp`}
+                      src={getRankingBalloonSrc(activeGameType, index + 1)}
                       alt=""
                     />
                     <span className="home-ranking-podium__name">{rankingItem.displayName}</span>

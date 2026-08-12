@@ -13,6 +13,7 @@ import {
 } from '../api/gameApi';
 import { formatSeconds } from '../utils/math';
 import { getNicknameValidationError } from '../utils/nicknamePolicy';
+import { getRankingBalloonSrc } from '../utils/rankingBalloon';
 
 type RankingScreenProps = {
   userKey: string | null;
@@ -35,11 +36,6 @@ function formatScore(gameType: GameType, score: number) {
   return gameType === 'LUNG_CAPACITY'
     ? `${score}점`
     : `${score}개`;
-}
-
-function getRankingBalloonSrc(gameType: GameType, rank: number) {
-  const folder = gameType === 'LUNG_CAPACITY' ? 'lung-test' : 'balloon-rush';
-  return `/balloons/${folder}/balloon_${String(((rank - 1) % 3) + 1).padStart(2, '0')}.webp`;
 }
 
 function RankingPodium({ ranking, gameType }: { ranking: RankingItem[]; gameType: GameType }) {
