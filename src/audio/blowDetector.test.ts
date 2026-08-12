@@ -39,6 +39,15 @@ describe('BlowDetector', () => {
     expect(recovered.isBlowing).toBe(true);
   });
 
+  it('marks signal below the start threshold as weak immediately', () => {
+    const detector = createDetector();
+    detector.update(0.04, 0);
+    detector.update(0.04, 100);
+    const frame = detector.update(0.017, 120);
+    expect(frame.state).toBe('blowing');
+    expect(frame.hasStrongSignal).toBe(false);
+  });
+
   it('ends only after the 350ms grace period', () => {
     const detector = createDetector();
     detector.update(0.04, 0);

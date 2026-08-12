@@ -17,7 +17,6 @@ import {
   calculateAverageWind,
   calculateBalloonScore,
   calculateWindGrowthMultiplier,
-  hasLungBreathEnded,
   hasRushTimeExpired,
   isBalloonComplete,
 } from './rules';
@@ -57,7 +56,6 @@ export class BalloonEngine {
   private windIntegral = 0;
   private peakWind = 0;
   private lungBreathStarted = false;
-  private lungGapMs = 0;
   private lungSettlingMs = 0;
   private finished = false;
   private paused = false;
@@ -172,9 +170,8 @@ export class BalloonEngine {
       return;
     }
 
-    if (signal.isBlowing) {
+    if (signal.state === 'blowing' && signal.hasStrongSignal) {
       this.lungBreathStarted = true;
-      this.lungGapMs = 0;
       this.elapsedMs += deltaMs;
       this.totalBlowingMs += deltaMs;
       this.windIntegral += signal.windStrength * deltaMs;
@@ -189,8 +186,7 @@ export class BalloonEngine {
         deltaSeconds;
       this.growActiveBalloon(growth);
     } else if (this.lungBreathStarted) {
-      this.lungGapMs += deltaMs;
-      if (hasLungBreathEnded(this.lungGapMs)) this.lungSettlingMs = 1;
+      this.lungSettlingMs = 1;
     }
   }
 

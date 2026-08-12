@@ -18,6 +18,7 @@ const EMPTY_FRAME: DetectorFrame = {
   rawRms: 0,
   baselineRms: 0,
   windStrength: 0,
+  hasStrongSignal: false,
   isBlowing: false,
   state: 'idle',
   currentBreathDurationMs: 0,
