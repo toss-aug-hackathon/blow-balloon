@@ -5,12 +5,7 @@ export const MAX_RUSH_BALLOON_COUNT = 30;
 export const MAX_BALLOON_SCORE_RATIO = 9.99;
 export const RUSH_MAX_RADIUS = 54;
 export const RUSH_COMPLETION_RADIUS = 51;
-export const LUNG_END_GRACE_MS = 150;
 export const LUNG_MAX_GROWTH_DURATION_MS = 15_000;
-
-export function hasLungBreathEnded(gapMs: number): boolean {
-  return gapMs >= LUNG_END_GRACE_MS;
-}
 
 export function hasRushTimeExpired(elapsedMs: number): boolean {
   return elapsedMs >= BALLOON_RUSH_DURATION_MS;
