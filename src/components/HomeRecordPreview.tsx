@@ -5,7 +5,7 @@ import {
   type GameType,
   type RankingItem,
 } from '../api/gameApi';
-import { getRankingBalloonSrc } from '../utils/rankingBalloon';
+import { RankingPodium } from './RankingPodium';
 
 type HomeRecordPreviewProps = {
   userKey: string | null;
@@ -65,37 +65,7 @@ export function HomeRecordPreview({ onOpenRanking }: HomeRecordPreviewProps) {
         <strong>{getLabel(activeGameType)} 랭킹</strong>
       </button>
       <button className="home-record-preview" type="button" onClick={onOpenRanking}>
-        <span className="home-ranking-podium">
-          {[0, 1, 2].map((index) => {
-            const rankingItem = items[index];
-            return (
-              <span
-                className={`home-ranking-podium__card home-ranking-podium__card--${index + 1}${rankingItem ? '' : ' is-empty'}`}
-                key={rankingItem ? `${activeGameType}-${rankingItem.rank}` : `empty-${index + 1}`}
-                aria-label={rankingItem ? getLabel(activeGameType) : `${index + 1}위 기록 없음`}
-              >
-                <span className="home-ranking-podium__rank">{index + 1}</span>
-                {rankingItem ? (
-                  <>
-                    <img
-                      className="home-ranking-podium__balloon"
-                      src={getRankingBalloonSrc(activeGameType, index + 1)}
-                      alt=""
-                    />
-                    <span className="home-ranking-podium__name">{rankingItem.displayName}</span>
-                    <strong className="home-ranking-podium__score">
-                      {activeGameType === 'LUNG_CAPACITY'
-                        ? `${rankingItem.score}점`
-                        : `${rankingItem.score}개`}
-                    </strong>
-                  </>
-                ) : (
-                  <span className="home-ranking-podium__empty">기록 없음</span>
-                )}
-              </span>
-            );
-          })}
-        </span>
+        <RankingPodium ranking={items} gameType={activeGameType} />
       </button>
     </div>
   );
