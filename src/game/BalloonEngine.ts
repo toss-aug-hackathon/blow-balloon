@@ -37,7 +37,6 @@ type BalloonEngineOptions = {
 
 // The active balloon starts behind the bottom wind panel and reveals itself
 // as it grows into the playfield.
-const ACTIVE_BALLOON_HIDDEN_OFFSET = 46;
 const ACTIVE_BALLOON_TARGET_RATIO = 0.82;
 const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.5;
 const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
@@ -256,7 +255,8 @@ export class BalloonEngine {
       1,
     );
     const playHeight = this.getPlayHeight();
-    const hiddenStartY = playHeight + ACTIVE_BALLOON_HIDDEN_OFFSET;
+    const hiddenOffset = Math.max(140, this.playBottomInset * 0.48);
+    const hiddenStartY = playHeight + hiddenOffset;
     if (this.mode === 'lung-test') {
       // Start behind the bottom wind panel, then move the balloon's center
       // quickly toward the middle as the breath continues.
@@ -350,6 +350,7 @@ export class BalloonEngine {
     this.drawInteractiveBackground(timeMs);
 
     for (const balloon of this.completedBalloons) {
+      const isRelieved = (balloon.variant.seed % 3) === 0;
       drawBalloon(
         context,
         balloon,
@@ -357,9 +358,9 @@ export class BalloonEngine {
         0.96,
         0,
         {
-          growthProgress: 1,
+          growthProgress: 0,
           windStrength: 0,
-          settlingProgress: 1,
+          settlingProgress: isRelieved ? 1 : 0,
         },
         this.getCompletedImage(balloon.variant.assetId),
       );
@@ -370,25 +371,28 @@ export class BalloonEngine {
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       const baseRadius = 22;
       const maximumLungRadius = this.getMaximumActiveRadius();
-      const growthProgress = clamp(
-        (this.averageRadius(this.activeBalloon) - baseRadius) /
-          Math.max(1, maximumLungRadius - baseRadius),
-        0,
-        1,
-      );
+      const isLungTest = this.mode === 'lung-test';
+      const growthProgress = isLungTest
+        ? clamp(
+            (this.averageRadius(this.activeBalloon) - baseRadius) /
+              Math.max(1, maximumLungRadius - baseRadius),
+            0,
+            1,
+          )
+        : 0;
+      const activeWind = isLungTest ? windStrength : 0;
       drawBalloon(
         context,
         this.activeBalloon,
         timeMs,
         1,
-        windStrength,
+        activeWind,
         {
           growthProgress,
-          windStrength,
-          settlingProgress:
-            this.mode === 'lung-test'
-              ? clamp(this.lungSettlingMs / 700, 0, 1)
-              : 0,
+          windStrength: activeWind,
+          settlingProgress: isLungTest
+            ? clamp(this.lungSettlingMs / 700, 0, 1)
+            : 0,
         },
         this.mode === 'balloon-rush'
           ? (getBalloonImage(this.activeBalloon.variant.assetId) ?? undefined)
