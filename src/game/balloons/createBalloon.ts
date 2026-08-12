@@ -44,11 +44,6 @@ export function createBalloonBody(
   y: number,
   radius = 22,
 ): BalloonBody {
-  const asset = getBalloonAsset(variant.assetId);
-  const bodyAspect = Math.min(
-    1.55,
-    Math.max(0.82, (asset.height / asset.width) * 0.67),
-  );
   return {
     id: `${variant.seed}-${performance.now().toFixed(2)}`,
     variant,
@@ -57,7 +52,9 @@ export function createBalloonBody(
     vx: 0,
     vy: 0,
     radiusX: radius,
-    radiusY: radius * bodyAspect,
+    // asset 원본의 세로 비율에 따라 충돌 크기가 달라지지 않도록
+    // 모든 풍선을 동일한 기준 박스로 처리한다.
+    radiusY: radius,
     rotation: 0,
     angularVelocity: 0,
     compressionX: 1,

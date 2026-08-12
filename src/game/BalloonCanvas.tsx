@@ -57,7 +57,7 @@ export function BalloonCanvas({
         getComputedStyle(document.documentElement)
           .getPropertyValue('--ait-safe-top'),
       );
-      engine.setSafeTopInset(Number.isFinite(safeTop) ? safeTop + 78 : 78);
+      engine.setSafeTopInset(Number.isFinite(safeTop) ? safeTop : 0);
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);

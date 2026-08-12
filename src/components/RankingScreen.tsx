@@ -213,7 +213,8 @@ export function RankingScreen({
     <main className="screen ranking-screen">
       <header className="ranking-header">
         <button className="back-button" type="button" onClick={onHome}>
-          ←<span className="sr-only">홈으로</span>
+          <img src="/navigation/back.png" alt="" aria-hidden="true" />
+          <span className="sr-only">홈으로</span>
         </button>
           <h1>풍선 기록장</h1>
         <p>점수가 높을수록, 같은 점수라면 시간이 짧을수록 높은 기록이에요.</p>

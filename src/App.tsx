@@ -281,7 +281,7 @@ export default function App() {
       {screen === 'mic-permission' && mode && (
         <main className="screen center-screen mic-permission-screen">
           <button className="back-button" type="button" onClick={goHome}>
-            ←
+            <img src="/navigation/back.png" alt="" aria-hidden="true" />
             <span className="sr-only">홈으로</span>
           </button>
           <div className="permission-art" aria-hidden="true">
@@ -445,7 +445,7 @@ export default function App() {
               onClick={goHome}
               aria-label="게임 나가기"
             >
-              ×
+              <img src="/navigation/cancel.png" alt="" aria-hidden="true" />
             </button>
             {mode === 'lung-test' ? (
               <div className="game-stat game-stat--center">

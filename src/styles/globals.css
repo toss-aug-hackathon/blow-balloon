@@ -4432,3 +4432,47 @@ h1 {
 .result-screen .snapshot-preview {
   margin-top: 10px;
 }
+
+/* 토스 상단의 더보기·닫기 컨트롤과 좌측 앱 버튼의 중심선을 맞춘다. */
+.back-button,
+.game-screen > .game-hud > .game-exit {
+  top: calc(18px + var(--ait-safe-top));
+}
+
+.game-screen > .game-hud > .game-exit {
+  position: fixed;
+  left: calc(18px + var(--ait-safe-left));
+}
+
+.back-button,
+.game-screen > .game-hud > .game-exit {
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: navigation-balloon-float 3.8s ease-in-out infinite;
+}
+
+.back-button img,
+.game-screen > .game-hud > .game-exit img {
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.game-screen > .game-hud > .game-exit img {
+  width: 34px;
+  height: 34px;
+}
+
+@keyframes navigation-balloon-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}

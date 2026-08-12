@@ -13,6 +13,7 @@ import {
   BALLOON_RUSH_DURATION_MS,
   LUNG_MAX_GROWTH_DURATION_MS,
   MAX_RUSH_BALLOON_COUNT,
+  RUSH_MAX_RADIUS,
   calculateAverageWind,
   calculateBalloonScore,
   calculateWindGrowthMultiplier,
@@ -381,7 +382,7 @@ export class BalloonEngine {
           )
         : 0;
       const activeWind = isLungTest ? windStrength : 0;
-      const targetRushAverageRadius = this.getBaseAverageRadius(62);
+      const targetRushAverageRadius = this.getBaseAverageRadius(RUSH_MAX_RADIUS);
       const rushProgress = !isLungTest
         ? clamp(
             (this.averageRadius(this.activeBalloon) - baseAverageRadius) /
@@ -465,7 +466,7 @@ export class BalloonEngine {
   private getMaximumActiveRadius(): number {
     return this.mode === 'lung-test'
       ? Math.max(this.width, this.height) * 0.36
-      : 62;
+      : RUSH_MAX_RADIUS;
   }
 
 
