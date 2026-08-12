@@ -41,7 +41,7 @@ function formatScore(gameType: GameType, score: number) {
 function RankingPodium({ ranking, gameType }: { ranking: RankingItem[]; gameType: GameType }) {
   return (
     <section className="home-ranking-podium ranking-podium" aria-label="상위 3위">
-      {[2, 1, 3].map((rank) => {
+      {[1, 2, 3].map((rank) => {
         const item = ranking.find((entry) => entry.rank === rank);
         return (
           <article className={`home-ranking-podium__card home-ranking-podium__card--${rank}${item ? '' : ' is-empty'}`} key={rank}>

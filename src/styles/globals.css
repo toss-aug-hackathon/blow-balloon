@@ -4063,50 +4063,8 @@ h1 {
 }
 
 .ranking-podium {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: end;
-  gap: 8px;
-  margin-top: 18px;
-  padding-top: 12px;
-}
-
-.ranking-podium__card {
-  display: flex;
-  min-width: 0;
-  min-height: 148px;
-  align-items: center;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 10px 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 22px 22px 16px 16px;
-  background: #e8edf2;
-  box-shadow: 0 8px 16px rgba(96, 74, 89, 0.08);
-  text-align: center;
-}
-
-.ranking-podium__card--1 { min-height: 178px; background: #dce5ff; border-color: #c8d5f7; }
-.ranking-podium__card--3 { background: #ffd9df; border-color: #f5bcc7; }
-.ranking-podium__card.is-empty { border-style: dashed; background: rgba(255, 255, 255, 0.28); }
-.ranking-podium__rank { color: #738097; font-size: 18px; line-height: 1; }
-.ranking-podium__card--1 .ranking-podium__rank { color: #dfaa24; font-size: 24px; }
-.ranking-podium__card--3 .ranking-podium__rank { color: #a9784e; }
-.ranking-podium__balloon { width: 74px; height: 74px; margin: 5px 0 3px; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(101, 64, 80, 0.12)); }
-.ranking-podium__card--1 .ranking-podium__balloon { width: 94px; height: 94px; }
-.ranking-podium__name,
-.ranking-podium__score { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ranking-podium__name { color: #493541; font-size: 13px; font-weight: 800; }
-.ranking-podium__score { margin-top: 4px; color: #ef7475; font-size: 14px; }
-.ranking-podium__empty { margin-top: 48px; color: #9c8f95; font-size: 12px; font-weight: 700; }
-
-.ranking-podium {
   margin-top: 18px;
 }
-
-.ranking-podium .home-ranking-podium__card--1 { order: 2; }
-.ranking-podium .home-ranking-podium__card--2 { order: 1; }
-.ranking-podium .home-ranking-podium__card--3 { order: 3; }
 
 .ranking-tabs {
   display: grid;
