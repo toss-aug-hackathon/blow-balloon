@@ -303,9 +303,61 @@ h1 {
 
 .permission-art {
   position: relative;
-  width: 190px;
-  height: 190px;
-  margin-bottom: 28px;
+  width: 170px;
+  height: 170px;
+  margin-bottom: 16px;
+}
+
+.mic-test-card {
+  width: min(100%, 390px);
+  margin: 12px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 28px rgba(91, 46, 58, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.mic-test-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.mic-test-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(241, 101, 118, 0.12);
+  color: #f16576;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mic-test-hint {
+  margin: 0;
+  color: #6e5966;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mic-test-card .test-wind-control {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.mic-test-card .test-wind-button {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 14px;
 }
 
 .button-stack,

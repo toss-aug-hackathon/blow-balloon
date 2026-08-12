@@ -67,10 +67,10 @@ export function useBlowDetector(publishUiFrames = true) {
     setPermission('requesting');
     setErrorMessage(null);
     try {
-      let readSignal: () => { rms: number; breathiness: number };
+      let readSignal: (isCalibrating?: boolean) => { rms: number; breathiness: number };
       if (simulationEnabled) {
-        readSignal = () => ({
-          rms: 0.005 + simulatedWindRef.current * 0.18,
+        readSignal = (isCalibrating = false) => ({
+          rms: 0.005 + (isCalibrating ? 0 : simulatedWindRef.current) * 0.18,
           breathiness: 1,
         });
       } else {
@@ -85,8 +85,9 @@ export function useBlowDetector(publishUiFrames = true) {
       let lastUiUpdate = 0;
 
       const readFrame = (now: number) => {
-        const { rms, breathiness } = readSignal();
-        if (now - calibrationStartedAt < BLOW_CONFIG.calibrationMs) {
+        const isCalibrating = now - calibrationStartedAt < BLOW_CONFIG.calibrationMs;
+        const { rms, breathiness } = readSignal(isCalibrating);
+        if (isCalibrating) {
           calibrationSamples.push(rms);
           signalRef.current = { ...EMPTY_FRAME, rawRms: rms };
         } else {
