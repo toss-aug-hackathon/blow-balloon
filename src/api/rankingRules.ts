@@ -32,3 +32,13 @@ export function hasSameRankingRecord(
 ): boolean {
   return a.score === b.score && a.durationMs === b.durationMs;
 }
+
+export function calculateExpectedRank(
+  gameType: GameType,
+  ranking: RankingItem[],
+  score: number,
+  durationMs: number | null,
+): number {
+  const current = { rank: 0, displayName: '', score, durationMs };
+  return 1 + ranking.filter((item) => compareRankingItems(gameType, item, current) < 0).length;
+}

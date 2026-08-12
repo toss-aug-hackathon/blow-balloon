@@ -48,6 +48,7 @@ export type GameHudState = {
   elapsedMs: number;
   remainingMs: number;
   completedCount: number;
+  completionTimeMs: number | null;
   windStrength: number;
   isWaitingForBreath: boolean;
   balloonScore: number;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RankingItem } from './gameApi';
 import {
   chooseBetterDuration,
+  calculateExpectedRank,
   compareRankingItems,
   hasSameRankingRecord,
 } from './rankingRules';
@@ -35,5 +36,11 @@ describe('ranking rules', () => {
   it('treats records as tied only when score and duration both match', () => {
     expect(hasSameRankingRecord(record(20, 16_000), record(20, 16_000))).toBe(true);
     expect(hasSameRankingRecord(record(20, 16_000), record(20, 17_000))).toBe(false);
+  });
+
+  it('estimates the current rank with each mode tie-breaker', () => {
+    const ranking = [record(6, 8_000), record(5, 7_000), record(5, 12_000)];
+    expect(calculateExpectedRank('BALLOON_COUNT', ranking, 5, 10_000)).toBe(3);
+    expect(calculateExpectedRank('LUNG_CAPACITY', ranking, 5, 10_000)).toBe(3);
   });
 });
