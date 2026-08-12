@@ -420,7 +420,6 @@ export default function App() {
                   onPointerCancel={stopTestWind}
                   onPointerLeave={stopTestWind}
                 >
-                  <i aria-hidden="true">〰</i>
                   바람 미리 불어보기
                 </button>
               </div>
@@ -450,7 +449,7 @@ export default function App() {
       {screen === 'calibrating' && (
         <main className="screen center-screen calibration-screen">
           {detector.permission === 'denied' ||
-          detector.permission === 'error' ? (
+            detector.permission === 'error' ? (
             <>
               <div className="status-icon status-icon--error">!</div>
               <p className="eyebrow">마이크를 확인해 주세요</p>
@@ -502,7 +501,11 @@ export default function App() {
 
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
-          <p>{mode === 'lung-test' ? '한 번의 호흡을 준비하세요' : '30초 준비!'}</p>
+          <p>
+            {mode === 'lung-test'
+              ? '한 번의 호흡을 준비하세요'
+              : '30초 동안 최대한 많이 불어보세요!'}
+          </p>
           <strong
             key={countdown}
             data-countdown={countdown > 0 ? countdown : '후—!'}
@@ -554,29 +557,27 @@ export default function App() {
             )}
           </div>
           <div className="game-control-panel">
-          <p className="game-control-guide">
-            <span aria-hidden="true">〰</span>
-            <span>누르고 있는 동안 <strong>바람</strong>이 불어요</span>
-          </p>
-          <div className="game-wind-meter">
-            <WindMeter strength={hud.windStrength} />
-          </div>
-          {detector.testModeEnabled && (
-            <div className="test-wind-control">
-              <span>누르고 있는 동안 바람이 불어요</span>
-              <button
-                className={`test-wind-button${testWindOn ? ' is-active' : ''}`}
-                type="button"
-                onPointerDown={startTestWind}
-                onPointerUp={stopTestWind}
-                onPointerCancel={stopTestWind}
-                onPointerLeave={stopTestWind}
-              >
-                <i aria-hidden="true">〰</i>
-                바람 불기
-              </button>
+            <p className="game-control-guide">
+              <span>누르고 있는 동안 <strong>바람</strong>이 불어요</span>
+            </p>
+            <div className="game-wind-meter">
+              <WindMeter strength={hud.windStrength} />
             </div>
-          )}
+            {detector.testModeEnabled && (
+              <div className="test-wind-control">
+                <span>누르고 있는 동안 바람이 불어요</span>
+                <button
+                  className={`test-wind-button${testWindOn ? ' is-active' : ''}`}
+                  type="button"
+                  onPointerDown={startTestWind}
+                  onPointerUp={stopTestWind}
+                  onPointerCancel={stopTestWind}
+                  onPointerLeave={stopTestWind}
+                >
+                  바람 불기
+                </button>
+              </div>
+            )}
           </div>
         </main>
       )}

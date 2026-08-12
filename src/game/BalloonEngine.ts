@@ -247,10 +247,11 @@ export class BalloonEngine {
     }
 
     const baseRadius = 22;
+    const baseAverageRadius = this.getBaseAverageRadius(baseRadius);
     const maximumRadius = this.getMaximumActiveRadius();
     const progress = clamp(
-      (this.averageRadius(this.activeBalloon) - baseRadius) /
-        Math.max(1, maximumRadius - baseRadius),
+      (this.averageRadius(this.activeBalloon) - baseAverageRadius) /
+        Math.max(1, maximumRadius - baseAverageRadius),
       0,
       1,
     );
@@ -368,34 +369,47 @@ export class BalloonEngine {
       this.activeBalloon.rotation =
         Math.sin(timeMs * 0.003) * (0.025 + windStrength * 0.035);
       const baseRadius = 22;
+      const baseAverageRadius = this.getBaseAverageRadius(baseRadius);
       const maximumLungRadius = this.getMaximumActiveRadius();
       const isLungTest = this.mode === 'lung-test';
       const growthProgress = isLungTest
         ? clamp(
-            (this.averageRadius(this.activeBalloon) - baseRadius) /
-              Math.max(1, maximumLungRadius - baseRadius),
+            (this.averageRadius(this.activeBalloon) - baseAverageRadius) /
+              Math.max(1, maximumLungRadius - baseAverageRadius),
             0,
             1,
           )
         : 0;
       const activeWind = isLungTest ? windStrength : 0;
-      drawBalloon(
-        context,
-        this.activeBalloon,
-        timeMs,
-        1,
-        activeWind,
-        {
-          growthProgress,
-          windStrength: activeWind,
-          settlingProgress: isLungTest
-            ? clamp(this.lungSettlingMs / 700, 0, 1)
-            : 0,
-        },
-        this.mode === 'balloon-rush'
-          ? (getBalloonImage(this.activeBalloon.variant.assetId) ?? undefined)
-          : undefined,
-      );
+      const targetRushAverageRadius = this.getBaseAverageRadius(62);
+      const rushProgress = !isLungTest
+        ? clamp(
+            (this.averageRadius(this.activeBalloon) - baseAverageRadius) /
+              Math.max(1, targetRushAverageRadius - baseAverageRadius),
+            0,
+            1,
+          )
+        : 1;
+
+      if (isLungTest || rushProgress > 0) {
+        drawBalloon(
+          context,
+          this.activeBalloon,
+          timeMs,
+          1,
+          activeWind,
+          {
+            growthProgress,
+            windStrength: activeWind,
+            settlingProgress: isLungTest
+              ? clamp(this.lungSettlingMs / 700, 0, 1)
+              : 0,
+          },
+          this.mode === 'balloon-rush'
+            ? (getBalloonImage(this.activeBalloon.variant.assetId) ?? undefined)
+            : undefined,
+        );
+      }
     }
   }
 
