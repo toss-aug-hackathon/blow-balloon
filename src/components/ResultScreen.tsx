@@ -278,7 +278,7 @@ export function ResultScreen({
       </section>
 
       <div className="button-stack">
-        <button className="button button--secondary" type="button" onClick={onRetry}>
+        <button className="button result-retry-button" type="button" onClick={onRetry}>
           다시 도전
         </button>
         <button className="text-button" type="button" onClick={onHome}>
