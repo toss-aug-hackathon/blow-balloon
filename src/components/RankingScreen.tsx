@@ -220,7 +220,7 @@ export function RankingScreen({
       </header>
 
       <div className="ranking-tabs" role="tablist" aria-label="랭킹 메뉴">
-        <button type="button" className={view === 'ranking' && gameType === 'LUNG_CAPACITY' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('LUNG_CAPACITY'); setView('ranking'); }}>폐활량</button>
+        <button type="button" className={view === 'ranking' && gameType === 'LUNG_CAPACITY' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('LUNG_CAPACITY'); setView('ranking'); }}>크게 불기</button>
         <button type="button" className={view === 'ranking' && gameType === 'BALLOON_COUNT' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('BALLOON_COUNT'); setView('ranking'); }}>스피드런</button>
         <button type="button" className={view === 'mine' ? 'is-selected' : ''} onClick={() => setView('mine')}>나의 기록</button>
       </div>
