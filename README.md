@@ -37,27 +37,26 @@
   </tr>
 </table>
 
-## 핵심 기능과 상태
+## 주요 기능
 
-| 기능 | 상태 | 설명 |
-| --- | --- | --- |
-| 풍선 크게 불기 | 부분 구현 | 첫 유효 호흡 동안 풍선을 키우고 호흡 시간과 풍선 점수를 기록합니다. 감지기의 종료 유예가 엔진 종료 조건에는 연결되지 않았습니다. |
-| 풍선 스피드런 | 구현 완료 | 30초 동안 완성한 풍선 수를 겨루며, 중간에 호흡을 멈춰도 현재 풍선 크기를 유지합니다. |
-| 마이크 입력 분석 | 부분 구현 | 850ms 주변 소음 표본, RMS 보정, 평활화, 시작·종료 히스테리시스를 사용합니다. 현재 보정 완료를 시작 버튼이 강제하지는 않습니다. |
-| 풍선 렌더링과 물리 | 구현 완료 | 모드별 15종 WebP 풍선, 표정 오버레이, 부력·충돌·압축·상단 패킹을 Canvas에서 처리합니다. |
-| 랭킹과 나의 기록 | 구현 완료 | Supabase Edge Function을 통해 최고 기록, 순위, 별명과 4자리 표시 ID를 관리합니다. 백엔드가 없어도 게임은 플레이할 수 있습니다. |
-| 결과 이미지 | 부분 구현 | 오프스크린 Canvas 생성기는 있으나 현재 결과 화면에서 호출되지 않습니다. |
-| 모바일 수명주기 | 구현 완료 | Safe Area, 플레이 중 화면 켜짐, 백그라운드 일시정지/중단, 마이크·애니메이션 정리를 처리합니다. |
-
-구현 상태의 상세 근거와 예외 흐름은 [기능 명세](docs/functional-specification.md)를 참고하세요.
+- **풍선 크게 불기:** 한 번의 호흡으로 풍선을 키우고 호흡 시간과 풍선 점수를 기록합니다. 매 시도마다 15종의 풍선 중 하나가 선택됩니다.
+- **풍선 스피드런:** 30초 동안 최대한 많은 풍선을 완성합니다. 호흡을 멈춰도 현재 풍선 크기가 유지되며, 완성된 풍선은 위로 떠올라 서로 밀리고 압축되며 쌓입니다.
+- **마이크 기반 조작:** Web Audio API로 마이크 신호를 기기 안에서 분석하고 주변 소음 기준값, RMS, 바람 세기 평활화와 호흡 상태를 게임 입력으로 변환합니다. 마이크 소리는 저장하거나 서버로 전송하지 않습니다.
+- **Canvas 풍선 애니메이션:** React 렌더링과 분리된 `requestAnimationFrame` 루프에서 풍선 성장, 흔들림, 부력, 충돌과 상단 패킹을 처리합니다.
+- **랭킹과 나의 기록:** 게임 중 예상 순위를 보여주고, 결과 화면에서 기록을 등록할 수 있습니다. 모드별 랭킹, 개인 최고 기록과 별명 변경도 지원합니다.
+- **모바일 WebView 대응:** Apps in Toss Safe Area와 화면 켜짐 기능을 사용합니다. 백그라운드 전환 시 모드에 따라 게임을 일시정지하거나 현재 시도를 종료하고, 게임 이탈 시 마이크와 애니메이션 자원을 정리합니다.
+- **개발용 테스트 입력:** 마이크를 사용할 수 없는 환경에서는 환경 변수로 버튼식 바람 입력을 활성화할 수 있습니다.
 
 ## 기술 스택
 
-- React 19.2, TypeScript 5.9, Vite 7
-- Apps in Toss Web Framework/Web Bridge 2.10.8
-- Canvas 2D, Web Audio API, MediaDevices API
-- Supabase Postgres, Supabase Edge Functions
-- Vitest 4, ESLint 9
+[![React](https://img.shields.io/badge/React-19.2.8-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.3.6-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Apps in Toss](https://img.shields.io/badge/Apps_in_Toss-2.10.8-0064FF?logo=toss&logoColor=white)](https://developers-apps-in-toss.toss.im/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%26%20Edge%20Functions-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Vitest](https://img.shields.io/badge/Vitest-4.0.18-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
+
+게임 렌더링과 입력 처리에는 Canvas 2D, Web Audio API와 MediaDevices API를 사용합니다.
 
 ## 빠른 시작
 
@@ -124,7 +123,6 @@ src/
 ├── components/  홈 보조 UI, 결과, 랭킹, 바람 계기
 ├── game/        Canvas 엔진, 풍선 렌더링, 규칙과 물리
 ├── hooks/       마이크, Toss 사용자, Safe Area, 화면 켜짐
-├── result/      결과 이미지 생성기
 └── sdk/         Apps in Toss v2 호환 어댑터
 supabase/
 ├── functions/   game-api Edge Function
@@ -141,9 +139,3 @@ supabase/
 - [ERD](docs/erd.md): Postgres 테이블, 관계, 제약과 접근 정책
 - [Supabase 운영 안내](supabase/README.md): Dashboard 적용·배포·검증 절차
 - [프런트엔드 연동 참고](supabase/FRONTEND_INTEGRATION.md): 랭킹 연동의 상세 계약
-
-## 확인이 필요한 범위
-
-- 실제 iPhone·Android의 마이크 감도, 권한, Safe Area와 WebView 동작은 기기 테스트가 필요합니다.
-- Supabase 마이그레이션과 Edge Function이 특정 운영 프로젝트에 적용·배포되었는지는 저장소만으로 확인할 수 없습니다.
-- 저장소 루트에 라이선스 파일이 없으므로 재사용·배포 권한은 별도로 확정해야 합니다.
