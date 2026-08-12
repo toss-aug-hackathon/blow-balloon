@@ -4,6 +4,39 @@
 
 > `풍선 크게 불기`는 마이크 입력으로 만드는 재미용 기록입니다. 실제 폐활량이나 의료 지표를 측정하지 않습니다.
 
+## 주요 화면
+
+<table>
+  <tr>
+    <td align="center">
+      <strong>홈</strong><br />
+      <img src="docs/images/screenshots/home.png" width="260" alt="후우풍선 홈과 게임 모드 선택 화면" />
+    </td>
+    <td align="center">
+      <strong>풍선 크게 불기</strong><br />
+      <img src="docs/images/screenshots/big-balloon-gameplay.png" width="260" alt="한 번의 호흡으로 풍선을 키우는 크게 불기 게임 화면" />
+    </td>
+    <td align="center">
+      <strong>풍선 스피드런</strong><br />
+      <img src="docs/images/screenshots/speedrun-gameplay.png" width="260" alt="30초 동안 여러 풍선을 완성하는 스피드런 게임 화면" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>크게 불기 랭킹</strong><br />
+      <img src="docs/images/screenshots/big-balloon-ranking.png" width="260" alt="풍선 크게 불기 점수와 호흡 시간 랭킹 화면" />
+    </td>
+    <td align="center">
+      <strong>스피드런 랭킹</strong><br />
+      <img src="docs/images/screenshots/speedrun-ranking.png" width="260" alt="풍선 스피드런 완성 개수와 기록 시간 랭킹 화면" />
+    </td>
+    <td align="center">
+      <strong>나의 기록</strong><br />
+      <img src="docs/images/screenshots/my-records.png" width="260" alt="사용자의 크게 불기와 스피드런 최고 기록 화면" />
+    </td>
+  </tr>
+</table>
+
 ## 핵심 기능과 상태
 
 | 기능 | 상태 | 설명 |
