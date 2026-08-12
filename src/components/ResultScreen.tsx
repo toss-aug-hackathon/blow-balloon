@@ -8,6 +8,7 @@ import {
   type SubmitScoreResponse,
 } from '../api/gameApi';
 import type { GameResult } from '../game/types';
+import { getLungScoreTitle } from '../game/rules';
 import { formatSeconds } from '../utils/math';
 import { getNicknameValidationError } from '../utils/nicknamePolicy';
 
@@ -20,13 +21,6 @@ type ResultScreenProps = {
   user: GameUser | null;
   onRegistered: (user: RegisteredGameUser) => void;
 };
-
-function getLungGrade(durationMs: number): string {
-  if (durationMs >= 12_000) return '바람의 전설';
-  if (durationMs >= 8_000) return '풍선 장인';
-  if (durationMs >= 5_000) return '안정적인 한 호흡';
-  return '말랑한 첫걸음';
-}
 
 export function ResultScreen({
   result,
@@ -159,7 +153,7 @@ export function ResultScreen({
         </h1>
         <p className="result-title">
           {result.mode === 'lung-test'
-            ? getLungGrade(result.durationMs)
+            ? getLungScoreTitle(score)
             : '30초 스피드런 기록이에요'}
         </p>
       </header>
@@ -168,33 +162,25 @@ export function ResultScreen({
         {result.mode === 'lung-test' ? (
           <dl className="result-grid">
             <div>
-              <dt>한 번에 분 시간</dt>
+              <dt>호흡 시간</dt>
               <dd>{formatSeconds(result.durationMs)}초</dd>
             </div>
             <div>
-              <dt>평균 바람 세기</dt>
-              <dd>{Math.round(result.averageWindStrength * 100)}%</dd>
-            </div>
-            <div>
-              <dt>최대 바람 세기</dt>
-              <dd>{Math.round(result.peakWindStrength * 100)}%</dd>
-            </div>
-            <div>
-              <dt>최종 풍선 크기</dt>
-              <dd>{Math.round(result.finalBalloonScale * 100)}점</dd>
+              <dt>풍선 점수</dt>
+              <dd>{score.toLocaleString()}점</dd>
             </div>
           </dl>
         ) : (
           <dl className="result-grid result-grid--rush">
             <div>
-              <dt>완성한 풍선</dt>
+              <dt>만든 풍선 수</dt>
               <dd>{result.completedCount}개</dd>
             </div>
             <div>
-              <dt>마지막 풍선까지</dt>
+              <dt>마지막 풍선 완성</dt>
               <dd>
                 {result.completionTimeMs === null
-                  ? '30초 내 미달성'
+                  ? '완성 기록 없음'
                   : `${formatSeconds(result.completionTimeMs)}초`}
               </dd>
             </div>

@@ -2289,6 +2289,10 @@ h1 {
   display: none;
 }
 
+.permission-art .permission-art__balloon {
+  transform: rotate(2deg);
+}
+
 .countdown-screen > strong {
   position: relative;
   display: inline-block;
@@ -3013,6 +3017,47 @@ h1 {
     inset 0 0 0 1px rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.game-screen > .game-control-panel > .lung-live-stats {
+  display: none;
+}
+
+.game-screen > .game-control-panel > .lung-live-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 15px;
+}
+
+.game-screen > .game-control-panel > .lung-live-stats > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 14px;
+  background: rgba(255, 244, 239, 0.72);
+}
+
+.game-screen > .game-control-panel > .lung-live-stats span {
+  color: #756b70;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.game-screen > .game-control-panel > .lung-live-stats strong {
+  color: #292329;
+  font-size: clamp(16px, 4.8vw, 22px);
+  font-weight: 850;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+
+.game-screen > .game-control-panel:has(.lung-live-stats) > .lung-live-stats {
+  display: grid;
 }
 
 .game-screen > .game-control-panel + .test-wind-control,
@@ -4533,12 +4578,33 @@ h1 {
   left: calc(18px + var(--ait-safe-left));
 }
 
+/* 모든 화면의 뒤로가기·닫기 버튼을 하나의 상단 기준선으로 통일한다. */
+.back-button,
+.game-screen > .game-hud > .game-exit {
+  position: fixed !important;
+  top: calc(10px + var(--ait-safe-top)) !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: calc(18px + var(--ait-safe-left)) !important;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.76) !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    0 8px 22px rgba(75, 52, 63, 0.11),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.32) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ranking-header {
+  padding-top: 54px;
+}
+
 .back-button,
 .game-screen > .game-hud > .game-exit {
   overflow: hidden;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
   animation: navigation-balloon-float 3.8s ease-in-out infinite;
 }
 

@@ -1,3 +1,9 @@
+import {
+  chooseBetterDuration,
+  compareRankingItems,
+  hasSameRankingRecord,
+} from './rankingRules';
+
 export type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY';
 
 export type RegisteredGameUser = {
@@ -344,9 +350,8 @@ export function syncRankingAfterScore(params: {
     const preservedDurationMs =
       cachedUser && cachedUser.score > bestScore
         ? cachedUser.durationMs
-        : cachedUser && cachedUser.score === bestScore &&
-            cachedUser.durationMs !== null && bestDurationMs !== null
-          ? Math.min(cachedUser.durationMs, bestDurationMs)
+        : cachedUser && cachedUser.score === bestScore
+          ? chooseBetterDuration(gameType, cachedUser.durationMs, bestDurationMs)
           : bestDurationMs;
     const nextRanking = cachedRanking
       .filter((item) => item.displayName !== displayName)
@@ -356,15 +361,12 @@ export function syncRankingAfterScore(params: {
         score: preservedBestScore,
         durationMs: preservedDurationMs,
       })
-      .sort((a, b) =>
-        b.score - a.score || (a.durationMs ?? Number.MAX_SAFE_INTEGER) -
-          (b.durationMs ?? Number.MAX_SAFE_INTEGER),
-      )
+      .sort((a, b) => compareRankingItems(gameType, a, b))
       .slice(0, 100)
       .map((item, index, items) => ({
         ...item,
         rank:
-          index > 0 && item.score === items[index - 1].score
+          index > 0 && hasSameRankingRecord(item, items[index - 1])
             ? items[index - 1].rank
             : index + 1,
       }));
@@ -379,9 +381,8 @@ export function syncRankingAfterScore(params: {
     const preservedBestDuration =
       currentBestScore > bestScore
         ? currentBestDuration
-        : currentBestScore === bestScore &&
-            currentBestDuration !== null && bestDurationMs !== null
-          ? Math.min(currentBestDuration, bestDurationMs)
+        : currentBestScore === bestScore
+          ? chooseBetterDuration(gameType, currentBestDuration, bestDurationMs)
           : bestDurationMs;
     const optimisticRank = rankingCache
       .get(gameType)

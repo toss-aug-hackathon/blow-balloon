@@ -4,8 +4,8 @@ type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 
 const GAME_TYPES = new Set<GameType>(['BALLOON_COUNT', 'LUNG_CAPACITY'])
 const SCORE_LIMITS: Record<GameType, number> = {
-  BALLOON_COUNT: 30,
-  LUNG_CAPACITY: 999,
+  BALLOON_COUNT: 50,
+  LUNG_CAPACITY: 9999,
 }
 const USER_KEY_HEADER = 'x-game-user-key'
 const BLOCKED_NICKNAME_TERMS = [

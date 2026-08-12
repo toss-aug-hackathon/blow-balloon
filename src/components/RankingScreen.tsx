@@ -13,6 +13,7 @@ import {
 } from '../api/gameApi';
 import { formatSeconds } from '../utils/math';
 import { getNicknameValidationError } from '../utils/nicknamePolicy';
+import { getRankingBalloonSrc } from '../utils/rankingBalloon';
 
 type RankingScreenProps = {
   userKey: string | null;
@@ -35,11 +36,6 @@ function formatScore(gameType: GameType, score: number) {
   return gameType === 'LUNG_CAPACITY'
     ? `${score}점`
     : `${score}개`;
-}
-
-function getRankingBalloonSrc(gameType: GameType, rank: number) {
-  const folder = gameType === 'LUNG_CAPACITY' ? 'lung-test' : 'balloon-rush';
-  return `/balloons/${folder}/balloon_${String(((rank - 1) % 3) + 1).padStart(2, '0')}.webp`;
 }
 
 function RankingPodium({ ranking, gameType }: { ranking: RankingItem[]; gameType: GameType }) {
@@ -217,7 +213,11 @@ export function RankingScreen({
           <span className="sr-only">홈으로</span>
         </button>
           <h1>풍선 기록장</h1>
-        <p>점수가 높을수록, 같은 점수라면 시간이 짧을수록 높은 기록이에요.</p>
+        <p>
+          {gameType === 'LUNG_CAPACITY'
+            ? '풍선 점수가 높을수록, 같은 점수라면 호흡이 길수록 높은 기록이에요.'
+            : '풍선 수가 많을수록, 같은 개수라면 마지막 완성이 빠를수록 높은 기록이에요.'}
+        </p>
       </header>
 
       <div className="ranking-tabs" role="tablist" aria-label="랭킹 메뉴">
