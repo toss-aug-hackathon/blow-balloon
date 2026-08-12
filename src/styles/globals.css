@@ -526,7 +526,8 @@ h1 {
 }
 
 .countdown-screen > strong {
-  margin: 25px 0 45px;
+  order: 1;
+  margin: 0 0 22px;
   color: #f05b71;
   font-size: clamp(100px, 32vw, 170px);
   line-height: 1;
@@ -1941,6 +1942,15 @@ h1 {
   transform: rotate(2deg);
 }
 
+.countdown-screen > p {
+  order: 2;
+  margin: 0 0 30px;
+}
+
+.countdown-screen > .wind-meter {
+  order: 3;
+}
+
 @media (max-height: 700px) {
   .mode-card .balloon-art--lung {
     top: 9px;
@@ -2231,16 +2241,31 @@ h1 {
 }
 
 .center-screen .mode-eyebrow {
-  display: inline-block;
-  margin-bottom: 14px;
-  padding: 7px 13px 6px;
-  border-radius: 999px;
-  color: #c94b5f;
-  background: rgba(255, 224, 218, 0.82);
-  font-size: 15px;
-  font-weight: 850;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 20px;
+  padding: 5px 10px;
+  border: 1px solid rgba(220, 130, 112, 0.2);
+  border-radius: 10px;
+  color: #9a5962;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
+}
+
+.center-screen .mode-eyebrow::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f6a03c, #ed6673);
+  content: '';
+}
+
+.mic-ready-title {
+  display: none;
 }
 
 .permission-art .permission-art__balloon {
