@@ -8,7 +8,6 @@ import {
   type SubmitScoreResponse,
 } from '../api/gameApi';
 import type { GameResult } from '../game/types';
-import { createResultSnapshot } from '../result/createResultSnapshot';
 import { formatSeconds } from '../utils/math';
 import { getNicknameValidationError } from '../utils/nicknamePolicy';
 
@@ -38,9 +37,6 @@ export function ResultScreen({
   user,
   onRegistered,
 }: ResultScreenProps) {
-  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
-  const [snapshotError, setSnapshotError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [nickname, setNickname] = useState('');
   const [rankingError, setRankingError] = useState<string | null>(null);
@@ -83,13 +79,6 @@ export function ResultScreen({
     }
   }, [durationMs, gameType, score, user]);
 
-  useEffect(
-    () => () => {
-      if (snapshotUrl) URL.revokeObjectURL(snapshotUrl);
-    },
-    [snapshotUrl],
-  );
-
   useEffect(() => {
     if (!userKey || !user?.isRegistered || submittedResultRef.current === resultKey) {
       return;
@@ -97,22 +86,6 @@ export function ResultScreen({
     submittedResultRef.current = resultKey;
     void saveScore(userKey);
   }, [resultKey, saveScore, user?.isRegistered, userKey]);
-
-  const handleCreateSnapshot = async () => {
-    setIsCreating(true);
-    setSnapshotError(null);
-    try {
-      const nextUrl = await createResultSnapshot(result);
-      if (snapshotUrl) URL.revokeObjectURL(snapshotUrl);
-      setSnapshotUrl(nextUrl);
-    } catch (error) {
-      setSnapshotError(
-        error instanceof Error ? error.message : '이미지를 만들지 못했어요.',
-      );
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   const handleRegister = async () => {
     const trimmedNickname = nickname.trim();
@@ -227,14 +200,16 @@ export function ResultScreen({
             </div>
           </dl>
         )}
-        <p className="result-mode-guide">
-          {result.mode === 'lung-test'
-            ? '풍선 크기 점수와 기록 시간으로 순위를 정해요.'
-            : '완성한 풍선 수가 많을수록 높은 기록이에요.'}
-        </p>
-        <p className="medical-note">
-          마이크 입력을 이용한 재미용 기록이에요.
-        </p>
+        <div className="result-note-group">
+          <p className="result-mode-guide">
+            {result.mode === 'lung-test'
+              ? '풍선 크기 점수와 기록 시간으로 순위를 정해요.'
+              : '완성한 풍선 수가 많을수록 높은 기록이에요.'}
+          </p>
+          <p className="medical-note">
+            마이크 입력을 이용한 재미용 기록이에요.
+          </p>
+        </div>
         <section className="ranking-result" aria-live="polite">
           {submission ? (
           <>
@@ -273,18 +248,23 @@ export function ResultScreen({
           </div>
           ) : (
           <div className="ranking-choice">
-            <p>
-              게임 결과에서 랭킹에 등록하면<br />
-              나의 기록을 확인할 수 있어요.
-            </p>
-            <button
-              className="button button--primary"
-              type="button"
-              disabled={!userKey}
-              onClick={() => setIsRegistrationOpen(true)}
-            >
-              랭킹에 등록하기
-            </button>
+            <div className="ranking-choice__actions">
+              <button
+                className="button button--primary"
+                type="button"
+                disabled={!userKey}
+                onClick={() => setIsRegistrationOpen(true)}
+              >
+                랭킹에 등록하기
+              </button>
+              <button
+                className="button ranking-view-button"
+                type="button"
+                onClick={onOpenRanking}
+              >
+                랭킹 보러 가기
+              </button>
+            </div>
             {!userKey && (
               <small>랭킹 등록은 토스 앱에서 사용할 수 있어요.</small>
             )}
@@ -302,23 +282,13 @@ export function ResultScreen({
           )}
         </section>
 
-        <div className="result-utility-links">
-          <button className="text-button" type="button" onClick={onOpenRanking}>
-            랭킹 보러 가기
-          </button>
-          {!snapshotUrl && (
-            <button className="text-button" type="button" onClick={handleCreateSnapshot} disabled={isCreating}>
-              {isCreating ? '이미지 만드는 중…' : '결과 이미지 만들기'}
+        {(submission || user?.isRegistered || isRegistrationOpen) && (
+          <div className="result-utility-links result-utility-links--wide">
+            <button className="button ranking-view-button" type="button" onClick={onOpenRanking}>
+              랭킹 보러 가기
             </button>
-          )}
-        </div>
-        {snapshotUrl && (
-          <figure className="snapshot-preview">
-            <img src={snapshotUrl} alt="blow-balloon 결과 이미지" />
-            <figcaption>이미지를 길게 눌러 저장할 수 있어요.</figcaption>
-          </figure>
+          </div>
         )}
-        {snapshotError && <p className="error-text">{snapshotError}</p>}
       </section>
 
       <div className="button-stack">
