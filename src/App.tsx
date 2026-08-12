@@ -202,6 +202,27 @@ export default function App() {
   }, [requestPermission]);
 
   useEffect(() => {
+    if (
+      screen !== 'mic-permission' ||
+      !mode ||
+      !detector.testModeEnabled ||
+      detector.permission !== 'idle'
+    ) {
+      return;
+    }
+
+    // 테스트 모드도 실제 마이크 모드와 동일하게 입력 루프를 먼저
+    // 시작해야 버튼으로 바꾼 시뮬레이션 신호가 detector에 전달된다.
+    void requestPermission();
+  }, [
+    detector.permission,
+    detector.testModeEnabled,
+    mode,
+    requestPermission,
+    screen,
+  ]);
+
+  useEffect(() => {
     if (screen !== 'mic-permission' || !mode) return;
     if (!detector.testModeEnabled && hasUsedMicStartButton) {
       const timeout = window.setTimeout(() => {
