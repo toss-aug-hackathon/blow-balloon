@@ -65,3 +65,7 @@ temp/
 
 # Project-local generated assets
 /replace_balloons/
+
+# Large review/submission artifacts
+/output/**/*.mp4
+/output/**/*.zip
