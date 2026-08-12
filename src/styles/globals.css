@@ -1934,8 +1934,10 @@ h1 {
 
 .permission-art .permission-art__balloon {
   top: -3px;
-  right: 26px;
+  left: 50%;
+  width: 195px;
   height: 195px;
+  object-position: center;
   transform: rotate(2deg);
 }
 
@@ -2112,7 +2114,7 @@ h1 {
 }
 
 .home-header {
-  padding: 0 4px 18px;
+  padding: 18px 4px 18px;
 }
 
 .home-header h1 {
@@ -2195,6 +2197,39 @@ h1 {
   bottom: 10px;
 }
 
+/* Keep the home mode cards compact enough to show the full first screen. */
+.home-screen .mode-card {
+  min-height: 146px;
+  padding-top: 18px;
+  padding-bottom: 14px;
+}
+
+.home-screen .mode-card small {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.home-screen .mode-card .balloon-art--lung,
+.home-screen .mode-card .balloon-art--bunch {
+  height: 140px;
+}
+
+.home-screen .mode-card--lung .balloon-art--lung {
+  right: -8px;
+}
+
+.home-screen .mode-card--rush .balloon-art--bunch {
+  right: -12px;
+  top: 16px;
+  bottom: auto;
+}
+
+.home-screen .mode-card--rush small {
+  max-width: 235px;
+  padding-right: 4px;
+}
+
 .center-screen .mode-eyebrow {
   display: inline-block;
   margin-bottom: 14px;
@@ -2209,8 +2244,6 @@ h1 {
 }
 
 .permission-art .permission-art__balloon {
-  right: auto;
-  left: 50%;
   transform: translateX(-50%) rotate(2deg);
 }
 
@@ -2262,6 +2295,29 @@ h1 {
   .mode-card .balloon-art--lung,
   .mode-card .balloon-art--bunch {
     height: 136px;
+  }
+}
+
+/* Final mobile home spacing and copy width tuning. */
+@media (max-width: 600px) {
+  .home-screen {
+    padding-top: calc(38px + var(--ait-safe-top));
+  }
+
+  .home-screen .home-header {
+    padding-top: 28px;
+  }
+
+  .home-screen .mode-card--rush {
+    padding-right: 34%;
+  }
+
+  .home-screen .mode-card--rush small {
+    width: 210px;
+    max-width: none;
+    font-size: 12px;
+    line-height: 1.35;
+    word-break: keep-all;
   }
 }
 
