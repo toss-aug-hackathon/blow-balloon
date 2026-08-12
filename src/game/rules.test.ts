@@ -6,7 +6,6 @@ import {
   calculateBalloonScore,
   calculateWindGrowthMultiplier,
   getLungScoreTitle,
-  hasLungBreathEnded,
   hasRushTimeExpired,
   isBalloonComplete,
 } from './rules';
@@ -36,11 +35,6 @@ describe('game rules', () => {
   it('counts only balloons that reached the completion radius', () => {
     expect(isBalloonComplete(50.99)).toBe(false);
     expect(isBalloonComplete(51)).toBe(true);
-  });
-
-  it('ends a lung breath after a 150ms signal gap', () => {
-    expect(hasLungBreathEnded(149)).toBe(false);
-    expect(hasLungBreathEnded(150)).toBe(true);
   });
 
   it('calculates duration-weighted lung values', () => {

@@ -7,6 +7,7 @@ export type DetectorFrame = {
   rawRms: number;
   baselineRms: number;
   windStrength: number;
+  hasStrongSignal: boolean;
   isBlowing: boolean;
   state: BlowState;
   currentBreathDurationMs: number;
@@ -133,6 +134,7 @@ export class BlowDetector {
       rawRms,
       baselineRms: this.baseline,
       windStrength: isBlowing ? this.smoothedWind : 0,
+      hasStrongSignal: rawRms >= startThreshold && looksLikeBreath,
       isBlowing,
       state: this.state,
       currentBreathDurationMs:
