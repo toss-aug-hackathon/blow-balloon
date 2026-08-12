@@ -284,6 +284,9 @@ export default function App() {
             <img src="/navigation/back.png" alt="" aria-hidden="true" />
             <span className="sr-only">홈으로</span>
           </button>
+          <p className="eyebrow mode-eyebrow">
+            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
+          </p>
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
@@ -291,16 +294,15 @@ export default function App() {
               alt=""
             />
           </div>
-          <p className="eyebrow mode-eyebrow">
-            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
-          </p>
-          <h1 className="mic-permission-title">
-            {detector.permission === 'requesting'
-              ? '마이크 확인 중...'
-              : detector.permission === 'denied' || detector.permission === 'error'
-                ? '마이크 권한 필요'
-                : '마이크 준비 완료!'}
-          </h1>
+          {(detector.permission === 'requesting' ||
+            detector.permission === 'denied' ||
+            detector.permission === 'error') && (
+            <h1 className="mic-permission-title">
+              {detector.permission === 'requesting'
+                ? '마이크 확인 중...'
+                : '마이크 권한 필요'}
+            </h1>
+          )}
 
           {/* 바람세기 미리 테스트 영역 */}
           <div className="mic-test-card">
