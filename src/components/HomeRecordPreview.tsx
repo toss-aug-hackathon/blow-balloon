@@ -5,7 +5,6 @@ import {
   type GameType,
   type RankingItem,
 } from '../api/gameApi';
-import { formatSeconds } from '../utils/math';
 
 type HomeRecordPreviewProps = {
   userKey: string | null;
@@ -42,7 +41,6 @@ export function HomeRecordPreview({ onOpenRanking }: HomeRecordPreviewProps) {
       getCachedRanking('BALLOON_COUNT'),
     ),
   );
-  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,49 +51,54 @@ export function HomeRecordPreview({ onOpenRanking }: HomeRecordPreviewProps) {
       ]);
       if (!cancelled) {
         setItems(buildTickerItems(lungRanking, rushRanking));
-        setActiveIndex(0);
       }
     };
     void load();
     return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    if (items.length <= 1) return;
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % items.length);
-    }, 2500);
-    return () => window.clearInterval(timer);
-  }, [items.length]);
-
-  const item = items[activeIndex];
-
   return (
     <div className="home-ranking-preview">
-      <div className="home-ranking-preview__heading">
+      <button
+        className="home-ranking-preview__title"
+        type="button"
+        onClick={onOpenRanking}
+        aria-label="오늘의 풍선 랭킹 보기"
+      >
         <strong>오늘의 풍선 랭킹</strong>
-        <i aria-hidden="true">→</i>
-      </div>
+      </button>
       <button className="home-record-preview" type="button" onClick={onOpenRanking}>
-        {item ? (
-          <span className="home-ranking-ticker" key={`${item.gameType}-${item.rank}-${activeIndex}`}>
-            <b className="home-ranking-ticker__rank">{item.rank}위</b>
-            <span className="home-ranking-ticker__name">
-              <small>{getLabel(item.gameType)}</small>
-              <strong>{item.displayName}</strong>
-            </span>
-            <span className="home-ranking-ticker__score">
-              <strong>
-                {item.gameType === 'LUNG_CAPACITY' ? `${item.score}점` : `${item.score}개`}
-              </strong>
-              {item.durationMs !== null && <small>{formatSeconds(item.durationMs)}초</small>}
-            </span>
-          </span>
-        ) : (
-          <span className="home-ranking-ticker home-ranking-ticker--empty">
-            <strong>랭킹을 불러오는 중이에요</strong>
-          </span>
-        )}
+        <span className="home-ranking-podium">
+          {[0, 1, 2].map((index) => {
+            const rankingItem = items[index];
+            return (
+              <span
+                className={`home-ranking-podium__card home-ranking-podium__card--${index + 1}${rankingItem ? '' : ' is-empty'}`}
+                key={rankingItem ? `${rankingItem.gameType}-${rankingItem.rank}` : `empty-${index + 1}`}
+                aria-label={rankingItem ? getLabel(rankingItem.gameType) : `${index + 1}위 기록 없음`}
+              >
+                <span className="home-ranking-podium__rank">{index + 1}</span>
+                {rankingItem ? (
+                  <>
+                    <img
+                      className="home-ranking-podium__balloon"
+                      src={`/balloons/${rankingItem.gameType === 'LUNG_CAPACITY' ? 'lung-test' : 'balloon-rush'}/balloon_${String((index % 3) + 1).padStart(2, '0')}.webp`}
+                      alt=""
+                    />
+                    <span className="home-ranking-podium__name">{rankingItem.displayName}</span>
+                    <strong className="home-ranking-podium__score">
+                      {rankingItem.gameType === 'LUNG_CAPACITY'
+                        ? `${rankingItem.score}점`
+                        : `${rankingItem.score}개`}
+                    </strong>
+                  </>
+                ) : (
+                  <span className="home-ranking-podium__empty">기록 없음</span>
+                )}
+              </span>
+            );
+          })}
+        </span>
       </button>
     </div>
   );

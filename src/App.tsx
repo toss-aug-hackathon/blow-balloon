@@ -337,7 +337,6 @@ export default function App() {
               />
               <strong>풍선 크게 불기</strong>
               <small>풍선 크기를 키우고, 같은 크기라면 더 빠르게 기록해요.</small>
-              <span className="mode-card__arrow" aria-hidden="true">→</span>
               <span className="sr-only">풍선 크게 불기 시작하기</span>
             </button>
             <button
@@ -352,7 +351,6 @@ export default function App() {
               />
               <strong>풍선 스피드런</strong>
               <small>30초 동안 최대한 많이 만들고 마지막 풍선까지의 시간을 겨뤄요.</small>
-              <span className="mode-card__arrow" aria-hidden="true">→</span>
               <span className="sr-only">풍선 스피드런 시작하기</span>
             </button>
           </section>
@@ -402,7 +400,7 @@ export default function App() {
               <p className="mic-test-hint">
                 {detector.permission === 'granted'
                   ? detector.frame.isBlowing
-                    ? '바람 감지 중! 💨'
+                    ? '바람 감지 중!'
                     : '마이크에 후- 불면 반응해요!'
                   : detector.testModeEnabled
                     ? '아래 버튼을 눌러 테스트해보세요!'

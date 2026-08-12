@@ -25,7 +25,6 @@ type View = 'ranking' | 'mine';
 type RankMovement = 'up' | 'down' | 'same';
 
 const RANKING_POLL_INTERVAL_MS = 3000;
-const MAX_VISIBLE_RANKING_ITEMS = 15;
 
 const gameTabs: Array<{ type: GameType; label: string }> = [
   { type: 'LUNG_CAPACITY', label: '크게 불기' },
@@ -36,6 +35,33 @@ function formatScore(gameType: GameType, score: number) {
   return gameType === 'LUNG_CAPACITY'
     ? `${score}점`
     : `${score}개`;
+}
+
+function getRankingBalloonSrc(gameType: GameType, rank: number) {
+  const folder = gameType === 'LUNG_CAPACITY' ? 'lung-test' : 'balloon-rush';
+  return `/balloons/${folder}/balloon_${String(((rank - 1) % 3) + 1).padStart(2, '0')}.webp`;
+}
+
+function RankingPodium({ ranking, gameType }: { ranking: RankingItem[]; gameType: GameType }) {
+  return (
+    <section className="home-ranking-podium ranking-podium" aria-label="상위 3위">
+      {[2, 1, 3].map((rank) => {
+        const item = ranking.find((entry) => entry.rank === rank);
+        return (
+          <article className={`home-ranking-podium__card home-ranking-podium__card--${rank}${item ? '' : ' is-empty'}`} key={rank}>
+            <strong className="home-ranking-podium__rank">{rank}</strong>
+            {item ? (
+              <>
+                <img className="home-ranking-podium__balloon" src={getRankingBalloonSrc(gameType, rank)} alt="" />
+                <span className="home-ranking-podium__name">{item.displayName}</span>
+                <b className="home-ranking-podium__score">{formatScore(gameType, item.score)}</b>
+              </>
+            ) : <span className="home-ranking-podium__empty">기록 없음</span>}
+          </article>
+        );
+      })}
+    </section>
+  );
 }
 
 export function RankingScreen({
@@ -189,52 +215,19 @@ export function RankingScreen({
         <button className="back-button" type="button" onClick={onHome}>
           ←<span className="sr-only">홈으로</span>
         </button>
-        <p className="eyebrow">blow-balloon</p>
-        <h1>풍선 기록장</h1>
+          <h1>풍선 기록장</h1>
         <p>점수가 높을수록, 같은 점수라면 시간이 짧을수록 높은 기록이에요.</p>
       </header>
 
-      <div className="ranking-view-tabs" role="tablist" aria-label="기록 보기">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'ranking'}
-          className={view === 'ranking' ? 'is-selected' : ''}
-          onClick={() => {
-            setRankMovements({});
-            setView('ranking');
-          }}
-        >
-          전체 랭킹
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'mine'}
-          className={view === 'mine' ? 'is-selected' : ''}
-          onClick={() => setView('mine')}
-        >
-          나의 기록
-        </button>
+      <div className="ranking-tabs" role="tablist" aria-label="랭킹 메뉴">
+        <button type="button" className={view === 'ranking' && gameType === 'LUNG_CAPACITY' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('LUNG_CAPACITY'); setView('ranking'); }}>폐활량</button>
+        <button type="button" className={view === 'ranking' && gameType === 'BALLOON_COUNT' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('BALLOON_COUNT'); setView('ranking'); }}>스피드런</button>
+        <button type="button" className={view === 'mine' ? 'is-selected' : ''} onClick={() => setView('mine')}>나의 기록</button>
       </div>
 
       {view === 'ranking' ? (
         <>
-          <div className="ranking-game-tabs" role="tablist" aria-label="게임 선택">
-            {gameTabs.map((tab) => (
-              <button
-                key={tab.type}
-                type="button"
-                className={gameType === tab.type ? 'is-selected' : ''}
-                onClick={() => {
-                  setRankMovements({});
-                  setGameType(tab.type);
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {ranking && ranking.length > 0 && <RankingPodium ranking={ranking} gameType={gameType} />}
           <section className="ranking-list" aria-live="polite">
             {error ? (
               <p className="ranking-notice">{error}</p>
@@ -243,42 +236,55 @@ export function RankingScreen({
             ) : ranking.length === 0 ? (
               <p className="ranking-notice">아직 등록된 기록이 없어요.</p>
             ) : (
-              ranking.slice(0, MAX_VISIBLE_RANKING_ITEMS).map((item) => (
-                <div className="ranking-item" key={item.displayName}>
-                  <strong>{item.rank}</strong>
-                  <span>{item.displayName}</span>
-                  <b>
-                    {formatScore(gameType, item.score)}
-                    <small>
-                      {item.durationMs === null
-                        ? '시간 기록 없음'
-                        : `${formatSeconds(item.durationMs)}초`}
-                    </small>
-                  </b>
+              [4, 5, 6, 7, 8].map((rank) => {
+                const item = ranking.find((entry) => entry.rank === rank);
+                return (
+                <div className={`ranking-item${item ? '' : ' is-empty'}`} key={rank}>
+                  <strong>{rank}</strong>
+                  {item ? (
+                    <>
+                      <img className="ranking-item__balloon" src={getRankingBalloonSrc(gameType, rank)} alt="" />
+                      <span>{item.displayName}</span>
+                      <b>
+                        {formatScore(gameType, item.score)}
+                        <small>
+                          {item.durationMs === null ? '시간 기록 없음' : `${formatSeconds(item.durationMs)}초`}
+                        </small>
+                      </b>
+                    </>
+                  ) : (
+                    <>
+                      <span className="ranking-item__placeholder" aria-hidden="true" />
+                      <span className="ranking-item__empty-label">기록 없음</span>
+                      <b className="ranking-item__empty-score">-</b>
+                    </>
+                  )}
                   <i
-                    className={`ranking-movement ranking-movement--${rankMovements[item.displayName] ?? 'same'}`}
+                    className={`ranking-movement ranking-movement--${item ? rankMovements[item.displayName] ?? 'same' : 'same'}`}
                     aria-label={
-                      rankMovements[item.displayName] === 'up'
+                      item && rankMovements[item.displayName] === 'up'
                         ? '순위 상승'
-                        : rankMovements[item.displayName] === 'down'
+                        : item && rankMovements[item.displayName] === 'down'
                           ? '순위 하락'
                           : '순위 변동 없음'
                     }
                   >
-                    {rankMovements[item.displayName] === 'up'
+                    {item && rankMovements[item.displayName] === 'up'
                       ? '↑'
-                      : rankMovements[item.displayName] === 'down'
+                      : item && rankMovements[item.displayName] === 'down'
                         ? '↓'
                         : '-'}
                   </i>
                 </div>
-              ))
+                );
+              })
             )}
           </section>
         </>
       ) : !isRegistered || !userKey ? (
         <section className="ranking-notice ranking-notice--card">
-          게임 결과에서 랭킹에 등록하면 나의 기록을 확인할 수 있어요.
+          게임 결과에서 랭킹에 등록하면<br />
+          나의 기록을 확인할 수 있어요.
         </section>
       ) : error ? (
         <section className="ranking-notice ranking-notice--card">{error}</section>
