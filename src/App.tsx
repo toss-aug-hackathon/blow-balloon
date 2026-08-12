@@ -364,6 +364,9 @@ export default function App() {
             ←
             <span className="sr-only">홈으로</span>
           </button>
+          <p className="eyebrow mode-eyebrow">
+            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
+          </p>
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
@@ -371,10 +374,7 @@ export default function App() {
               alt=""
             />
           </div>
-          <p className="eyebrow mode-eyebrow">
-            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
-          </p>
-          <h1>
+          <h1 className={detector.permission === 'granted' ? 'mic-ready-title' : ''}>
             {detector.permission === 'granted'
               ? '바람을 잘 들을 수 있어요!'
               : detector.testModeEnabled
@@ -499,17 +499,17 @@ export default function App() {
 
       {screen === 'countdown' && (
         <main className="screen countdown-screen">
-          <p>
-            {mode === 'lung-test'
-              ? '한 번의 호흡을 준비하세요'
-              : '30초 동안 최대한 많이 불어보세요!'}
-          </p>
           <strong
             key={countdown}
             data-countdown={countdown > 0 ? countdown : '후—!'}
           >
             {countdown > 0 ? countdown : '후—!'}
           </strong>
+          <p>
+            {mode === 'lung-test'
+              ? '한 번의 호흡을 준비하세요'
+              : '30초 동안 최대한 많이 불어보세요!'}
+          </p>
           <WindMeter strength={detector.frame.windStrength} />
         </main>
       )}
