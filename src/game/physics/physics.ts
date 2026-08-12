@@ -33,8 +33,8 @@ export function resolveBalloonCollision(
   const dx = second.x - first.x;
   const dy = second.y - first.y;
   const distance = Math.hypot(dx, dy) || 0.001;
-  const firstRadius = (first.radiusX + first.radiusY) * 0.43;
-  const secondRadius = (second.radiusX + second.radiusY) * 0.43;
+  const firstRadius = (first.radiusX + first.radiusY) * 0.46;
+  const secondRadius = (second.radiusX + second.radiusY) * 0.46;
   const minimumDistance = firstRadius + secondRadius;
   if (distance >= minimumDistance) return false;
 

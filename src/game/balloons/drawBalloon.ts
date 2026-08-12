@@ -10,14 +10,6 @@ import {
   type BalloonFaceMotion,
 } from './drawBalloonFace';
 
-const ASSET_SCALE: Readonly<Record<number, number>> = {
-  3: 1.2,
-  8: 1.45,
-  11: 1.4,
-  14: 1.12,
-  15: 1.5,
-};
-
 export function drawBalloon(
   context: CanvasRenderingContext2D,
   balloon: BalloonBody,
@@ -50,10 +42,17 @@ export function drawBalloon(
       (balloon.completed ? 0.022 : 0.012) +
     Math.sin(timeMs * 0.005 + balloon.variant.seed) * windStrength * 0.012;
   const depthAlpha = clamp(0.84 + (balloon.depth - 0.94) * 1.35, 0.8, 1);
-  const drawWidth =
-    balloon.radiusX * 2 * balloon.depth * (ASSET_SCALE[asset.sourceId] ?? 1);
-  const drawHeight = drawWidth * (asset.height / asset.width);
-  const bodyTop = -balloon.radiusY * balloon.depth;
+  // 모든 풍선을 같은 정사각형 기준 안에 비율을 유지해 맞춘다.
+  // 세로로 긴 달이나 가로로 긴 캔디 풍선도 특정 종류만 커 보이지 않는다.
+  const bodySize =
+    Math.min(balloon.radiusX, balloon.radiusY) * 3.1 * balloon.depth;
+  const fitScale = Math.min(
+    bodySize / asset.width,
+    bodySize / asset.height,
+  );
+  const drawWidth = asset.width * fitScale;
+  const drawHeight = asset.height * fitScale;
+  const bodyTop = -drawHeight / 2;
 
   context.save();
   context.globalAlpha = alpha * depthAlpha;
@@ -69,7 +68,11 @@ export function drawBalloon(
     // Pull unusual asset anchors slightly toward the visual center. This
     // keeps the character readable on both tall and wide balloon artwork.
     const faceX =
-      asset.id === 12 ? 0.5 : asset.face.x * 0.72 + 0.5 * 0.28;
+      asset.id === 15
+        ? 0.38
+        : asset.id === 12
+          ? 0.5
+          : asset.face.x * 0.72 + 0.5 * 0.28;
     const flowerLift = asset.id === 9 ? -0.055 : 0;
     const faceY = asset.face.y * 0.82 + 0.34 * 0.18 + flowerLift;
     context.translate((faceX - 0.5) * drawWidth, bodyTop + faceY * drawHeight);

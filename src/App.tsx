@@ -38,25 +38,6 @@ const INITIAL_HUD: GameHudState = {
   isWaitingForBreath: true,
 };
 
-const MIC_NOTICE_SESSION_KEY = 'blow-balloon:mic-notice-shown';
-const MIC_START_BUTTON_SESSION_KEY = 'blow-balloon:mic-start-button-used';
-
-function readMicNoticeState(): boolean {
-  try {
-    return window.sessionStorage.getItem(MIC_NOTICE_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function readMicStartButtonState(): boolean {
-  if (import.meta.env.DEV) return false;
-  try {
-    return window.sessionStorage.getItem(MIC_START_BUTTON_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
 
 export default function App() {
   useSafeArea();
@@ -122,8 +103,6 @@ export default function App() {
   const [countdown, setCountdown] = useState(3);
   const [hud, setHud] = useState<GameHudState>(INITIAL_HUD);
   const [result, setResult] = useState<GameResult | null>(null);
-  const [hasShownMicNotice, setHasShownMicNotice] = useState(readMicNoticeState);
-  const [showMicNotice, setShowMicNotice] = useState(false);
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
   const gameUser = useGameUser();
@@ -147,9 +126,6 @@ export default function App() {
     requestPermission,
     resetBreath,
   } = detector;
-  const [hasUsedMicStartButton, setHasUsedMicStartButton] = useState(
-    () => (detector.testModeEnabled ? false : readMicStartButtonState()),
-  );
 
   const goHome = useCallback(() => {
     stopDetector();
@@ -158,79 +134,26 @@ export default function App() {
     setMode(null);
     setResult(null);
     setHud(INITIAL_HUD);
-    if (detector.testModeEnabled) {
-      setHasUsedMicStartButton(false);
-    }
-  }, [detector.testModeEnabled, stopDetector]);
+  }, [stopDetector]);
 
-  const selectMode = (nextMode: GameMode) => {
-    stopDetector();
-    setTestWindOn(false);
-    setMode(nextMode);
-    if (detector.testModeEnabled) {
-      setHasUsedMicStartButton(false);
-    }
-    const shouldShowNotice = !hasShownMicNotice;
-    setShowMicNotice(shouldShowNotice);
-    if (shouldShowNotice) {
-      setHasShownMicNotice(true);
-      try {
-        window.sessionStorage.setItem(MIC_NOTICE_SESSION_KEY, '1');
-      } catch {
-        // In-memory state still covers WebViews without session storage.
-      }
-    }
-    setPermissionBalloonId(Math.floor(Math.random() * 16) + 1);
-    setResult(null);
-    setHud(INITIAL_HUD);
-    setScreen('mic-permission');
-  };
+  const selectMode = useCallback(
+    (nextMode: GameMode) => {
+      stopDetector();
+      setTestWindOn(false);
+      setMode(nextMode);
+      setPermissionBalloonId(Math.floor(Math.random() * 15) + 1);
+      setResult(null);
+      setHud(INITIAL_HUD);
+      setScreen('mic-permission');
+      void requestPermission();
+    },
+    [requestPermission, stopDetector],
+  );
 
   const openRanking = () => {
     stopDetector();
     setScreen('ranking');
   };
-
-  const startMicrophone = useCallback(async () => {
-    setHasUsedMicStartButton(true);
-    try {
-      window.sessionStorage.setItem(MIC_START_BUTTON_SESSION_KEY, '1');
-    } catch {
-      // In-memory state still covers WebViews without session storage.
-    }
-    await requestPermission();
-  }, [requestPermission]);
-
-  useEffect(() => {
-    if (
-      screen !== 'mic-permission' ||
-      !mode ||
-      !detector.testModeEnabled ||
-      detector.permission !== 'idle'
-    ) {
-      return;
-    }
-
-    // 테스트 모드도 실제 마이크 모드와 동일하게 입력 루프를 먼저
-    // 시작해야 버튼으로 바꾼 시뮬레이션 신호가 detector에 전달된다.
-    void requestPermission();
-  }, [
-    detector.permission,
-    detector.testModeEnabled,
-    mode,
-    requestPermission,
-    screen,
-  ]);
-
-  useEffect(() => {
-    if (screen !== 'mic-permission' || !mode) return;
-    if (!detector.testModeEnabled && hasUsedMicStartButton) {
-      const timeout = window.setTimeout(() => {
-        void startMicrophone();
-      }, 0);
-      return () => window.clearTimeout(timeout);
-    }
-  }, [detector.testModeEnabled, hasUsedMicStartButton, mode, screen, startMicrophone]);
 
   const startTestWind = useCallback((event?: React.SyntheticEvent) => {
     if (event && event.cancelable) event.preventDefault();
@@ -280,20 +203,17 @@ export default function App() {
   const retry = useCallback(() => {
     stopDetector();
     setTestWindOn(false);
-    setShowMicNotice(false);
-    if (detector.testModeEnabled) {
-      setHasUsedMicStartButton(false);
-    }
     setResult(null);
     setHud(INITIAL_HUD);
     setPermissionBalloonId((prev) => {
-      const candidateIds = Array.from({ length: 16 }, (_, i) => i + 1).filter(
+      const candidateIds = Array.from({ length: 15 }, (_, i) => i + 1).filter(
         (id) => id !== prev,
       );
       return candidateIds[Math.floor(Math.random() * candidateIds.length)] ?? 1;
     });
     setScreen('mic-permission');
-  }, [detector.testModeEnabled, stopDetector]);
+    void requestPermission();
+  }, [requestPermission, stopDetector]);
 
   const startCountdown = useCallback(() => {
     setCountdown(3);
@@ -361,12 +281,9 @@ export default function App() {
       {screen === 'mic-permission' && mode && (
         <main className="screen center-screen mic-permission-screen">
           <button className="back-button" type="button" onClick={goHome}>
-            ←
+            <img src="/navigation/back.png" alt="" aria-hidden="true" />
             <span className="sr-only">홈으로</span>
           </button>
-          <p className="eyebrow mode-eyebrow">
-            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
-          </p>
           <div className="permission-art" aria-hidden="true">
             <img
               className="permission-art__balloon"
@@ -374,37 +291,29 @@ export default function App() {
               alt=""
             />
           </div>
-          <h1 className={detector.permission === 'granted' ? 'mic-ready-title' : ''}>
-            {detector.permission === 'granted'
-              ? '바람을 잘 들을 수 있어요!'
-              : detector.testModeEnabled
-                ? '테스트 바람을 준비했어요'
-                : '마이크에 바람을 불어주세요'}
+          <p className="eyebrow mode-eyebrow">
+            {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
+          </p>
+          <h1 className="mic-permission-title">
+            {detector.permission === 'requesting'
+              ? '마이크 확인 중...'
+              : detector.permission === 'denied' || detector.permission === 'error'
+                ? '마이크 권한 필요'
+                : '마이크 준비 완료!'}
           </h1>
-          {showMicNotice && detector.permission !== 'granted' && (
-            <p className="body-copy">
-              {detector.testModeEnabled
-                ? '화면의 바람 불기 버튼으로 마이크 입력 없이 테스트할 수 있어요.'
-                : '풍선을 키우기 위해 마이크를 사용해요.'}
-              <br />
-              {detector.testModeEnabled
-                ? '마이크 권한 없이 바로 시작할 수 있어요.'
-                : '소리는 저장하거나 서버로 전송하지 않아요.'}
-            </p>
-          )}
 
           {/* 바람세기 미리 테스트 영역 */}
           <div className="mic-test-card">
             <div className="mic-test-header">
               <span className="mic-test-badge">바람세기 미리 테스트</span>
               <p className="mic-test-hint">
-                {detector.permission === 'granted'
-                  ? detector.frame.isBlowing
+                {detector.permission === 'denied' || detector.permission === 'error'
+                  ? '마이크 허용 후 테스트해 보세요'
+                  : detector.frame.isBlowing
                     ? '바람 감지 중!'
-                    : '마이크에 후- 불면 반응해요!'
-                  : detector.testModeEnabled
-                    ? '아래 버튼을 눌러 테스트해보세요!'
-                    : '마이크 허용 후 후- 불어서 테스트해보세요.'}
+                    : detector.testModeEnabled
+                      ? '아래 버튼을 눌러 테스트해보세요!'
+                      : '마이크에 후- 불면 반응해요!'}
               </p>
             </div>
             <WindMeter strength={detector.frame.windStrength} />
@@ -424,21 +333,26 @@ export default function App() {
             )}
           </div>
 
-          {detector.permission !== 'granted' && !detector.testModeEnabled ? (
+          {detector.permission === 'denied' || detector.permission === 'error' ? (
             <button
               className="button button--primary"
               type="button"
-              onClick={startMicrophone}
+              onClick={() => void requestPermission()}
             >
-              마이크 허용하고 시작
+              마이크 허용 다시 시도
             </button>
           ) : (
             <button
               className="button button--primary"
               type="button"
+              disabled={detector.permission === 'requesting'}
               onClick={startCountdown}
             >
-              {mode === 'lung-test' ? '준비 완료! 크게 불기 시작' : '준비 완료! 스피드런 시작'}
+              {detector.permission === 'requesting'
+                ? '마이크 확인 중...'
+                : mode === 'lung-test'
+                  ? '준비 완료! 크게 불기 시작'
+                  : '준비 완료! 스피드런 시작'}
             </button>
           )}
         </main>
@@ -458,7 +372,7 @@ export default function App() {
               <button
                 className="button button--primary"
                 type="button"
-                onClick={startMicrophone}
+                onClick={() => void requestPermission()}
               >
                 다시 시도
               </button>
@@ -531,7 +445,7 @@ export default function App() {
               onClick={goHome}
               aria-label="게임 나가기"
             >
-              ×
+              <img src="/navigation/cancel.png" alt="" aria-hidden="true" />
             </button>
             {mode === 'lung-test' ? (
               <div className="game-stat game-stat--center">
