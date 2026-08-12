@@ -14,6 +14,7 @@ import {
 import { formatSeconds } from '../utils/math';
 import { getNicknameValidationError } from '../utils/nicknamePolicy';
 import { getRankingBalloonSrc } from '../utils/rankingBalloon';
+import { RankingPodium } from './RankingPodium';
 
 type RankingScreenProps = {
   userKey: string | null;
@@ -36,28 +37,6 @@ function formatScore(gameType: GameType, score: number) {
   return gameType === 'LUNG_CAPACITY'
     ? `${score}점`
     : `${score}개`;
-}
-
-function RankingPodium({ ranking, gameType }: { ranking: RankingItem[]; gameType: GameType }) {
-  return (
-    <section className="home-ranking-podium ranking-podium" aria-label="상위 3위">
-      {[2, 1, 3].map((rank) => {
-        const item = ranking.find((entry) => entry.rank === rank);
-        return (
-          <article className={`home-ranking-podium__card home-ranking-podium__card--${rank}${item ? '' : ' is-empty'}`} key={rank}>
-            <strong className="home-ranking-podium__rank">{rank}</strong>
-            {item ? (
-              <>
-                <img className="home-ranking-podium__balloon" src={getRankingBalloonSrc(gameType, rank)} alt="" />
-                <span className="home-ranking-podium__name">{item.displayName}</span>
-                <b className="home-ranking-podium__score">{formatScore(gameType, item.score)}</b>
-              </>
-            ) : <span className="home-ranking-podium__empty">기록 없음</span>}
-          </article>
-        );
-      })}
-    </section>
-  );
 }
 
 export function RankingScreen({
@@ -228,7 +207,11 @@ export function RankingScreen({
 
       {view === 'ranking' ? (
         <>
-          {ranking && ranking.length > 0 && <RankingPodium ranking={ranking} gameType={gameType} />}
+          {ranking && ranking.length > 0 && (
+            <div className="ranking-podium">
+              <RankingPodium ranking={ranking} gameType={gameType} />
+            </div>
+          )}
           <section className="ranking-list" aria-live="polite">
             {error ? (
               <p className="ranking-notice">{error}</p>
