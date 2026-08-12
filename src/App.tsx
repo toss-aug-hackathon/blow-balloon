@@ -15,9 +15,13 @@ import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
 import { useGameUser } from './hooks/useGameUser';
+import { calculateExpectedRank } from './api/rankingRules';
 import {
+  getCachedRanking,
   getCachedRegisteredGameUser,
+  getRanking,
   prefetchRankings,
+  type RankingItem,
 } from './api/gameApi';
 
 type AppScreen =
@@ -34,6 +38,7 @@ const INITIAL_HUD: GameHudState = {
   elapsedMs: 0,
   remainingMs: BALLOON_RUSH_DURATION_MS,
   completedCount: 0,
+  completionTimeMs: null,
   windStrength: 0,
   isWaitingForBreath: true,
   balloonScore: 0,
@@ -106,6 +111,7 @@ export default function App() {
   const [result, setResult] = useState<GameResult | null>(null);
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
+  const [rankingSnapshot, setRankingSnapshot] = useState<RankingItem[]>([]);
   const gameUser = useGameUser();
   const effectiveUser =
     gameUser.user ??
@@ -145,6 +151,9 @@ export default function App() {
       setPermissionBalloonId(Math.floor(Math.random() * 15) + 1);
       setResult(null);
       setHud(INITIAL_HUD);
+      const gameType = nextMode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
+      setRankingSnapshot(getCachedRanking(gameType) ?? []);
+      void getRanking(gameType).then(setRankingSnapshot).catch(() => undefined);
       setScreen('mic-permission');
       void requestPermission();
     },
@@ -220,6 +229,18 @@ export default function App() {
     setCountdown(3);
     setScreen('countdown');
   }, []);
+
+  const expectedRank = useMemo(() => {
+    if (!mode || screen !== 'game' || rankingSnapshot.length === 0) return null;
+    const score = mode === 'lung-test' ? hud.balloonScore : hud.completedCount;
+    if (score <= 0) return null;
+    return calculateExpectedRank(
+      mode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT',
+      rankingSnapshot,
+      score,
+      mode === 'lung-test' ? hud.elapsedMs : hud.completionTimeMs,
+    );
+  }, [hud.balloonScore, hud.completedCount, hud.completionTimeMs, hud.elapsedMs, mode, rankingSnapshot, screen]);
 
   return (
     <div className="app-shell">
@@ -451,6 +472,13 @@ export default function App() {
               <img src="/navigation/cancel.png" alt="" aria-hidden="true" />
             </button>
           </div>
+          {expectedRank !== null && (
+            <div className="live-rank-impact" key={expectedRank} aria-live="polite">
+              <span>{expectedRank === 1 ? '새로운 왕좌!' : expectedRank <= 10 ? 'TOP 10 진입!' : '순위 상승!'}</span>
+              <strong>{expectedRank}<small>위</small></strong>
+              <i aria-hidden="true">↑</i>
+            </div>
+          )}
           <div className="game-control-panel">
             {mode && (
               <div className="lung-live-stats" aria-live="polite">

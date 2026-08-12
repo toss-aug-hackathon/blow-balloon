@@ -582,6 +582,35 @@ h1 {
   pointer-events: none;
 }
 
+.live-rank-impact {
+  position: absolute;
+  z-index: 8;
+  top: calc(72px + var(--ait-safe-top));
+  right: calc(14px + var(--ait-safe-right));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 2px solid rgba(255, 255, 255, 0.88);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #ff637e, #ff9a62);
+  box-shadow: 0 8px 20px rgba(225, 76, 104, 0.28);
+  color: white;
+  animation: live-rank-impact 650ms cubic-bezier(.2, 1.5, .4, 1);
+  pointer-events: none;
+}
+
+.live-rank-impact span { max-width: 58px; font-size: 10px; font-weight: 900; line-height: 1.1; }
+.live-rank-impact strong { font-size: 25px; line-height: 1; text-shadow: 0 2px 0 rgba(125, 35, 54, 0.18); }
+.live-rank-impact strong small { margin-left: 2px; font-size: 12px; }
+.live-rank-impact i { font-size: 17px; font-style: normal; font-weight: 1000; }
+
+@keyframes live-rank-impact {
+  0% { opacity: 0; transform: translateX(24px) scale(.65) rotate(5deg); }
+  55% { transform: translateX(-4px) scale(1.1) rotate(-2deg); }
+  100% { opacity: 1; transform: translateX(0) scale(1) rotate(0); }
+}
+
 .game-exit {
   position: static;
   font-size: 25px;

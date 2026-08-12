@@ -342,6 +342,7 @@ export class BalloonEngine {
           ? Math.max(0, BALLOON_RUSH_DURATION_MS - this.elapsedMs)
           : 0,
       completedCount: this.completedBalloons.length,
+      completionTimeMs: this.lastCompletionElapsedMs,
       windStrength: signal.windStrength,
       isWaitingForBreath:
         this.mode === 'lung-test' && !this.lungBreathStarted,
