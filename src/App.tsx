@@ -326,7 +326,7 @@ export default function App() {
       )}
 
       {screen === 'mic-permission' && mode && (
-        <main className="screen center-screen">
+        <main className="screen center-screen mic-permission-screen">
           <button className="back-button" type="button" onClick={goHome}>
             ←
             <span className="sr-only">홈으로</span>

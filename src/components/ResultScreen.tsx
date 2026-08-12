@@ -42,7 +42,6 @@ export function ResultScreen({
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
-  const [isSkipped, setIsSkipped] = useState(false);
   const [nickname, setNickname] = useState('');
   const [rankingError, setRankingError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -228,31 +227,16 @@ export function ResultScreen({
             </div>
           </dl>
         )}
-        {result.mode === 'lung-test' ? (
-          <p className="result-mode-guide">
-            풍선 크기 점수가 높을수록, 같은 점수라면 시간이 짧을수록 높은 기록이에요.
-          </p>
-        ) : (
-          <p className="result-mode-guide">
-            30개 미만은 현재 개수와 마지막 풍선까지의 시간으로 기록해요.
-            30개를 만들면 30번째 풍선까지 걸린 시간으로 겨뤄요.
-          </p>
-        )}
+        <p className="result-mode-guide">
+          {result.mode === 'lung-test'
+            ? '풍선 크기 점수와 기록 시간으로 순위를 정해요.'
+            : '완성한 풍선 수가 많을수록 높은 기록이에요.'}
+        </p>
         <p className="medical-note">
           마이크 입력을 이용한 재미용 기록이에요.
         </p>
-      </section>
-
-      {snapshotUrl && (
-        <figure className="snapshot-preview">
-          <img src={snapshotUrl} alt="blow-balloon 결과 이미지" />
-          <figcaption>이미지를 길게 눌러 저장할 수 있어요.</figcaption>
-        </figure>
-      )}
-      {snapshotError && <p className="error-text">{snapshotError}</p>}
-
-      <section className="ranking-result" aria-live="polite">
-        {submission ? (
+        <section className="ranking-result" aria-live="polite">
+          {submission ? (
           <>
             <p className="eyebrow">랭킹 저장 완료</p>
             <strong>
@@ -264,13 +248,11 @@ export function ResultScreen({
                 : `${submission.bestScore}개 · ${submission.bestDurationMs === null ? '-' : `${formatSeconds(submission.bestDurationMs)}초`}`}
             </span>
           </>
-        ) : user?.isRegistered ? (
+          ) : user?.isRegistered ? (
           <p className="ranking-progress">
             {isSubmitting ? '이번 기록을 랭킹에 저장하고 있어요.' : '랭킹 저장을 다시 시도할 수 있어요.'}
           </p>
-        ) : isSkipped ? (
-          <p className="ranking-progress">이번 기록은 랭킹에 저장하지 않았어요.</p>
-        ) : isRegistrationOpen ? (
+          ) : isRegistrationOpen ? (
           <div className="nickname-form">
             <label htmlFor="nickname">랭킹에서 사용할 별명</label>
             <input
@@ -289,7 +271,7 @@ export function ResultScreen({
               {isSubmitting ? '등록하는 중…' : '별명 등록하고 기록 저장'}
             </button>
           </div>
-        ) : (
+          ) : (
           <div className="ranking-choice">
             <p>이번 기록을 랭킹에 남길까요?</p>
             <button
@@ -300,48 +282,43 @@ export function ResultScreen({
             >
               랭킹에 등록하기
             </button>
-            <button
-              className="text-button"
-              type="button"
-              onClick={() => setIsSkipped(true)}
-            >
-              등록하지 않기
-            </button>
             {!userKey && (
               <small>랭킹 등록은 토스 앱에서 사용할 수 있어요.</small>
             )}
           </div>
+          )}
+          {rankingError && (
+            <>
+              <p className="error-text">{rankingError}</p>
+              {user?.isRegistered && userKey && (
+                <button className="text-button" type="button" onClick={() => void saveScore(userKey)}>
+                  기록 저장 다시 시도
+                </button>
+              )}
+            </>
+          )}
+        </section>
+
+        <div className="result-utility-links">
+          <button className="text-button" type="button" onClick={onOpenRanking}>
+            랭킹 보러 가기
+          </button>
+          {!snapshotUrl && (
+            <button className="text-button" type="button" onClick={handleCreateSnapshot} disabled={isCreating}>
+              {isCreating ? '이미지 만드는 중…' : '결과 이미지 만들기'}
+            </button>
+          )}
+        </div>
+        {snapshotUrl && (
+          <figure className="snapshot-preview">
+            <img src={snapshotUrl} alt="blow-balloon 결과 이미지" />
+            <figcaption>이미지를 길게 눌러 저장할 수 있어요.</figcaption>
+          </figure>
         )}
-        {rankingError && (
-          <>
-            <p className="error-text">{rankingError}</p>
-            {user?.isRegistered && userKey && (
-              <button className="text-button" type="button" onClick={() => void saveScore(userKey)}>
-                기록 저장 다시 시도
-              </button>
-            )}
-          </>
-        )}
+        {snapshotError && <p className="error-text">{snapshotError}</p>}
       </section>
 
       <div className="button-stack">
-        <button
-          className="button button--primary"
-          type="button"
-          onClick={onOpenRanking}
-        >
-          랭킹 보러 가기
-        </button>
-        {!snapshotUrl && (
-          <button
-            className="button button--primary"
-            type="button"
-            onClick={handleCreateSnapshot}
-            disabled={isCreating}
-          >
-            {isCreating ? '이미지 만드는 중…' : '결과 이미지 만들기'}
-          </button>
-        )}
         <button className="button button--secondary" type="button" onClick={onRetry}>
           다시 도전
         </button>

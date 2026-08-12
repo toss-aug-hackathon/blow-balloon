@@ -37,9 +37,8 @@ type BalloonEngineOptions = {
 
 // The active balloon starts behind the bottom wind panel and reveals itself
 // as it grows into the playfield.
-const ACTIVE_BALLOON_HIDDEN_OFFSET = 46;
 const ACTIVE_BALLOON_TARGET_RATIO = 0.82;
-const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.5;
+const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.43;
 const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
 export class BalloonEngine {
   private readonly mode: GameMode;
@@ -256,19 +255,18 @@ export class BalloonEngine {
       1,
     );
     const playHeight = this.getPlayHeight();
-    const hiddenStartY = playHeight + ACTIVE_BALLOON_HIDDEN_OFFSET;
     if (this.mode === 'lung-test') {
-      // Start behind the bottom wind panel, then move the balloon's center
-      // quickly toward the middle as the breath continues.
-      const centerMoveProgress = clamp(progress * 2.5, 0, 1);
       const targetY =
         this.height * LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO;
       this.activeBalloon.x = this.width * 0.5;
-      this.activeBalloon.y =
-        hiddenStartY + (targetY - hiddenStartY) * centerMoveProgress;
+      this.activeBalloon.y = targetY;
       return;
     }
 
+    // The rush panel covers the lower part of the canvas, so spawn the next
+    // balloon just above its top edge rather than underneath it.
+    const panelTopStartY =
+      playHeight - this.activeBalloon.radiusY - 14;
     const upwardLift = playHeight * 0.13 * progress;
     const targetY =
       playHeight * ACTIVE_BALLOON_TARGET_RATIO -
@@ -277,7 +275,7 @@ export class BalloonEngine {
     const revealProgress = clamp(progress * 1.25, 0, 1);
     this.activeBalloon.x = this.width * this.activeSpawnXRatio;
     this.activeBalloon.y =
-      hiddenStartY + (targetY - hiddenStartY) * revealProgress;
+      panelTopStartY + (targetY - panelTopStartY) * revealProgress;
   }
 
   private chooseSpawnXRatio(): number {
