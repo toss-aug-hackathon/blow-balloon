@@ -31,6 +31,36 @@ pnpm dev
 
 개발 서버는 실행 시 활성 Wi-Fi 또는 Ethernet의 IPv4 주소를 자동으로 선택합니다. 네트워크를 변경했다면 개발 서버를 다시 시작하세요. 실제 마이크 입력을 사용하려면 브라우저 또는 Apps in Toss 샌드박스에서 마이크 권한을 허용해야 합니다.
 
+### 모바일 Chrome에서 마이크 테스트
+
+모바일 Chrome에서 로컬 개발 서버를 열 때는 HTTPS 주소가 필요합니다. `http://192.168.x.x:5173` 같은 로컬 네트워크 주소에서는 마이크 권한을 요청할 수 없습니다.
+
+터미널을 두 개 열고 각각 실행합니다.
+
+```bash
+# 터미널 1
+npm run dev
+
+# 터미널 2
+cloudflared tunnel --url http://localhost:5173
+```
+
+`cloudflared`가 없다면 macOS에서 다음 명령으로 설치할 수 있습니다.
+
+```bash
+brew install cloudflared
+```
+
+터널 실행 후 출력되는 `https://xxxxx.trycloudflare.com` 주소를 모바일 Chrome에서 열고 `마이크 허용하고 시작`을 누릅니다. Cloudflare Quick Tunnel은 터미널을 종료하면 사용할 수 없고, 서버를 재시작하면 주소가 바뀔 수 있습니다.
+
+토스 샌드박스 WebView에서는 HTTPS 주소를 사용해도 기기·WebView의 마이크 권한 지원 여부에 따라 실제 마이크가 동작하지 않을 수 있습니다. 샌드박스에서 마이크 없이 입력 흐름을 확인하려면 다음 테스트 모드를 사용합니다.
+
+```dotenv
+VITE_BLOW_BALLOON_TEST_MODE=true
+```
+
+환경 변수를 바꾼 뒤에는 개발 서버를 다시 시작하세요. 실제 마이크를 사용하려면 `VITE_BLOW_BALLOON_TEST_MODE=false`로 설정합니다.
+
 ## 환경 변수
 
 `.env.local`에서 다음 값을 설정합니다.
