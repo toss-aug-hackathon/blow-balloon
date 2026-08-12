@@ -16,9 +16,7 @@ function getLocalDevelopmentHost(): string {
   const candidates = Object.entries(networkInterfaces()).flatMap(
     ([name, addresses]) =>
       (addresses ?? [])
-        .filter(
-          ({ family, internal }) => family === "IPv4" && !internal,
-        )
+        .filter(({ family, internal }) => family === "IPv4" && !internal)
         .filter(
           () =>
             !IGNORED_INTERFACE_PREFIXES.some((prefix) =>
@@ -50,7 +48,7 @@ export default defineConfig({
   brand: {
     displayName: "후우풍선",
     primaryColor: "#ff6b74",
-    icon: "https://static.toss.im/appsintoss/70341/b002c5f9-9027-4808-bb49-9d1c5e2931ea.png",
+    icon: "https://static.toss.im/appsintoss/70341/7485fa11-d391-4798-a494-0b8a3167d003.png",
   },
   web: {
     host: getLocalDevelopmentHost(),
