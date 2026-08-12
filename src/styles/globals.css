@@ -548,7 +548,8 @@ h1 {
 }
 
 .countdown-screen > strong {
-  margin: 25px 0 45px;
+  order: 1;
+  margin: 0 0 22px;
   color: #f05b71;
   font-size: clamp(100px, 32vw, 170px);
   line-height: 1;
@@ -1953,6 +1954,24 @@ h1 {
   transform: rotate(-3deg);
 }
 
+.permission-art .permission-art__balloon {
+  top: -3px;
+  left: 50%;
+  width: 195px;
+  height: 195px;
+  object-position: center;
+  transform: rotate(2deg);
+}
+
+.countdown-screen > p {
+  order: 2;
+  margin: 0 0 30px;
+}
+
+.countdown-screen > .wind-meter {
+  order: 3;
+}
+
 @media (max-height: 700px) {
   .mode-card .balloon-art--lung {
     top: 9px;
@@ -2209,19 +2228,70 @@ h1 {
   bottom: 10px;
 }
 
+/* Keep the home mode cards compact enough to show the full first screen. */
+.home-screen .mode-card {
+  min-height: 146px;
+  padding-top: 18px;
+  padding-bottom: 14px;
+}
+
+.home-screen .mode-card small {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.home-screen .mode-card .balloon-art--lung,
+.home-screen .mode-card .balloon-art--bunch {
+  height: 140px;
+}
+
+.home-screen .mode-card--lung .balloon-art--lung {
+  right: -8px;
+}
+
+.home-screen .mode-card--rush .balloon-art--bunch {
+  right: -12px;
+  top: 16px;
+  bottom: auto;
+}
+
+.home-screen .mode-card--rush small {
+  max-width: 235px;
+  padding-right: 4px;
+}
+
 .center-screen .mode-eyebrow {
-  display: inline-block;
-  margin-bottom: 14px;
-  padding: 7px 13px 6px;
-  border-radius: 999px;
-  color: #c94b5f;
-  background: rgba(255, 224, 218, 0.82);
-  font-size: 15px;
-  font-weight: 850;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 20px;
+  padding: 5px 10px;
+  border: 1px solid rgba(220, 130, 112, 0.2);
+  border-radius: 10px;
+  color: #9a5962;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
 }
 
+.center-screen .mode-eyebrow::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f6a03c, #ed6673);
+  content: '';
+}
+
+.mic-ready-title {
+  display: none;
+}
+
+.permission-art .permission-art__balloon {
+  transform: translateX(-50%) rotate(2deg);
+}
 
 .countdown-screen > strong {
   position: relative;
@@ -2271,6 +2341,29 @@ h1 {
   .mode-card .balloon-art--lung,
   .mode-card .balloon-art--bunch {
     height: 136px;
+  }
+}
+
+/* Final mobile home spacing and copy width tuning. */
+@media (max-width: 600px) {
+  .home-screen {
+    padding-top: calc(38px + var(--ait-safe-top));
+  }
+
+  .home-screen .home-header {
+    padding-top: 28px;
+  }
+
+  .home-screen .mode-card--rush {
+    padding-right: 34%;
+  }
+
+  .home-screen .mode-card--rush small {
+    width: 210px;
+    max-width: none;
+    font-size: 12px;
+    line-height: 1.35;
+    word-break: keep-all;
   }
 }
 
