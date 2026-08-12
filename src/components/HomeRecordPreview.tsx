@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  getCachedMyRecords,
-  getMyRecords,
-  type MyRecordsResponse,
+  getCachedRanking,
+  getRanking,
+  type GameType,
+  type RankingItem,
 } from '../api/gameApi';
 import { formatSeconds } from '../utils/math';
 
@@ -12,72 +13,90 @@ type HomeRecordPreviewProps = {
   onOpenRanking: () => void;
 };
 
-export function HomeRecordPreview({
-  userKey,
-  isRegistered,
-  onOpenRanking,
-}: HomeRecordPreviewProps) {
-  const [records, setRecords] = useState<MyRecordsResponse | null>(() =>
-    userKey ? getCachedMyRecords(userKey) : null,
-  );
-  const displayedRecords = userKey
-    ? getCachedMyRecords(userKey) ?? records
-    : records;
+type TickerItem = RankingItem & { gameType: GameType };
 
-  useEffect(() => {
-    if (!userKey || !isRegistered) return;
-    let cancelled = false;
+const getLabel = (gameType: GameType) =>
+  gameType === 'LUNG_CAPACITY' ? '크게 불기' : '풍선 스피드런';
 
-    const load = async () => {
-      try {
-        const nextRecords = await getMyRecords(userKey);
-        if (!cancelled) setRecords(nextRecords);
-      } catch {
-        if (!cancelled) setRecords(null);
-      }
-    };
+function buildTickerItems(
+  lungRanking: RankingItem[] | null,
+  rushRanking: RankingItem[] | null,
+): TickerItem[] {
+  const items: TickerItem[] = [];
+  const maxLength = Math.max(lungRanking?.length ?? 0, rushRanking?.length ?? 0);
 
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [isRegistered, userKey]);
-
-  if (!isRegistered || !displayedRecords) {
-    return (
-      <button className="home-ranking-entry" type="button" onClick={onOpenRanking}>
-        <span>
-          <small>나의 기록</small>
-          <b>게임 후 내 랭킹을 확인해봐요.</b>
-        </span>
-        <strong>랭킹 <i aria-hidden="true">→</i></strong>
-      </button>
-    );
+  for (let index = 0; index < maxLength && items.length < 5; index += 1) {
+    const lung = lungRanking?.[index];
+    const rush = rushRanking?.[index];
+    if (lung) items.push({ ...lung, gameType: 'LUNG_CAPACITY' });
+    if (rush && items.length < 5) items.push({ ...rush, gameType: 'BALLOON_COUNT' });
   }
 
-  const lung = displayedRecords.records.LUNG_CAPACITY;
-  const rush = displayedRecords.records.BALLOON_COUNT;
+  return items;
+}
+
+export function HomeRecordPreview({ onOpenRanking }: HomeRecordPreviewProps) {
+  const [items, setItems] = useState<TickerItem[]>(() =>
+    buildTickerItems(
+      getCachedRanking('LUNG_CAPACITY'),
+      getCachedRanking('BALLOON_COUNT'),
+    ),
+  );
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const [lungRanking, rushRanking] = await Promise.all([
+        getRanking('LUNG_CAPACITY').catch(() => null),
+        getRanking('BALLOON_COUNT').catch(() => null),
+      ]);
+      if (!cancelled) {
+        setItems(buildTickerItems(lungRanking, rushRanking));
+        setActiveIndex(0);
+      }
+    };
+    void load();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (items.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % items.length);
+    }, 2500);
+    return () => window.clearInterval(timer);
+  }, [items.length]);
+
+  const item = items[activeIndex];
 
   return (
-    <button className="home-record-preview" type="button" onClick={onOpenRanking}>
-      <span className="home-record-preview__heading">
-        <small>{displayedRecords.displayName}의 기록</small>
+    <div className="home-ranking-preview">
+      <div className="home-ranking-preview__heading">
+        <strong>오늘의 풍선 랭킹</strong>
         <i aria-hidden="true">→</i>
-      </span>
-      <span className="home-record-preview__items">
-        <span>
-          <small>크게 불기</small>
-          <strong>{lung.bestScore === null ? '기록 없음' : `${lung.bestScore}점`}</strong>
-          {lung.bestDurationMs !== null && <i>{formatSeconds(lung.bestDurationMs)}초</i>}
-          {lung.rank !== null && <em>{lung.rank}위</em>}
-        </span>
-        <span>
-          <small>스피드런</small>
-          <strong>{rush.bestScore === null ? '기록 없음' : `${rush.bestScore}개`}</strong>
-          {rush.bestDurationMs !== null && <i>{formatSeconds(rush.bestDurationMs)}초</i>}
-          {rush.rank !== null && <em>{rush.rank}위</em>}
-        </span>
-      </span>
-    </button>
+      </div>
+      <button className="home-record-preview" type="button" onClick={onOpenRanking}>
+        {item ? (
+          <span className="home-ranking-ticker" key={`${item.gameType}-${item.rank}-${activeIndex}`}>
+            <b className="home-ranking-ticker__rank">{item.rank}위</b>
+            <span className="home-ranking-ticker__name">
+              <small>{getLabel(item.gameType)}</small>
+              <strong>{item.displayName}</strong>
+            </span>
+            <span className="home-ranking-ticker__score">
+              <strong>
+                {item.gameType === 'LUNG_CAPACITY' ? `${item.score}점` : `${item.score}개`}
+              </strong>
+              {item.durationMs !== null && <small>{formatSeconds(item.durationMs)}초</small>}
+            </span>
+          </span>
+        ) : (
+          <span className="home-ranking-ticker home-ranking-ticker--empty">
+            <strong>랭킹을 불러오는 중이에요</strong>
+          </span>
+        )}
+      </button>
+    </div>
   );
 }

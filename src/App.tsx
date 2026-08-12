@@ -361,7 +361,7 @@ export default function App() {
       )}
 
       {screen === 'mic-permission' && mode && (
-        <main className="screen center-screen">
+        <main className="screen center-screen mic-permission-screen">
           <button className="back-button" type="button" onClick={goHome}>
             ←
             <span className="sr-only">홈으로</span>
@@ -444,9 +444,6 @@ export default function App() {
               {mode === 'lung-test' ? '준비 완료! 크게 불기 시작' : '준비 완료! 스피드런 시작'}
             </button>
           )}
-          <button className="text-button" type="button" onClick={goHome}>
-            다음에 할게요
-          </button>
         </main>
       )}
 
