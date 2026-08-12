@@ -124,9 +124,6 @@ export default function App() {
   const [result, setResult] = useState<GameResult | null>(null);
   const [hasShownMicNotice, setHasShownMicNotice] = useState(readMicNoticeState);
   const [showMicNotice, setShowMicNotice] = useState(false);
-  const [hasUsedMicStartButton, setHasUsedMicStartButton] = useState(
-    readMicStartButtonState,
-  );
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
   const gameUser = useGameUser();
@@ -150,6 +147,9 @@ export default function App() {
     requestPermission,
     resetBreath,
   } = detector;
+  const [hasUsedMicStartButton, setHasUsedMicStartButton] = useState(
+    () => (detector.testModeEnabled ? false : readMicStartButtonState()),
+  );
 
   const goHome = useCallback(() => {
     stopDetector();
@@ -158,12 +158,18 @@ export default function App() {
     setMode(null);
     setResult(null);
     setHud(INITIAL_HUD);
-  }, [stopDetector]);
+    if (detector.testModeEnabled) {
+      setHasUsedMicStartButton(false);
+    }
+  }, [detector.testModeEnabled, stopDetector]);
 
   const selectMode = (nextMode: GameMode) => {
     stopDetector();
     setTestWindOn(false);
     setMode(nextMode);
+    if (detector.testModeEnabled) {
+      setHasUsedMicStartButton(false);
+    }
     const shouldShowNotice = !hasShownMicNotice;
     setShowMicNotice(shouldShowNotice);
     if (shouldShowNotice) {
@@ -197,7 +203,7 @@ export default function App() {
 
   useEffect(() => {
     if (screen !== 'mic-permission' || !mode) return;
-    if (detector.testModeEnabled || hasUsedMicStartButton) {
+    if (!detector.testModeEnabled && hasUsedMicStartButton) {
       const timeout = window.setTimeout(() => {
         void startMicrophone();
       }, 0);
@@ -254,6 +260,9 @@ export default function App() {
     stopDetector();
     setTestWindOn(false);
     setShowMicNotice(false);
+    if (detector.testModeEnabled) {
+      setHasUsedMicStartButton(false);
+    }
     setResult(null);
     setHud(INITIAL_HUD);
     setPermissionBalloonId((prev) => {
@@ -263,7 +272,7 @@ export default function App() {
       return candidateIds[Math.floor(Math.random() * candidateIds.length)] ?? 1;
     });
     setScreen('mic-permission');
-  }, [stopDetector]);
+  }, [detector.testModeEnabled, stopDetector]);
 
   const startCountdown = useCallback(() => {
     setCountdown(3);
