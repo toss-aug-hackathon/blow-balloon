@@ -58,7 +58,7 @@ button:focus-visible {
   min-height: 100dvh;
   margin: 0 auto;
   padding:
-    calc(32px + var(--ait-safe-top))
+    calc(76px + var(--ait-safe-top))
     calc(22px + var(--ait-safe-right))
     calc(28px + var(--ait-safe-bottom))
     calc(22px + var(--ait-safe-left));
@@ -192,7 +192,7 @@ h1 {
 
 @media (max-height: 700px) {
   .screen {
-    padding-top: calc(16px + var(--ait-safe-top));
+    padding-top: calc(72px + var(--ait-safe-top));
     padding-bottom: calc(12px + var(--ait-safe-bottom));
   }
 
@@ -273,6 +273,14 @@ h1 {
   max-width: 390px;
 }
 
+.mic-permission-screen h1,
+.mic-permission-title {
+  max-width: 100%;
+  font-size: clamp(24px, 6.6vw, 34px);
+  white-space: nowrap;
+  letter-spacing: -0.04em;
+}
+
 .center-screen .body-copy {
   margin-bottom: 42px;
 }
@@ -306,7 +314,21 @@ h1 {
   position: relative;
   width: 170px;
   height: 170px;
-  margin-bottom: 26px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.permission-art__balloon {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+  filter: drop-shadow(0 12px 20px rgba(180, 80, 90, 0.15));
 }
 
 .mic-test-card {
@@ -552,7 +574,7 @@ h1 {
   position: absolute;
   z-index: 3;
   inset:
-    calc(20px + var(--ait-safe-top))
+    calc(68px + var(--ait-safe-top))
     calc(18px + var(--ait-safe-right))
     auto
     calc(18px + var(--ait-safe-left));
@@ -1908,8 +1930,7 @@ h1 {
 }
 
 /* PNG balloon artwork */
-.mode-card .balloon-art,
-.permission-art .permission-art__balloon {
+.mode-card .balloon-art {
   position: absolute;
   display: block;
   width: auto;
@@ -1930,13 +1951,6 @@ h1 {
   right: 19px;
   height: 144px;
   transform: rotate(-3deg);
-}
-
-.permission-art .permission-art__balloon {
-  top: -3px;
-  right: 26px;
-  height: 195px;
-  transform: rotate(2deg);
 }
 
 @media (max-height: 700px) {
@@ -2107,12 +2121,12 @@ h1 {
 /* Compact home layout: both game choices stay inside one mobile viewport. */
 .home-screen {
   justify-content: center;
-  padding-top: calc(20px + var(--ait-safe-top));
+  padding-top: calc(78px + var(--ait-safe-top));
   padding-bottom: calc(18px + var(--ait-safe-bottom));
 }
 
 .home-header {
-  padding: 0 4px 18px;
+  padding: 0 4px 2px;
 }
 
 .home-header h1 {
@@ -2208,11 +2222,6 @@ h1 {
   text-transform: none;
 }
 
-.permission-art .permission-art__balloon {
-  right: auto;
-  left: 50%;
-  transform: translateX(-50%) rotate(2deg);
-}
 
 .countdown-screen > strong {
   position: relative;
@@ -2425,8 +2434,9 @@ h1 {
 }
 
 .game-screen > .game-hud > .game-exit {
-  grid-column: 1;
-  justify-self: start;
+  position: absolute;
+  top: -50px;
+  left: 0;
 }
 
 .game-screen > .game-hud > .game-stat {
@@ -2848,7 +2858,7 @@ h1 {
 
 .game-screen > .game-hud > .game-exit {
   position: absolute;
-  top: 0;
+  top: -50px;
   left: 0;
 }
 

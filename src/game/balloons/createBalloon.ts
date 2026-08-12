@@ -34,6 +34,7 @@ export function createVariantForAsset(
   return {
     assetId: asset.id,
     seed: Math.floor(random() * 1_000_000),
+    faceId: Math.floor(random() * BALLOON_FACE_CHARACTER_COUNT),
   };
 }
 
