@@ -18,7 +18,12 @@ function drawSnapshotBalloon(
   const balloon = createBalloonBody(source.variant, x, y, radius);
   balloon.completed = source.completed;
   balloon.rotation = source.rotation;
-  drawBalloon(context, balloon, performance.now());
+  const isRelieved = (source.variant.seed % 3) === 0;
+  drawBalloon(context, balloon, performance.now(), 1, 0, {
+    growthProgress: 0,
+    windStrength: 0,
+    settlingProgress: isRelieved ? 1 : 0,
+  });
 }
 
 export async function createResultSnapshot(

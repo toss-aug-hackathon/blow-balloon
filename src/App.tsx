@@ -192,36 +192,30 @@ export default function App() {
     } catch {
       // In-memory state still covers WebViews without session storage.
     }
-    setScreen('calibrating');
     await requestPermission();
   }, [requestPermission]);
 
   useEffect(() => {
-    if (screen !== 'mic-permission' || !mode || !hasUsedMicStartButton) return;
-    const timeout = window.setTimeout(() => {
-      void startMicrophone();
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, [hasUsedMicStartButton, mode, screen, startMicrophone]);
+    if (screen !== 'mic-permission' || !mode) return;
+    if (detector.testModeEnabled || hasUsedMicStartButton) {
+      const timeout = window.setTimeout(() => {
+        void startMicrophone();
+      }, 0);
+      return () => window.clearTimeout(timeout);
+    }
+  }, [detector.testModeEnabled, hasUsedMicStartButton, mode, screen, startMicrophone]);
 
-  const startTestWind = () => {
+  const startTestWind = useCallback((event?: React.SyntheticEvent) => {
+    if (event && event.cancelable) event.preventDefault();
     detector.setSimulatedWind(1);
     setTestWindOn(true);
-  };
+  }, [detector]);
 
-  const stopTestWind = () => {
+  const stopTestWind = useCallback((event?: React.SyntheticEvent) => {
+    if (event && event.cancelable) event.preventDefault();
     detector.setSimulatedWind(0);
     setTestWindOn(false);
-  };
-
-  useEffect(() => {
-    if (screen !== 'calibrating' || !detector.isCalibrated) return;
-    const timeout = window.setTimeout(() => {
-      setCountdown(3);
-      setScreen('countdown');
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, [detector.isCalibrated, screen]);
+  }, [detector]);
 
   useEffect(() => {
     if (screen !== 'countdown') return;
@@ -262,8 +256,19 @@ export default function App() {
     setShowMicNotice(false);
     setResult(null);
     setHud(INITIAL_HUD);
+    setPermissionBalloonId((prev) => {
+      const candidateIds = Array.from({ length: 16 }, (_, i) => i + 1).filter(
+        (id) => id !== prev,
+      );
+      return candidateIds[Math.floor(Math.random() * candidateIds.length)] ?? 1;
+    });
     setScreen('mic-permission');
   }, [stopDetector]);
+
+  const startCountdown = useCallback(() => {
+    setCountdown(3);
+    setScreen('countdown');
+  }, []);
 
   return (
     <div className="app-shell">
@@ -342,14 +347,16 @@ export default function App() {
             {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
           </p>
           <h1>
-            {detector.testModeEnabled
-              ? '테스트 바람을 준비할게요'
-              : '마이크에 바람을 불어주세요'}
+            {detector.permission === 'granted'
+              ? '바람을 잘 들을 수 있어요!'
+              : detector.testModeEnabled
+                ? '테스트 바람을 준비했어요'
+                : '마이크에 바람을 불어주세요'}
           </h1>
-          {showMicNotice && (
+          {showMicNotice && detector.permission !== 'granted' && (
             <p className="body-copy">
               {detector.testModeEnabled
-                ? '실기기 테스트 모드에서는 화면 버튼으로 바람을 만들어요.'
+                ? '화면의 바람 불기 버튼으로 마이크 입력 없이 테스트할 수 있어요.'
                 : '풍선을 키우기 위해 마이크를 사용해요.'}
               <br />
               {detector.testModeEnabled
@@ -357,13 +364,54 @@ export default function App() {
                 : '소리는 저장하거나 서버로 전송하지 않아요.'}
             </p>
           )}
-          {!hasUsedMicStartButton && (
+
+          {/* 바람세기 미리 테스트 영역 */}
+          <div className="mic-test-card">
+            <div className="mic-test-header">
+              <span className="mic-test-badge">바람세기 미리 테스트</span>
+              <p className="mic-test-hint">
+                {detector.permission === 'granted'
+                  ? detector.frame.isBlowing
+                    ? '바람 감지 중! 💨'
+                    : '마이크에 후- 불면 반응해요!'
+                  : detector.testModeEnabled
+                    ? '아래 버튼을 눌러 테스트해보세요!'
+                    : '마이크 허용 후 후- 불어서 테스트해보세요.'}
+              </p>
+            </div>
+            <WindMeter strength={detector.frame.windStrength} />
+            {detector.testModeEnabled && (
+              <div className="test-wind-control">
+                <button
+                  className={`test-wind-button${testWindOn ? ' is-active' : ''}`}
+                  type="button"
+                  onPointerDown={startTestWind}
+                  onPointerUp={stopTestWind}
+                  onPointerCancel={stopTestWind}
+                  onPointerLeave={stopTestWind}
+                >
+                  <i aria-hidden="true">〰</i>
+                  바람 미리 불어보기
+                </button>
+              </div>
+            )}
+          </div>
+
+          {detector.permission !== 'granted' && !detector.testModeEnabled ? (
             <button
               className="button button--primary"
               type="button"
               onClick={startMicrophone}
             >
-              {detector.testModeEnabled ? '테스트 모드로 시작' : '마이크 허용하고 시작'}
+              마이크 허용하고 시작
+            </button>
+          ) : (
+            <button
+              className="button button--primary"
+              type="button"
+              onClick={startCountdown}
+            >
+              {mode === 'lung-test' ? '준비 완료! 크게 불기 시작' : '준비 완료! 스피드런 시작'}
             </button>
           )}
           <button className="text-button" type="button" onClick={goHome}>
