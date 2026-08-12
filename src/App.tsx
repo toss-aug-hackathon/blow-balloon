@@ -423,9 +423,6 @@ export default function App() {
               {mode === 'lung-test' ? '준비 완료! 크게 불기 시작' : '준비 완료! 스피드런 시작'}
             </button>
           )}
-          <button className="text-button" type="button" onClick={goHome}>
-            다음에 할게요
-          </button>
         </main>
       )}
 

@@ -305,7 +305,7 @@ h1 {
   position: relative;
   width: 170px;
   height: 170px;
-  margin-bottom: 16px;
+  margin-bottom: 26px;
 }
 
 .mic-test-card {
@@ -350,14 +350,50 @@ h1 {
 }
 
 .mic-test-card .test-wind-control {
+  position: static;
   width: 100%;
-  margin-top: 2px;
+  margin: 4px 0 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.mic-test-card > .wind-meter {
+  width: 100%;
+}
+
+.mic-test-card > .wind-meter .wind-meter__scale {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 7px;
+  padding: 0;
+}
+
+.mic-test-card > .wind-meter .wind-meter__scale span {
+  flex: 0 0 auto;
+}
+
+.mic-test-card > .wind-meter .wind-meter__scale span:nth-child(2) {
+  transform: translateX(-1px);
 }
 
 .mic-test-card .test-wind-button {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   border-radius: 14px;
+  border: 1px solid rgba(203, 111, 128, 0.28);
+  background: rgba(255, 255, 255, 0.72);
+  color: #a9586c;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.mic-test-card .test-wind-button.is-active,
+.mic-test-card .test-wind-button:active {
+  background: rgba(255, 220, 223, 0.85);
+  color: #8f3f56;
+  box-shadow: none;
 }
 
 .button-stack,
@@ -3079,11 +3115,23 @@ h1 {
 
 .game-screen > .game-control-panel > .test-wind-control > span {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   color: rgba(38, 51, 58, 0.68);
   font-size: 13px;
   font-weight: 700;
   text-align: center;
+}
+
+.game-screen > .game-control-panel > .test-wind-control {
+  gap: 8px;
+}
+
+.game-screen > .game-control-panel > .test-wind-control .test-wind-button {
+  margin-top: 0;
+}
+
+.game-screen > .game-control-panel > .game-wind-meter {
+  margin-top: 20px;
 }
 
 /* Align both top stats to one visual baseline and use compact, legible icons. */

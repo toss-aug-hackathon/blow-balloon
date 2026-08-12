@@ -171,7 +171,7 @@ export class BalloonEngine {
       return;
     }
 
-    if (signal.state === 'blowing') {
+    if (signal.isBlowing) {
       this.lungBreathStarted = true;
       this.lungGapMs = 0;
       this.elapsedMs += deltaMs;
