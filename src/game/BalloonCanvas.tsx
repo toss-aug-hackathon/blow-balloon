@@ -57,7 +57,10 @@ export function BalloonCanvas({
         getComputedStyle(document.documentElement)
           .getPropertyValue('--ait-safe-top'),
       );
-      engine.setSafeTopInset(Number.isFinite(safeTop) ? safeTop : 0);
+      const topInset = Number.isFinite(safeTop) ? safeTop : 0;
+      // 풍선은 실제 기기 상단 safe area까지만 올라가고,
+      // 게임 HUD 아래의 추가 여백에는 막히지 않게 한다.
+      engine.setSafeTopInset(topInset);
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);

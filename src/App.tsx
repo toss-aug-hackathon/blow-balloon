@@ -36,6 +36,7 @@ const INITIAL_HUD: GameHudState = {
   completedCount: 0,
   windStrength: 0,
   isWaitingForBreath: true,
+  balloonScore: 0,
 };
 
 
@@ -447,30 +448,37 @@ export default function App() {
             >
               <img src="/navigation/cancel.png" alt="" aria-hidden="true" />
             </button>
-            {mode === 'lung-test' ? (
-              <div className="game-stat game-stat--center">
-                <span className="game-stat__icon game-stat__icon--timer" aria-hidden="true" />
-                <small>{hud.isWaitingForBreath ? '바람을 불어주세요' : '현재 호흡'}</small>
-                <strong>{formatSeconds(hud.elapsedMs)}초</strong>
-              </div>
-            ) : (
-              <>
-                <div className="game-stat game-stat--timer">
-                  <span className="game-stat__icon game-stat__icon--timer" aria-hidden="true" />
-                  <small>남은 시간</small>
-                  <strong>{Math.ceil(hud.remainingMs / 1000)}<em>초</em></strong>
-                </div>
-                <div className="game-stat game-stat--right">
-                  <span className="game-stat__icon game-stat__icon--balloon" aria-hidden="true" />
-                  <small>완성</small>
-                  <strong>{hud.completedCount}<em>개</em></strong>
-                </div>
-              </>
-            )}
           </div>
           <div className="game-control-panel">
+            {mode && (
+              <div className="lung-live-stats" aria-live="polite">
+                {mode === 'lung-test' ? (
+                  <>
+                    <div>
+                      <span>호흡 시간</span>
+                      <strong>{formatSeconds(hud.elapsedMs)}초</strong>
+                    </div>
+                    <div>
+                      <span>현재 점수</span>
+                      <strong>{hud.balloonScore.toLocaleString()}점</strong>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span>남은 시간</span>
+                      <strong>{Math.ceil(hud.remainingMs / 1000)}초</strong>
+                    </div>
+                    <div>
+                      <span>현재 풍선 수</span>
+                      <strong>{hud.completedCount}개</strong>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             <p className="game-control-guide">
-              <span>누르고 있는 동안 <strong>바람</strong>이 불어요</span>
+              <span>{mode === 'lung-test' ? '바람을 불어 풍선을 키워보세요' : '누르고 있는 동안 바람이 불어요'}</span>
             </p>
             <div className="game-wind-meter">
               <WindMeter strength={hud.windStrength} />

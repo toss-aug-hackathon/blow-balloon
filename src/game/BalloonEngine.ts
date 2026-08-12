@@ -39,7 +39,8 @@ type BalloonEngineOptions = {
 // The active balloon starts behind the bottom wind panel and reveals itself
 // as it grows into the playfield.
 const ACTIVE_BALLOON_TARGET_RATIO = 0.82;
-const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.43;
+// 크게 불기 풍선은 상단 HUD와 겹치지 않으면서 플레이 영역 중앙에 오도록 한다.
+const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.56;
 const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
 export class BalloonEngine {
   private readonly mode: GameMode;
@@ -219,6 +220,15 @@ export class BalloonEngine {
   }
 
   private growActiveBalloon(amount: number): void {
+    if (this.mode === 'lung-test') {
+      // 크게 불기 모드는 화면 경계와 무관하게 한 호흡 동안 계속 커진다.
+      // 성장 속도 기준은 유지하고, 풍선 크기만 상한 없이 누적한다.
+      this.activeBalloon.radiusX += amount;
+      this.activeBalloon.radiusY += amount;
+      this.positionActiveBalloon();
+      return;
+    }
+
     const currentRadius = this.averageRadius(this.activeBalloon);
     const maximumRadius = this.getMaximumActiveRadius();
     if (currentRadius >= maximumRadius) return;
@@ -339,6 +349,15 @@ export class BalloonEngine {
       windStrength: signal.windStrength,
       isWaitingForBreath:
         this.mode === 'lung-test' && !this.lungBreathStarted,
+      balloonScore:
+        this.mode === 'lung-test'
+          ? Math.round(
+              calculateBalloonScore(
+                this.averageRadius(this.activeBalloon),
+                this.getBaseAverageRadius(22),
+              ) * 100,
+            )
+          : 0,
     });
   }
 
