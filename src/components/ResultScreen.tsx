@@ -273,7 +273,10 @@ export function ResultScreen({
           </div>
           ) : (
           <div className="ranking-choice">
-            <p>이번 기록을 랭킹에 남길까요?</p>
+            <p>
+              게임 결과에서 랭킹에 등록하면<br />
+              나의 기록을 확인할 수 있어요.
+            </p>
             <button
               className="button button--primary"
               type="button"
