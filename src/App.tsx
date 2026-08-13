@@ -171,13 +171,17 @@ export default function App() {
       hasGrantedInSession &&
       detector.permission === 'idle'
     ) {
-      requestMicrophone();
+      queueMicrotask(() => {
+        requestMicrophone();
+      });
     }
   }, [screen, hasGrantedInSession, detector.permission, requestMicrophone]);
 
   useEffect(() => {
     if (detector.permission === 'denied' || detector.permission === 'error') {
-      setHasGrantedInSession(false);
+      queueMicrotask(() => {
+        setHasGrantedInSession(false);
+      });
       try {
         sessionStorage.removeItem('hoo_balloon_mic_session_granted');
       } catch {

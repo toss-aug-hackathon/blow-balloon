@@ -19,6 +19,13 @@ Supabase Dashboard만 사용해 설치하는 PostgreSQL + Edge Function 백엔�
 
 ## Dashboard 설치 순서
 
+기존 게임용 DB를 완전히 초기화하고 새로 구성하는 경우에는 migration 001~008 대신
+[`nongame_schema.sql`](./nongame_schema.sql) 하나만 실행하세요. 이 파일은 비게임용
+최종 스키마만 생성하며 기존 데이터를 삭제하지 않습니다. 기존 객체와 데이터를 삭제하는
+SQL은 별도로 확인한 뒤 먼저 실행해야 합니다.
+
+기존 DB를 유지하면서 migration 기록을 이어가야 하는 경우에만 아래의 001~008 순서를 사용합니다.
+
 1. Supabase 프로젝트의 **SQL Editor**를 엽니다.
 2. [`migrations/001_ranking_backend.sql`](./migrations/001_ranking_backend.sql) 전체를 붙여 넣고 실행합니다.
 3. [`migrations/002_profile_identity_and_nickname.sql`](./migrations/002_profile_identity_and_nickname.sql) 전체를 붙여 넣고 실행합니다.
