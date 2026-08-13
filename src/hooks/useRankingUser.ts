@@ -3,6 +3,7 @@ import { getAnonymousKey } from '@apps-in-toss/web-bridge';
 import {
   getRankingUser,
   getMyRecords,
+  getCachedRegisteredRankingUser,
   type RankingUser,
 } from '../api/rankingApi';
 import { extractAnonymousKey } from '../utils/anonymousIdentity';
@@ -16,6 +17,7 @@ export function useRankingUser() {
 
   const refresh = useCallback(async () => {
     setStatus('loading');
+
     try {
       const keyResult = await getAnonymousKey();
       const nextAnonymousKey = extractAnonymousKey(keyResult);
@@ -24,16 +26,21 @@ export function useRankingUser() {
         setUser(null);
         setStatus('unavailable');
         return;
-      }
-
-      const userRequest = getRankingUser(nextAnonymousKey);
-      const recordsRequest = getMyRecords(nextAnonymousKey).catch(() => null);
-      const nextUser = await userRequest;
-      if (nextUser.isRegistered) await recordsRequest;
-
+}
       setAnonymousKey(nextAnonymousKey);
-      setUser(nextUser);
-      setStatus('ready');
+      try {
+        const userRequest = getRankingUser(nextAnonymousKey);
+        const recordsRequest = getMyRecords(nextAnonymousKey).catch(() => null);
+        const nextUser = await userRequest;
+        if (nextUser.isRegistered) await recordsRequest;
+
+        setUser(nextUser);
+        setStatus('ready');
+      } catch {
+        const cachedUser = getCachedRegisteredRankingUser(nextAnonymousKey);
+        setUser(cachedUser ?? { isRegistered: false });
+        setStatus('ready');
+      }
     } catch {
       setAnonymousKey(null);
       setUser(null);
