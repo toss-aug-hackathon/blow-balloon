@@ -224,14 +224,19 @@ export function ResultScreen({
               placeholder="2~15자 입력"
               onChange={(event) => setNickname(event.target.value)}
             />
-            <button
-              className="button button--primary"
-              type="button"
-              disabled={isSubmitting}
-              onClick={handleRegister}
-            >
-              {isSubmitting ? '등록하는 중…' : '별명 등록하고 기록 저장'}
-            </button>
+            <div className="nickname-form__actions">
+              <button
+                className="button button--primary"
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleRegister}
+              >
+                {isSubmitting ? '등록하는 중…' : '별명 등록하고 기록 저장'}
+              </button>
+              <button className="button ranking-view-button" type="button" onClick={onOpenRanking}>
+                랭킹 보러 가기
+              </button>
+            </div>
           </div>
           ) : (
           <div className="ranking-choice">
@@ -269,7 +274,7 @@ export function ResultScreen({
           )}
         </section>
 
-        {(submission || user?.isRegistered || isRegistrationOpen) && (
+        {(submission || user?.isRegistered) && (
           <div className="result-utility-links result-utility-links--wide">
             <button className="button ranking-view-button" type="button" onClick={onOpenRanking}>
               랭킹 보러 가기
