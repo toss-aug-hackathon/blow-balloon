@@ -248,8 +248,12 @@ export function registerNickname(
     { method: 'POST', body: JSON.stringify({ nickname }) },
     anonymousKey,
   ).then((user) => {
-    saveRegisteredRankingUser(anonymousKey, user);
-    return user;
+    const registeredUser: RegisteredRankingUser = {
+      ...user,
+      isRegistered: true,
+    };
+    saveRegisteredRankingUser(anonymousKey, registeredUser);
+    return registeredUser;
   });
 }
 
@@ -262,8 +266,12 @@ export function updateNickname(
     { method: 'POST', body: JSON.stringify({ nickname }) },
     anonymousKey,
   ).then((user) => {
-    saveRegisteredRankingUser(anonymousKey, user);
-    return user;
+    const registeredUser: RegisteredRankingUser = {
+      ...user,
+      isRegistered: true,
+    };
+    saveRegisteredRankingUser(anonymousKey, registeredUser);
+    return registeredUser;
   });
 }
 

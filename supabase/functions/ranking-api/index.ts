@@ -175,6 +175,7 @@ async function registerNickname(req: Request, anonymousKey: string): Promise<Res
   const user = data?.[0]
   return json({
     success: true,
+    isRegistered: true,
     displayName: `${user.nickname} #${user.display_id}`,
     nickname: user.nickname,
     displayId: user.display_id,
@@ -197,6 +198,7 @@ async function updateNickname(req: Request, anonymousKey: string): Promise<Respo
   const user = data?.[0]
   return json({
     success: true,
+    isRegistered: true,
     displayName: `${user.nickname} #${user.display_id}`,
     nickname: user.nickname,
     displayId: user.display_id,
