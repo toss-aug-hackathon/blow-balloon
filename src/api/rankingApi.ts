@@ -4,16 +4,16 @@ import {
   hasSameRankingRecord,
 } from './rankingRules';
 
-export type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY';
+export type RankingType = 'BALLOON_COUNT' | 'LUNG_CAPACITY';
 
-export type RegisteredGameUser = {
+export type RegisteredRankingUser = {
   isRegistered: true;
   displayName: string;
   nickname: string;
   displayId: number;
 };
 
-export type GameUser = RegisteredGameUser | { isRegistered: false };
+export type RankingUser = RegisteredRankingUser | { isRegistered: false };
 
 export type RankingItem = {
   rank: number;
@@ -24,7 +24,7 @@ export type RankingItem = {
 
 export type MyRecordsResponse = {
   displayName: string;
-  records: Record<GameType, {
+  records: Record<RankingType, {
     bestScore: number | null;
     bestDurationMs: number | null;
     rank: number | null;
@@ -33,7 +33,7 @@ export type MyRecordsResponse = {
 
 export type SubmitScoreResponse = {
   success: true;
-  gameType: GameType;
+  rankingType: RankingType;
   submittedScore: number;
   bestScore: number;
   bestDurationMs: number | null;
@@ -44,7 +44,7 @@ type ApiErrorBody = {
   error?: { code?: string; message?: string };
 };
 
-export class GameApiError extends Error {
+export class RankingApiError extends Error {
   constructor(
     readonly code: string,
     message: string,
@@ -52,28 +52,28 @@ export class GameApiError extends Error {
     readonly retryAfterSeconds: number | null,
   ) {
     super(message);
-    this.name = 'GameApiError';
+    this.name = 'RankingApiError';
   }
 }
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '');
-const gameApiUrl = supabaseUrl
-  ? `${supabaseUrl}/functions/v1/game-api`
+const rankingApiUrl = supabaseUrl
+  ? `${supabaseUrl}/functions/v1/ranking-api`
   : null;
 
-const rankingCache = new Map<GameType, RankingItem[]>();
-const rankingRequests = new Map<GameType, Promise<RankingItem[]>>();
+const rankingCache = new Map<RankingType, RankingItem[]>();
+const rankingRequests = new Map<RankingType, Promise<RankingItem[]>>();
 const myRecordsCache = new Map<string, MyRecordsResponse>();
 const myRecordsRequests = new Map<string, Promise<MyRecordsResponse>>();
 const myRecordsRequestTokens = new Map<string, symbol>();
 const MAX_VISIBLE_RANKING_ITEMS = 15;
-const MY_RECORDS_STORAGE_PREFIX = 'blow-balloon:my-records:';
-const REGISTERED_USER_STORAGE_PREFIX = 'blow-balloon:registered-user:';
+const MY_RECORDS_STORAGE_PREFIX = 'hoo-balloon:nongame:my-records:';
+const REGISTERED_USER_STORAGE_PREFIX = 'hoo-balloon:nongame:registered-user:';
 
-function saveRegisteredGameUser(userKey: string, user: RegisteredGameUser): void {
+function saveRegisteredRankingUser(anonymousKey: string, user: RegisteredRankingUser): void {
   try {
     window.localStorage.setItem(
-      `${REGISTERED_USER_STORAGE_PREFIX}${userKey}`,
+      `${REGISTERED_USER_STORAGE_PREFIX}${anonymousKey}`,
       JSON.stringify(user),
     );
   } catch {
@@ -81,24 +81,24 @@ function saveRegisteredGameUser(userKey: string, user: RegisteredGameUser): void
   }
 }
 
-export function getCachedRegisteredGameUser(
-  userKey: string,
-): RegisteredGameUser | null {
+export function getCachedRegisteredRankingUser(
+  anonymousKey: string,
+): RegisteredRankingUser | null {
   try {
     const stored = window.localStorage.getItem(
-      `${REGISTERED_USER_STORAGE_PREFIX}${userKey}`,
+      `${REGISTERED_USER_STORAGE_PREFIX}${anonymousKey}`,
     );
     if (!stored) return null;
     const parsed: unknown = JSON.parse(stored);
     if (
       !parsed ||
       typeof parsed !== 'object' ||
-      (parsed as Partial<RegisteredGameUser>).isRegistered !== true ||
-      typeof (parsed as Partial<RegisteredGameUser>).displayName !== 'string'
+      (parsed as Partial<RegisteredRankingUser>).isRegistered !== true ||
+      typeof (parsed as Partial<RegisteredRankingUser>).displayName !== 'string'
     ) {
       return null;
     }
-    return parsed as RegisteredGameUser;
+    return parsed as RegisteredRankingUser;
   } catch {
     return null;
   }
@@ -130,10 +130,10 @@ function normalizeMyRecords(records: MyRecordsResponse): MyRecordsResponse {
   };
 }
 
-function saveMyRecordsToStorage(userKey: string, records: MyRecordsResponse): void {
+function saveMyRecordsToStorage(anonymousKey: string, records: MyRecordsResponse): void {
   try {
     window.localStorage.setItem(
-      `${MY_RECORDS_STORAGE_PREFIX}${userKey}`,
+      `${MY_RECORDS_STORAGE_PREFIX}${anonymousKey}`,
       JSON.stringify(records),
     );
   } catch {
@@ -141,9 +141,9 @@ function saveMyRecordsToStorage(userKey: string, records: MyRecordsResponse): vo
   }
 }
 
-function readMyRecordsFromStorage(userKey: string): MyRecordsResponse | null {
+function readMyRecordsFromStorage(anonymousKey: string): MyRecordsResponse | null {
   try {
-    const stored = window.localStorage.getItem(`${MY_RECORDS_STORAGE_PREFIX}${userKey}`);
+    const stored = window.localStorage.getItem(`${MY_RECORDS_STORAGE_PREFIX}${anonymousKey}`);
     if (!stored) return null;
     const parsed: unknown = JSON.parse(stored);
     return isMyRecordsResponse(parsed) ? normalizeMyRecords(parsed) : null;
@@ -152,19 +152,19 @@ function readMyRecordsFromStorage(userKey: string): MyRecordsResponse | null {
   }
 }
 
-function cacheMyRecords(userKey: string, records: MyRecordsResponse): void {
+function cacheMyRecords(anonymousKey: string, records: MyRecordsResponse): void {
   const normalized = normalizeMyRecords(records);
-  myRecordsCache.set(userKey, normalized);
-  saveMyRecordsToStorage(userKey, normalized);
+  myRecordsCache.set(anonymousKey, normalized);
+  saveMyRecordsToStorage(anonymousKey, normalized);
 }
 
-async function gameApi<T>(
+async function rankingApi<T>(
   path: string,
   options: RequestInit = {},
-  userKey?: string,
+  anonymousKey?: string,
 ): Promise<T> {
-  if (!gameApiUrl) {
-    throw new GameApiError(
+  if (!rankingApiUrl) {
+    throw new RankingApiError(
       'CONFIGURATION_ERROR',
       '랭킹 연결 정보를 찾지 못했어요.',
       0,
@@ -174,9 +174,9 @@ async function gameApi<T>(
 
   const headers = new Headers(options.headers);
   if (options.body) headers.set('Content-Type', 'application/json');
-  if (userKey) headers.set('x-game-user-key', userKey);
+  if (anonymousKey) headers.set('x-anonymous-user-key', anonymousKey);
 
-  const response = await fetch(`${gameApiUrl}${path}`, {
+  const response = await fetch(`${rankingApiUrl}${path}`, {
     ...options,
     cache: 'no-store',
     headers,
@@ -186,7 +186,7 @@ async function gameApi<T>(
   if (!response.ok) {
     const error = body as ApiErrorBody;
     const retryAfter = response.headers.get('Retry-After');
-    throw new GameApiError(
+    throw new RankingApiError(
       error.error?.code ?? 'UNKNOWN_ERROR',
       error.error?.message ?? '요청을 처리하지 못했어요.',
       response.status,
@@ -197,124 +197,124 @@ async function gameApi<T>(
   return body as T;
 }
 
-export function getGameUser(userKey: string): Promise<GameUser> {
-  return gameApi<GameUser>('/game-user', {}, userKey).then((user) => {
-    if (user.isRegistered) saveRegisteredGameUser(userKey, user);
+export function getRankingUser(anonymousKey: string): Promise<RankingUser> {
+  return rankingApi<RankingUser>('/ranking-user', {}, anonymousKey).then((user) => {
+    if (user.isRegistered) saveRegisteredRankingUser(anonymousKey, user);
     return user;
   });
 }
 
 export function registerNickname(
   nickname: string,
-  userKey: string,
-): Promise<RegisteredGameUser> {
-  return gameApi<RegisteredGameUser>(
+  anonymousKey: string,
+): Promise<RegisteredRankingUser> {
+  return rankingApi<RegisteredRankingUser>(
     '/register-nickname',
     { method: 'POST', body: JSON.stringify({ nickname }) },
-    userKey,
+    anonymousKey,
   ).then((user) => {
-    saveRegisteredGameUser(userKey, user);
+    saveRegisteredRankingUser(anonymousKey, user);
     return user;
   });
 }
 
 export function updateNickname(
   nickname: string,
-  userKey: string,
-): Promise<RegisteredGameUser> {
-  return gameApi<RegisteredGameUser>(
+  anonymousKey: string,
+): Promise<RegisteredRankingUser> {
+  return rankingApi<RegisteredRankingUser>(
     '/update-nickname',
     { method: 'POST', body: JSON.stringify({ nickname }) },
-    userKey,
+    anonymousKey,
   ).then((user) => {
-    saveRegisteredGameUser(userKey, user);
+    saveRegisteredRankingUser(anonymousKey, user);
     return user;
   });
 }
 
 export function submitScore(
-  gameType: GameType,
+  rankingType: RankingType,
   score: number,
   durationMs: number | null,
-  userKey: string,
+  anonymousKey: string,
 ): Promise<SubmitScoreResponse> {
-  return gameApi<SubmitScoreResponse>(
+  return rankingApi<SubmitScoreResponse>(
     '/submit-score',
-    { method: 'POST', body: JSON.stringify({ gameType, score, durationMs }) },
-    userKey,
+    { method: 'POST', body: JSON.stringify({ rankingType, score, durationMs }) },
+    anonymousKey,
   );
 }
 
-export function getRanking(gameType: GameType): Promise<RankingItem[]> {
-  const pendingRequest = rankingRequests.get(gameType);
+export function getRanking(rankingType: RankingType): Promise<RankingItem[]> {
+  const pendingRequest = rankingRequests.get(rankingType);
   if (pendingRequest) return pendingRequest;
 
-  const request = gameApi<RankingItem[]>(
-    `/ranking?gameType=${gameType}&limit=${MAX_VISIBLE_RANKING_ITEMS}`,
+  const request = rankingApi<RankingItem[]>(
+    `/ranking?rankingType=${rankingType}&limit=${MAX_VISIBLE_RANKING_ITEMS}`,
   )
     .then((ranking) => {
       const normalizedRanking = ranking.map((item) => ({
         ...item,
         durationMs: item.durationMs ?? null,
       }));
-      rankingCache.set(gameType, normalizedRanking);
+      rankingCache.set(rankingType, normalizedRanking);
       return normalizedRanking;
     })
     .finally(() => {
-      rankingRequests.delete(gameType);
+      rankingRequests.delete(rankingType);
     });
-  rankingRequests.set(gameType, request);
+  rankingRequests.set(rankingType, request);
   return request;
 }
 
 export function getMyRecords(
-  userKey: string,
+  anonymousKey: string,
   options: { forceRefresh?: boolean } = {},
 ): Promise<MyRecordsResponse> {
-  const pendingRequest = myRecordsRequests.get(userKey);
+  const pendingRequest = myRecordsRequests.get(anonymousKey);
   if (pendingRequest && !options.forceRefresh) return pendingRequest;
 
-  const requestToken = Symbol(userKey);
-  myRecordsRequestTokens.set(userKey, requestToken);
-  const request = gameApi<MyRecordsResponse>('/my-records', {}, userKey)
+  const requestToken = Symbol(anonymousKey);
+  myRecordsRequestTokens.set(anonymousKey, requestToken);
+  const request = rankingApi<MyRecordsResponse>('/my-records', {}, anonymousKey)
     .then((records) => {
-      if (myRecordsRequestTokens.get(userKey) === requestToken) {
-        cacheMyRecords(userKey, records);
+      if (myRecordsRequestTokens.get(anonymousKey) === requestToken) {
+        cacheMyRecords(anonymousKey, records);
       }
       return records;
     })
     .finally(() => {
-      if (myRecordsRequests.get(userKey) === request) {
-        myRecordsRequests.delete(userKey);
+      if (myRecordsRequests.get(anonymousKey) === request) {
+        myRecordsRequests.delete(anonymousKey);
       }
-      if (myRecordsRequestTokens.get(userKey) === requestToken) {
-        myRecordsRequestTokens.delete(userKey);
+      if (myRecordsRequestTokens.get(anonymousKey) === requestToken) {
+        myRecordsRequestTokens.delete(anonymousKey);
       }
     });
-  myRecordsRequests.set(userKey, request);
+  myRecordsRequests.set(anonymousKey, request);
   return request;
 }
 
-export function getCachedRanking(gameType: GameType): RankingItem[] | null {
-  return rankingCache.get(gameType) ?? null;
+export function getCachedRanking(rankingType: RankingType): RankingItem[] | null {
+  return rankingCache.get(rankingType) ?? null;
 }
 
-export function getCachedMyRecords(userKey: string): MyRecordsResponse | null {
-  const memoryCached = myRecordsCache.get(userKey);
+export function getCachedMyRecords(anonymousKey: string): MyRecordsResponse | null {
+  const memoryCached = myRecordsCache.get(anonymousKey);
   if (memoryCached) return memoryCached;
 
-  const stored = readMyRecordsFromStorage(userKey);
-  if (stored) myRecordsCache.set(userKey, stored);
+  const stored = readMyRecordsFromStorage(anonymousKey);
+  if (stored) myRecordsCache.set(anonymousKey, stored);
   return stored;
 }
 
-export function updateCachedDisplayName(userKey: string, displayName: string): void {
-  const records = getCachedMyRecords(userKey);
-  if (records) cacheMyRecords(userKey, { ...records, displayName });
+export function updateCachedDisplayName(anonymousKey: string, displayName: string): void {
+  const records = getCachedMyRecords(anonymousKey);
+  if (records) cacheMyRecords(anonymousKey, { ...records, displayName });
 
-  for (const [gameType, ranking] of rankingCache) {
+  for (const [rankingType, ranking] of rankingCache) {
     rankingCache.set(
-      gameType,
+      rankingType,
       ranking.map((item) =>
         item.displayName.includes(' #') && item.displayName.split(' #')[1] === displayName.split(' #')[1]
           ? { ...item, displayName }
@@ -332,14 +332,14 @@ export function prefetchRankings(): void {
 }
 
 export function syncRankingAfterScore(params: {
-  gameType: GameType;
+  rankingType: RankingType;
   bestScore: number;
   bestDurationMs: number | null;
   displayName: string;
-  userKey: string;
+  anonymousKey: string;
 }): void {
-  const { gameType, bestScore, bestDurationMs, displayName, userKey } = params;
-  const cachedRanking = rankingCache.get(gameType);
+  const { rankingType, bestScore, bestDurationMs, displayName, anonymousKey } = params;
+  const cachedRanking = rankingCache.get(rankingType);
 
   if (cachedRanking) {
     const cachedUserScore = cachedRanking.find(
@@ -351,7 +351,7 @@ export function syncRankingAfterScore(params: {
       cachedUser && cachedUser.score > bestScore
         ? cachedUser.durationMs
         : cachedUser && cachedUser.score === bestScore
-          ? chooseBetterDuration(gameType, cachedUser.durationMs, bestDurationMs)
+          ? chooseBetterDuration(rankingType, cachedUser.durationMs, bestDurationMs)
           : bestDurationMs;
     const nextRanking = cachedRanking
       .filter((item) => item.displayName !== displayName)
@@ -361,7 +361,7 @@ export function syncRankingAfterScore(params: {
         score: preservedBestScore,
         durationMs: preservedDurationMs,
       })
-      .sort((a, b) => compareRankingItems(gameType, a, b))
+      .sort((a, b) => compareRankingItems(rankingType, a, b))
       .slice(0, 100)
       .map((item, index, items) => ({
         ...item,
@@ -370,35 +370,35 @@ export function syncRankingAfterScore(params: {
             ? items[index - 1].rank
             : index + 1,
       }));
-    rankingCache.set(gameType, nextRanking);
+    rankingCache.set(rankingType, nextRanking);
   }
 
-  const cachedRecords = getCachedMyRecords(userKey);
+  const cachedRecords = getCachedMyRecords(anonymousKey);
   if (cachedRecords) {
-    const currentBestScore = cachedRecords.records[gameType].bestScore ?? 0;
+    const currentBestScore = cachedRecords.records[rankingType].bestScore ?? 0;
     const preservedBestScore = Math.max(currentBestScore, bestScore);
-    const currentBestDuration = cachedRecords.records[gameType].bestDurationMs;
+    const currentBestDuration = cachedRecords.records[rankingType].bestDurationMs;
     const preservedBestDuration =
       currentBestScore > bestScore
         ? currentBestDuration
         : currentBestScore === bestScore
-          ? chooseBetterDuration(gameType, currentBestDuration, bestDurationMs)
+          ? chooseBetterDuration(rankingType, currentBestDuration, bestDurationMs)
           : bestDurationMs;
     const optimisticRank = rankingCache
-      .get(gameType)
+      .get(rankingType)
       ?.find((item) => item.displayName === displayName)?.rank;
-    cacheMyRecords(userKey, {
+    cacheMyRecords(anonymousKey, {
       ...cachedRecords,
       records: {
         ...cachedRecords.records,
-        [gameType]: {
+        [rankingType]: {
           bestScore: preservedBestScore,
           bestDurationMs: preservedBestDuration,
-          rank: optimisticRank ?? cachedRecords.records[gameType].rank,
+          rank: optimisticRank ?? cachedRecords.records[rankingType].rank,
         },
       },
     });
   }
 
-  void Promise.allSettled([getRanking(gameType), getMyRecords(userKey)]);
+  void Promise.allSettled([getRanking(rankingType), getMyRecords(anonymousKey)]);
 }

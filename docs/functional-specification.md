@@ -9,7 +9,7 @@
 | ID | 기능 | 상태 |
 | --- | --- | --- |
 | F-01 | 앱 시작과 기록 미리보기 | 구현 완료 |
-| F-02 | 모드 선택, 마이크 권한과 보정 | 부분 구현 |
+| F-02 | 모드 선택, 마이크 권한과 보정 | 구현 완료 |
 | F-03 | 풍선 크게 불기 | 부분 구현 |
 | F-04 | 풍선 스피드런 | 구현 완료 |
 | F-05 | 결과 확인과 랭킹 저장 | 구현 완료 |
@@ -22,31 +22,32 @@
 
 ## F-01 앱 시작과 기록 미리보기
 
-- **목적 / Actor:** 모든 사용자가 두 게임 모드와 상위 기록을 확인합니다.
+- **목적 / Actor:** 모든 사용자가 두 모드와 상위 기록을 확인합니다.
 - **사전 조건:** 앱이 로드되어야 합니다. 랭킹 미리보기에는 `VITE_SUPABASE_URL`과 접근 가능한 API가 필요합니다.
 - **정상 흐름:**
   1. 앱이 두 모드 랭킹을 미리 가져옵니다.
-  2. Toss `getUserKeyForGame()`으로 사용자 식별값을 조회합니다.
+  2. Toss `getAnonymousKey()`으로 사용자 식별값을 조회합니다.
   3. 등록 사용자이면 사용자 정보와 나의 기록을 미리 캐시합니다.
   4. 홈에서 기록 미리보기와 `풍선 크게 불기`, `풍선 스피드런`을 표시합니다.
-- **예외 흐름:** 사용자 식별 또는 백엔드 조회가 실패해도 게임 선택과 플레이는 계속 허용합니다.
-- **출력 / 완료 조건:** 홈 화면이 표시되고 사용자가 게임 또는 기록장으로 이동할 수 있습니다.
+- **예외 흐름:** 사용자 식별 또는 백엔드 조회가 실패해도 모드 선택과 플레이는 계속 허용합니다.
+- **출력 / 완료 조건:** 홈 화면이 표시되고 사용자가 플레이 또는 기록장으로 이동할 수 있습니다.
 - **권한:** 플레이와 공개 랭킹 조회에는 등록이 필요하지 않습니다.
-- **관련 화면·API·데이터:** `home`, `GET /game-user`, `GET /ranking`, `GET /my-records`, `game_users`, `game_scores`.
-- **근거:** `src/App.tsx`, `src/hooks/useGameUser.ts`, `src/components/HomeRecordPreview.tsx`, `src/api/gameApi.ts`.
+- **관련 화면·API·데이터:** `home`, `GET /ranking-user`, `GET /ranking`, `GET /my-records`, `ranking_users`, `ranking_scores`.
+- **근거:** `src/App.tsx`, `src/hooks/useRankingUser.ts`, `src/components/HomeRecordPreview.tsx`, `src/api/rankingApi.ts`.
 
 ## F-02 모드 선택, 마이크 권한과 보정
 
 - **목적 / Actor:** 플레이어가 마이크 입력을 준비하고 게임을 시작합니다.
 - **입력:** 모드 선택, 마이크 권한, 약 850ms의 주변 소음 표본.
 - **정상 흐름:**
-  1. 모드를 선택하면 마이크 권한 화면으로 이동하고 `getUserMedia()`를 요청합니다.
-  2. 선택적 오디오 제약으로 먼저 요청하고, 지원되지 않으면 `{ audio: true }`로 재시도합니다.
-  3. RMS 표본의 하위 80% 평균으로 기준 소음을 계산합니다.
-  4. 3초 카운트다운 후 게임을 시작합니다.
+  1. 모드를 선택하면 마이크 사용 목적과 로컬 처리 안내 화면으로 이동합니다. 이때는 권한을 요청하지 않습니다.
+  2. 사용자가 `마이크 허용하고 준비하기`를 누르면 `getUserMedia()`를 요청합니다.
+  3. 선택적 오디오 제약으로 먼저 요청하고, 지원되지 않으면 `{ audio: true }`로 재시도합니다.
+  4. 보정 화면에서 RMS 표본의 하위 80% 평균으로 기준 소음을 계산합니다.
+  5. 보정 완료 후 바람 인식 미리보기를 제공하고, 시작 버튼을 누르면 3초 카운트다운을 진행합니다.
 - **예외 흐름:** 권한 거부, 미지원 MediaDevices/AudioContext, 입력 시작 오류를 한국어 메시지와 재시도 버튼으로 표시합니다.
 - **보안·개인정보:** 오디오 파일을 녹음하거나 서버에 전송하지 않고 브라우저 메모리에서 신호 특성만 계산합니다.
-- **구현 상태:** **부분 구현.** 보정 로직 자체는 실행되지만 `isCalibrated`가 시작 버튼의 조건으로 연결되지 않았고, `calibrating` 화면으로 전환하는 코드가 없습니다. 권한 승인 직후 사용자가 빠르게 시작하면 기준값 설정 전 게임에 진입할 수 있습니다.
+- **구현 상태:** **구현 완료.** 권한 요청은 별도 사용자 행동 뒤에만 발생하고, 보정 콜백이 완료된 뒤 권한 화면으로 돌아와 시작 버튼을 표시합니다.
 - **근거:** `src/App.tsx`의 `selectMode`, `mic-permission`, `calibrating`; `src/hooks/useBlowDetector.ts`; `src/audio/microphone.ts`; `src/audio/blowDetector.ts`; `src/audio/blowConfig.ts`.
 
 ## F-03 풍선 크게 불기
@@ -92,9 +93,9 @@
   4. 서버가 반환한 최고 점수와 모드별 시간 기록을 화면과 로컬 캐시에 반영합니다.
   5. 사용자는 다시 도전, 홈, 기록장으로 이동할 수 있습니다.
 - **예외 흐름:** 사용자 키 없음, 잘못된 별명, API 오류, 3초 제출 제한을 메시지로 표시합니다. 등록 사용자는 점수 저장을 재시도할 수 있습니다.
-- **권한:** 플레이 결과 확인은 공개입니다. 등록과 제출에는 `x-game-user-key`가 필요합니다.
-- **데이터:** `game_users`에는 사용자 식별·별명, `game_scores`에는 게임별 최고 기록만 저장됩니다.
-- **근거:** `src/components/ResultScreen.tsx`, `src/api/gameApi.ts`, `supabase/functions/game-api/index.ts`.
+- **권한:** 플레이 결과 확인은 공개입니다. 등록과 제출에는 `x-anonymous-user-key`가 필요합니다.
+- **데이터:** `ranking_users`에는 사용자 식별·별명, `ranking_scores`에는 모드별 최고 기록만 저장됩니다.
+- **근거:** `src/components/ResultScreen.tsx`, `src/api/rankingApi.ts`, `supabase/functions/ranking-api/index.ts`.
 
 ## F-06 전체 랭킹, 나의 기록과 별명 변경
 
@@ -106,7 +107,7 @@
   4. 별명을 변경하면 고정 4자리 표시 ID는 유지되고 캐시를 갱신합니다.
 - **정렬 규칙:** 크게 불기는 점수 내림차순 후 호흡 시간 내림차순, 스피드런은 개수 내림차순 후 마지막 완성 시간 오름차순입니다.
 - **예외 흐름:** 비등록 또는 사용자 키가 없는 경우 나의 기록 대신 등록 안내를 표시합니다. 조회·변경 오류는 해당 화면에 표시합니다.
-- **근거:** `src/components/RankingScreen.tsx`, `src/api/rankingRules.ts`, `src/api/gameApi.ts`, `supabase/migrations/007_mode_specific_ranking_duration.sql`.
+- **근거:** `src/components/RankingScreen.tsx`, `src/api/rankingRules.ts`, `src/api/rankingApi.ts`, `supabase/migrations/008_nongame_anonymous_identity_reset.sql`.
 
 ## F-07 결과 이미지 생성
 

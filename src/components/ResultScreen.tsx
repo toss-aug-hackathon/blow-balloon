@@ -3,10 +3,10 @@ import {
   registerNickname,
   syncRankingAfterScore,
   submitScore,
-  type GameUser,
-  type RegisteredGameUser,
+  type RankingUser,
+  type RegisteredRankingUser,
   type SubmitScoreResponse,
-} from '../api/gameApi';
+} from '../api/rankingApi';
 import type { GameResult } from '../game/types';
 import { getLungScoreTitle } from '../game/rules';
 import { formatSeconds } from '../utils/math';
@@ -17,9 +17,9 @@ type ResultScreenProps = {
   onRetry: () => void;
   onHome: () => void;
   onOpenRanking: () => void;
-  userKey: string | null;
-  user: GameUser | null;
-  onRegistered: (user: RegisteredGameUser) => void;
+  anonymousKey: string | null;
+  user: RankingUser | null;
+  onRegistered: (user: RegisteredRankingUser) => void;
 };
 
 export function ResultScreen({
@@ -27,7 +27,7 @@ export function ResultScreen({
   onRetry,
   onHome,
   onOpenRanking,
-  userKey,
+  anonymousKey,
   user,
   onRegistered,
 }: ResultScreenProps) {
@@ -38,7 +38,7 @@ export function ResultScreen({
   const [submission, setSubmission] = useState<SubmitScoreResponse | null>(null);
   const submittedResultRef = useRef<string | null>(null);
 
-  const gameType = result.mode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
+  const rankingType = result.mode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
   const score =
     result.mode === 'lung-test'
       ? Math.round(result.finalBalloonScale * 100)
@@ -47,21 +47,21 @@ export function ResultScreen({
     result.mode === 'lung-test'
       ? result.durationMs
       : result.completionTimeMs;
-  const resultKey = `${gameType}-${score}-${durationMs ?? 'none'}`;
+  const resultKey = `${rankingType}-${score}-${durationMs ?? 'none'}`;
 
   const saveScore = useCallback(async (key: string) => {
     setIsSubmitting(true);
     setRankingError(null);
     try {
-      const nextSubmission = await submitScore(gameType, score, durationMs, key);
+      const nextSubmission = await submitScore(rankingType, score, durationMs, key);
       setSubmission(nextSubmission);
       if (user?.isRegistered) {
         syncRankingAfterScore({
-          gameType,
+          rankingType,
           bestScore: nextSubmission.bestScore,
           bestDurationMs: nextSubmission.bestDurationMs,
           displayName: user.displayName,
-          userKey: key,
+          anonymousKey: key,
         });
       }
     } catch (error) {
@@ -71,15 +71,15 @@ export function ResultScreen({
     } finally {
       setIsSubmitting(false);
     }
-  }, [durationMs, gameType, score, user]);
+  }, [durationMs, rankingType, score, user]);
 
   useEffect(() => {
-    if (!userKey || !user?.isRegistered || submittedResultRef.current === resultKey) {
+    if (!anonymousKey || !user?.isRegistered || submittedResultRef.current === resultKey) {
       return;
     }
     submittedResultRef.current = resultKey;
-    void saveScore(userKey);
-  }, [resultKey, saveScore, user?.isRegistered, userKey]);
+    void saveScore(anonymousKey);
+  }, [resultKey, saveScore, user?.isRegistered, anonymousKey]);
 
   const handleRegister = async () => {
     const trimmedNickname = nickname.trim();
@@ -88,7 +88,7 @@ export function ResultScreen({
       setRankingError(nicknameError);
       return;
     }
-    if (!userKey) {
+    if (!anonymousKey) {
       setRankingError('토스 앱에서 사용자 정보를 다시 확인한 뒤 시도해 주세요.');
       return;
     }
@@ -96,16 +96,16 @@ export function ResultScreen({
     setIsSubmitting(true);
     setRankingError(null);
     try {
-      const registeredUser = await registerNickname(trimmedNickname, userKey);
+      const registeredUser = await registerNickname(trimmedNickname, anonymousKey);
       onRegistered(registeredUser);
-      const nextSubmission = await submitScore(gameType, score, durationMs, userKey);
+      const nextSubmission = await submitScore(rankingType, score, durationMs, anonymousKey);
       setSubmission(nextSubmission);
       syncRankingAfterScore({
-        gameType,
+        rankingType,
         bestScore: nextSubmission.bestScore,
         bestDurationMs: nextSubmission.bestDurationMs,
         displayName: registeredUser.displayName,
-        userKey,
+        anonymousKey,
       });
     } catch (error) {
       setRankingError(
@@ -216,6 +216,7 @@ export function ResultScreen({
           ) : isRegistrationOpen ? (
           <div className="nickname-form">
             <label htmlFor="nickname">랭킹에서 사용할 별명</label>
+            <small>다른 사용자에게 공개돼요. 개인정보는 입력하지 마세요.</small>
             <input
               id="nickname"
               value={nickname}
@@ -238,7 +239,7 @@ export function ResultScreen({
               <button
                 className="button button--primary"
                 type="button"
-                disabled={!userKey}
+                disabled={!anonymousKey}
                 onClick={() => setIsRegistrationOpen(true)}
               >
                 랭킹에 등록하기
@@ -251,7 +252,7 @@ export function ResultScreen({
                 랭킹 보러 가기
               </button>
             </div>
-            {!userKey && (
+            {!anonymousKey && (
               <small>랭킹 등록은 토스 앱에서 사용할 수 있어요.</small>
             )}
           </div>
@@ -259,8 +260,8 @@ export function ResultScreen({
           {rankingError && (
             <>
               <p className="error-text">{rankingError}</p>
-              {user?.isRegistered && userKey && (
-                <button className="text-button" type="button" onClick={() => void saveScore(userKey)}>
+              {user?.isRegistered && anonymousKey && (
+                <button className="text-button" type="button" onClick={() => void saveScore(anonymousKey)}>
                   기록 저장 다시 시도
                 </button>
               )}

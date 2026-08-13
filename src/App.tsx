@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { closeView, graniteEvent } from '@apps-in-toss/web-bridge';
 import { BalloonCanvas } from './game/BalloonCanvas';
 import type {
   GameHudState,
@@ -14,15 +15,16 @@ import { RankingScreen } from './components/RankingScreen';
 import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
-import { useGameUser } from './hooks/useGameUser';
+import { useRankingUser } from './hooks/useRankingUser';
 import { calculateExpectedRank } from './api/rankingRules';
 import {
   getCachedRanking,
-  getCachedRegisteredGameUser,
+  getCachedRegisteredRankingUser,
   getRanking,
   prefetchRankings,
   type RankingItem,
-} from './api/gameApi';
+} from './api/rankingApi';
+import { resolveAppEntry } from './utils/appEntry';
 
 type AppScreen =
   | 'home'
@@ -48,78 +50,56 @@ const INITIAL_HUD: GameHudState = {
 export default function App() {
   useSafeArea();
 
+  const [initialEntry] = useState(() => resolveAppEntry(window.location.pathname));
+
   useEffect(() => {
     prefetchRankings();
   }, []);
 
-  useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-    let isEdgeGesture = false;
-
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      startX = touch.clientX;
-      startY = touch.clientY;
-      isEdgeGesture =
-        startX <= 28 || startX >= window.innerWidth - 28;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (!isEdgeGesture) return;
-      const touch = event.touches[0];
-      if (!touch) return;
-      const deltaX = Math.abs(touch.clientX - startX);
-      const deltaY = Math.abs(touch.clientY - startY);
-
-      if (deltaX > 8 && deltaX > deltaY) {
-        event.preventDefault();
-      }
-    };
-
-    const resetEdgeGesture = () => {
-      isEdgeGesture = false;
-    };
-
-    document.addEventListener('touchstart', handleTouchStart, {
-      passive: true,
-    });
-    document.addEventListener('touchmove', handleTouchMove, {
-      passive: false,
-    });
-    document.addEventListener('touchend', resetEdgeGesture, {
-      passive: true,
-    });
-    document.addEventListener('touchcancel', resetEdgeGesture, {
-      passive: true,
-    });
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', resetEdgeGesture);
-      document.removeEventListener('touchcancel', resetEdgeGesture);
-    };
-  }, []);
-
-  const [screen, setScreen] = useState<AppScreen>('home');
-  const [mode, setMode] = useState<GameMode | null>(null);
-  const [permissionBalloonId, setPermissionBalloonId] = useState(1);
+  const [screen, setScreen] = useState<AppScreen>(() =>
+    initialEntry === 'ranking'
+      ? 'ranking'
+      : initialEntry === 'home'
+        ? 'home'
+        : 'mic-permission',
+  );
+  const [mode, setMode] = useState<GameMode | null>(() =>
+    initialEntry === 'lung-test' || initialEntry === 'balloon-rush'
+      ? initialEntry
+      : null,
+  );
+  const [permissionBalloonId, setPermissionBalloonId] = useState(
+    () => Math.floor(Math.random() * 15) + 1,
+  );
   const [countdown, setCountdown] = useState(3);
   const [hud, setHud] = useState<GameHudState>(INITIAL_HUD);
   const [result, setResult] = useState<GameResult | null>(null);
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
-  const [rankingSnapshot, setRankingSnapshot] = useState<RankingItem[]>([]);
-  const gameUser = useGameUser();
+  const [rankingSnapshot, setRankingSnapshot] = useState<RankingItem[]>(() => {
+    if (initialEntry === 'lung-test') {
+      return getCachedRanking('LUNG_CAPACITY') ?? [];
+    }
+    if (initialEntry === 'balloon-rush') {
+      return getCachedRanking('BALLOON_COUNT') ?? [];
+    }
+    return [];
+  });
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
+  const rankingUser = useRankingUser();
   const effectiveUser =
-    gameUser.user ??
-    (gameUser.userKey
-      ? getCachedRegisteredGameUser(gameUser.userKey)
+    rankingUser.user ??
+    (rankingUser.anonymousKey
+      ? getCachedRegisteredRankingUser(rankingUser.anonymousKey)
       : null);
   const isPlaying = screen === 'game';
   useScreenAwake(isPlaying);
+
+  useEffect(() => {
+    if (!mode) return;
+    const rankingType = mode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
+    void getRanking(rankingType).then(setRankingSnapshot).catch(() => undefined);
+  }, [mode]);
 
   const debugEnabled = useMemo(
     () =>
@@ -141,6 +121,7 @@ export default function App() {
     setMode(null);
     setResult(null);
     setHud(INITIAL_HUD);
+    setIsExitConfirmOpen(false);
   }, [stopDetector]);
 
   const selectMode = useCallback(
@@ -151,19 +132,51 @@ export default function App() {
       setPermissionBalloonId(Math.floor(Math.random() * 15) + 1);
       setResult(null);
       setHud(INITIAL_HUD);
-      const gameType = nextMode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
-      setRankingSnapshot(getCachedRanking(gameType) ?? []);
-      void getRanking(gameType).then(setRankingSnapshot).catch(() => undefined);
+      const rankingType = nextMode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
+      setRankingSnapshot(getCachedRanking(rankingType) ?? []);
       setScreen('mic-permission');
-      void requestPermission();
     },
-    [requestPermission, stopDetector],
+    [stopDetector],
   );
 
-  const openRanking = () => {
+  const openRanking = useCallback(() => {
     stopDetector();
     setScreen('ranking');
-  };
+  }, [stopDetector]);
+
+  const requestMicrophone = useCallback(() => {
+    setScreen('calibrating');
+    void requestPermission(() => setScreen('mic-permission'));
+  }, [requestPermission]);
+
+  useEffect(() => {
+    let removeBackListener: (() => void) | undefined;
+    let removeHomeListener: (() => void) | undefined;
+
+    try {
+      removeBackListener = graniteEvent.addEventListener('backEvent', {
+        onEvent: () => {
+          if (screen === 'home') {
+            void closeView().catch(() => undefined);
+          } else if (screen === 'game') {
+            setIsExitConfirmOpen(true);
+          } else {
+            goHome();
+          }
+        },
+      });
+      removeHomeListener = graniteEvent.addEventListener('homeEvent', {
+        onEvent: goHome,
+      });
+    } catch {
+      // 일반 브라우저에서는 Apps in Toss 내비게이션 이벤트가 없을 수 있어요.
+    }
+
+    return () => {
+      removeBackListener?.();
+      removeHomeListener?.();
+    };
+  }, [goHome, screen]);
 
   const startTestWind = useCallback((event?: React.SyntheticEvent) => {
     if (event && event.cancelable) event.preventDefault();
@@ -222,8 +235,7 @@ export default function App() {
       return candidateIds[Math.floor(Math.random() * candidateIds.length)] ?? 1;
     });
     setScreen('mic-permission');
-    void requestPermission();
-  }, [requestPermission, stopDetector]);
+  }, [stopDetector]);
 
   const startCountdown = useCallback(() => {
     setCountdown(3);
@@ -256,12 +268,12 @@ export default function App() {
           </header>
 
           <HomeRecordPreview
-            userKey={gameUser.userKey}
-            isRegistered={gameUser.user?.isRegistered === true}
+            anonymousKey={rankingUser.anonymousKey}
+            isRegistered={rankingUser.user?.isRegistered === true}
             onOpenRanking={openRanking}
           />
 
-          <section className="mode-list" aria-label="게임 모드 선택">
+          <section className="mode-list" aria-label="기능 선택">
             <button
               type="button"
               className="mode-card mode-card--lung"
@@ -278,7 +290,7 @@ export default function App() {
                 alt=""
               />
               <strong>풍선 크게 불기</strong>
-              <small>풍선 크기를 키우고, 같은 크기라면 더 빠르게 기록해요.</small>
+              <small>풍선 크기를 키우고, 같은 크기라면 오래 분 기록이 앞서요.</small>
               <span className="sr-only">풍선 크게 불기 시작하기</span>
             </button>
             <button
@@ -302,10 +314,6 @@ export default function App() {
 
       {screen === 'mic-permission' && mode && (
         <main className="screen center-screen mic-permission-screen">
-          <button className="back-button" type="button" onClick={goHome}>
-            <img src="/navigation/back.png" alt="" aria-hidden="true" />
-            <span className="sr-only">홈으로</span>
-          </button>
           <p className="eyebrow mode-eyebrow">
             {mode === 'lung-test' ? '풍선 크게 불기' : '풍선 스피드런'}
           </p>
@@ -316,68 +324,60 @@ export default function App() {
               alt=""
             />
           </div>
-          {(detector.permission === 'requesting' ||
-            detector.permission === 'denied' ||
-            detector.permission === 'error') && (
-            <h1 className="mic-permission-title">
-              {detector.permission === 'requesting'
-                ? '마이크 확인 중...'
-                : '마이크 권한 필요'}
-            </h1>
-          )}
-
-          {/* 바람세기 미리 테스트 영역 */}
-          <div className="mic-test-card">
-            <div className="mic-test-header">
-              <span className="mic-test-badge">바람세기 미리 테스트</span>
-              <p className="mic-test-hint">
-                {detector.permission === 'denied' || detector.permission === 'error'
-                  ? '마이크 허용 후 테스트해 보세요'
-                  : detector.frame.isBlowing
-                    ? '바람 감지 중!'
-                    : detector.testModeEnabled
-                      ? '아래 버튼을 눌러 테스트해보세요!'
-                      : '마이크에 후- 불면 반응해요!'}
+          {detector.permission === 'idle' ? (
+            <>
+              <h1 className="mic-permission-title">마이크로 바람을 감지해요</h1>
+              <p className="body-copy permission-copy">
+                풍선을 불기 위해 마이크를 사용해요.<br />
+                소리는 저장하거나 서버로 전송하지 않아요.
               </p>
-            </div>
-            <WindMeter strength={detector.frame.windStrength} />
-            {detector.testModeEnabled && (
-              <div className="test-wind-control">
-                <button
-                  className={`test-wind-button${testWindOn ? ' is-active' : ''}`}
-                  type="button"
-                  onPointerDown={startTestWind}
-                  onPointerUp={stopTestWind}
-                  onPointerCancel={stopTestWind}
-                  onPointerLeave={stopTestWind}
-                >
-                  바람 미리 불어보기
-                </button>
-              </div>
-            )}
-          </div>
-
-          {detector.permission === 'denied' || detector.permission === 'error' ? (
-            <button
-              className="button button--primary"
-              type="button"
-              onClick={() => void requestPermission()}
-            >
-              마이크 허용 다시 시도
-            </button>
+              <button
+                className="button button--primary"
+                type="button"
+                onClick={requestMicrophone}
+              >
+                마이크 허용하고 준비하기
+              </button>
+            </>
           ) : (
-            <button
-              className="button button--primary"
-              type="button"
-              disabled={detector.permission === 'requesting'}
-              onClick={startCountdown}
-            >
-              {detector.permission === 'requesting'
-                ? '마이크 확인 중...'
-                : mode === 'lung-test'
+            <>
+              <div className="mic-test-card">
+                <div className="mic-test-header">
+                  <span className="mic-test-badge">바람세기 미리 테스트</span>
+                  <p className="mic-test-hint">
+                    {detector.frame.isBlowing
+                      ? '바람 감지 중!'
+                      : detector.testModeEnabled
+                        ? '아래 버튼을 눌러 테스트해보세요!'
+                        : '마이크에 후- 불면 반응해요!'}
+                  </p>
+                </div>
+                <WindMeter strength={detector.frame.windStrength} />
+                {detector.testModeEnabled && (
+                  <div className="test-wind-control">
+                    <button
+                      className={`test-wind-button${testWindOn ? ' is-active' : ''}`}
+                      type="button"
+                      onPointerDown={startTestWind}
+                      onPointerUp={stopTestWind}
+                      onPointerCancel={stopTestWind}
+                      onPointerLeave={stopTestWind}
+                    >
+                      바람 미리 불어보기
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                className="button button--primary"
+                type="button"
+                onClick={startCountdown}
+              >
+                {mode === 'lung-test'
                   ? '준비 완료! 크게 불기 시작'
                   : '준비 완료! 스피드런 시작'}
-            </button>
+              </button>
+            </>
           )}
         </main>
       )}
@@ -396,7 +396,7 @@ export default function App() {
               <button
                 className="button button--primary"
                 type="button"
-                onClick={() => void requestPermission()}
+                onClick={requestMicrophone}
               >
                 다시 시도
               </button>
@@ -466,8 +466,8 @@ export default function App() {
             <button
               className="game-exit"
               type="button"
-              onClick={goHome}
-              aria-label="게임 나가기"
+              onClick={() => setIsExitConfirmOpen(true)}
+              aria-label="플레이 종료하고 홈으로"
             >
               <img src="/navigation/cancel.png" alt="" aria-hidden="true" />
             </button>
@@ -565,19 +565,44 @@ export default function App() {
           onRetry={retry}
           onHome={goHome}
           onOpenRanking={openRanking}
-          userKey={gameUser.userKey}
+          anonymousKey={rankingUser.anonymousKey}
           user={effectiveUser}
-          onRegistered={gameUser.setUser}
+          onRegistered={rankingUser.setUser}
         />
       )}
 
       {screen === 'ranking' && (
         <RankingScreen
-          userKey={gameUser.userKey}
+          anonymousKey={rankingUser.anonymousKey}
           isRegistered={effectiveUser?.isRegistered === true}
-          onHome={goHome}
-          onUserUpdated={gameUser.setUser}
+          onUserUpdated={rankingUser.setUser}
         />
+      )}
+
+      {isExitConfirmOpen && (
+        <div className="confirm-dialog-backdrop">
+          <section
+            className="confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exit-dialog-title"
+          >
+            <h2 id="exit-dialog-title">플레이를 종료할까요?</h2>
+            <p>진행 중인 기록은 저장되지 않아요.</p>
+            <div className="confirm-dialog__actions">
+              <button
+                className="button ranking-view-button"
+                type="button"
+                onClick={() => setIsExitConfirmOpen(false)}
+              >
+                계속하기
+              </button>
+              <button className="button button--primary" type="button" onClick={goHome}>
+                종료하고 홈으로
+              </button>
+            </div>
+          </section>
+        </div>
       )}
 
       {debugEnabled && screen !== 'home' && (

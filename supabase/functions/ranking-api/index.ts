@@ -1,13 +1,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
+type RankingType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 
-const GAME_TYPES = new Set<GameType>(['BALLOON_COUNT', 'LUNG_CAPACITY'])
-const SCORE_LIMITS: Record<GameType, number> = {
+const RANKING_TYPES = new Set<RankingType>(['BALLOON_COUNT', 'LUNG_CAPACITY'])
+const SCORE_LIMITS: Record<RankingType, number> = {
   BALLOON_COUNT: 50,
   LUNG_CAPACITY: 9999,
 }
-const USER_KEY_HEADER = 'x-game-user-key'
+const ANONYMOUS_KEY_HEADER = 'x-anonymous-user-key'
 const BLOCKED_NICKNAME_TERMS = [
   '시발', '시이발', '씨발', '씨이발', 'ㅅㅂ', '개새끼', '개새', '새끼', '병신', '븅신',
   '지랄', '존나', '좆', '씹', '섹스', '야동', '포르노', '자지', '보지',
@@ -42,7 +42,7 @@ const supabase = createClient(supabaseUrl, adminApiKey, {
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': `content-type, ${USER_KEY_HEADER}`,
+  'Access-Control-Allow-Headers': `content-type, ${ANONYMOUS_KEY_HEADER}`,
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Expose-Headers': 'Retry-After',
 }
@@ -72,21 +72,21 @@ function error(
   return json({ success: false, error: { code, message } }, status, headers)
 }
 
-function getUserKey(req: Request): string | null {
-  const value = req.headers.get(USER_KEY_HEADER)
+function getAnonymousKey(req: Request): string | null {
+  const value = req.headers.get(ANONYMOUS_KEY_HEADER)
   if (!value || value !== value.trim() || value.length > 255) return null
   return value
 }
 
-function parseGameType(value: unknown): GameType | null {
-  return typeof value === 'string' && GAME_TYPES.has(value as GameType)
-    ? value as GameType
+function parseRankingType(value: unknown): RankingType | null {
+  return typeof value === 'string' && RANKING_TYPES.has(value as RankingType)
+    ? value as RankingType
     : null
 }
 
-function parseScore(value: unknown, gameType: GameType): number | null {
+function parseScore(value: unknown, rankingType: RankingType): number | null {
   if (!Number.isSafeInteger(value) || (value as number) < 0) return null
-  return (value as number) <= SCORE_LIMITS[gameType] ? value as number : null
+  return (value as number) <= SCORE_LIMITS[rankingType] ? value as number : null
 }
 
 function parseDurationMs(value: unknown): number | null | undefined {
@@ -141,9 +141,9 @@ function databaseError(message?: string): Response {
   return error('INTERNAL_ERROR', '요청을 처리하지 못했어요.', 500)
 }
 
-async function getGameUser(userKey: string): Promise<Response> {
-  const { data, error: dbError } = await supabase.rpc('get_game_user', {
-    p_user_key: userKey,
+async function getRankingUser(anonymousKey: string): Promise<Response> {
+  const { data, error: dbError } = await supabase.rpc('get_ranking_user', {
+    p_anonymous_key: anonymousKey,
   })
   if (dbError) return databaseError(dbError.message)
 
@@ -159,15 +159,15 @@ async function getGameUser(userKey: string): Promise<Response> {
     : { success: true, isRegistered: false })
 }
 
-async function registerNickname(req: Request, userKey: string): Promise<Response> {
+async function registerNickname(req: Request, anonymousKey: string): Promise<Response> {
   const body = await parseJson(req)
   const nickname = parseNickname(body?.nickname)
   if (!nickname) {
     return error('INVALID_NICKNAME', '별명은 # 없이 2~12자로 입력해 주세요.', 400)
   }
 
-  const { data, error: dbError } = await supabase.rpc('register_game_user', {
-    p_user_key: userKey,
+  const { data, error: dbError } = await supabase.rpc('register_ranking_user', {
+    p_anonymous_key: anonymousKey,
     p_nickname: nickname,
   })
   if (dbError) return databaseError(dbError.message)
@@ -181,15 +181,15 @@ async function registerNickname(req: Request, userKey: string): Promise<Response
   }, 201)
 }
 
-async function updateNickname(req: Request, userKey: string): Promise<Response> {
+async function updateNickname(req: Request, anonymousKey: string): Promise<Response> {
   const body = await parseJson(req)
   const nickname = parseNickname(body?.nickname)
   if (!nickname) {
     return error('INVALID_NICKNAME', '별명은 # 없이 2~12자로 입력해 주세요.', 400)
   }
 
-  const { data, error: dbError } = await supabase.rpc('update_game_nickname', {
-    p_user_key: userKey,
+  const { data, error: dbError } = await supabase.rpc('update_ranking_nickname', {
+    p_anonymous_key: anonymousKey,
     p_nickname: nickname,
   })
   if (dbError) return databaseError(dbError.message)
@@ -203,18 +203,18 @@ async function updateNickname(req: Request, userKey: string): Promise<Response> 
   })
 }
 
-async function submitScore(req: Request, userKey: string): Promise<Response> {
+async function submitScore(req: Request, anonymousKey: string): Promise<Response> {
   const body = await parseJson(req)
-  const gameType = parseGameType(body?.gameType)
-  if (!gameType) {
-    return error('INVALID_GAME_TYPE', '지원하지 않는 게임 종류예요.', 400)
+  const rankingType = parseRankingType(body?.rankingType)
+  if (!rankingType) {
+    return error('INVALID_RANKING_TYPE', '지원하지 않는 기록 종류예요.', 400)
   }
 
-  const score = parseScore(body?.score, gameType)
+  const score = parseScore(body?.score, rankingType)
   if (score === null) {
     return error(
       'INVALID_SCORE',
-      `점수는 0부터 ${SCORE_LIMITS[gameType]} 사이의 정수여야 해요.`,
+      `점수는 0부터 ${SCORE_LIMITS[rankingType]} 사이의 정수여야 해요.`,
       400,
     )
   }
@@ -223,9 +223,9 @@ async function submitScore(req: Request, userKey: string): Promise<Response> {
     return error('INVALID_DURATION', '기록 시간을 확인해 주세요.', 400)
   }
 
-  const { data, error: dbError } = await supabase.rpc('submit_best_score', {
-    p_user_key: userKey,
-    p_game_type: gameType,
+  const { data, error: dbError } = await supabase.rpc('submit_best_ranking_score', {
+    p_anonymous_key: anonymousKey,
+    p_ranking_type: rankingType,
     p_score: score,
     p_duration_ms: durationMs,
   })
@@ -233,7 +233,7 @@ async function submitScore(req: Request, userKey: string): Promise<Response> {
 
   return json({
     success: true,
-    gameType,
+    rankingType,
     submittedScore: score,
     bestScore: data[0].best_score,
     bestDurationMs: data[0].best_duration_ms,
@@ -242,9 +242,9 @@ async function submitScore(req: Request, userKey: string): Promise<Response> {
 }
 
 async function getRanking(url: URL): Promise<Response> {
-  const gameType = parseGameType(url.searchParams.get('gameType'))
-  if (!gameType) {
-    return error('INVALID_GAME_TYPE', '지원하지 않는 게임 종류예요.', 400)
+  const rankingType = parseRankingType(url.searchParams.get('rankingType'))
+  if (!rankingType) {
+    return error('INVALID_RANKING_TYPE', '지원하지 않는 기록 종류예요.', 400)
   }
 
   const rawLimit = url.searchParams.get('limit') ?? '100'
@@ -253,8 +253,8 @@ async function getRanking(url: URL): Promise<Response> {
     return error('INVALID_LIMIT', 'limit은 1부터 100 사이의 정수여야 해요.', 400)
   }
 
-  const { data, error: dbError } = await supabase.rpc('get_game_ranking', {
-    p_game_type: gameType,
+  const { data, error: dbError } = await supabase.rpc('get_ranking', {
+    p_ranking_type: rankingType,
     p_limit: limit,
   })
   if (dbError) return databaseError(dbError.message)
@@ -267,16 +267,16 @@ async function getRanking(url: URL): Promise<Response> {
   })))
 }
 
-async function getMyRecords(userKey: string): Promise<Response> {
-  const { data, error: dbError } = await supabase.rpc('get_my_records', {
-    p_user_key: userKey,
+async function getMyRecords(anonymousKey: string): Promise<Response> {
+  const { data, error: dbError } = await supabase.rpc('get_ranking_records', {
+    p_anonymous_key: anonymousKey,
   })
   if (dbError) return databaseError(dbError.message)
   if (!data?.length) {
     return error('USER_NOT_REGISTERED', '랭킹에 등록된 사용자가 아니에요.', 404)
   }
 
-  const records: Record<GameType, {
+  const records: Record<RankingType, {
     bestScore: number | null;
     bestDurationMs: number | null;
     rank: number | null;
@@ -285,7 +285,7 @@ async function getMyRecords(userKey: string): Promise<Response> {
     LUNG_CAPACITY: { bestScore: null, bestDurationMs: null, rank: null },
   }
   for (const row of data) {
-    records[row.game_type as GameType] = {
+    records[row.ranking_type as RankingType] = {
       bestScore: row.best_score,
       bestDurationMs: row.best_duration_ms ?? null,
       rank: row.rank,
@@ -302,24 +302,24 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders })
 
   const url = new URL(req.url)
-  const route = url.pathname.replace(/^\/game-api\/?/, '/')
+  const route = url.pathname.replace(/^\/ranking-api\/?/, '/')
 
   if (route === '/ranking' && req.method === 'GET') return getRanking(url)
 
-  const userKey = getUserKey(req)
-  if (!userKey) {
-    return error('INVALID_USER_KEY', `${USER_KEY_HEADER} 헤더가 필요해요.`, 400)
+  const anonymousKey = getAnonymousKey(req)
+  if (!anonymousKey) {
+    return error('INVALID_ANONYMOUS_KEY', `${ANONYMOUS_KEY_HEADER} 헤더가 필요해요.`, 400)
   }
 
-  if (route === '/game-user' && req.method === 'GET') return getGameUser(userKey)
+  if (route === '/ranking-user' && req.method === 'GET') return getRankingUser(anonymousKey)
   if (route === '/register-nickname' && req.method === 'POST') {
-    return registerNickname(req, userKey)
+    return registerNickname(req, anonymousKey)
   }
   if (route === '/update-nickname' && req.method === 'POST') {
-    return updateNickname(req, userKey)
+    return updateNickname(req, anonymousKey)
   }
-  if (route === '/submit-score' && req.method === 'POST') return submitScore(req, userKey)
-  if (route === '/my-records' && req.method === 'GET') return getMyRecords(userKey)
+  if (route === '/submit-score' && req.method === 'POST') return submitScore(req, anonymousKey)
+  if (route === '/my-records' && req.method === 'GET') return getMyRecords(anonymousKey)
 
   return error('NOT_FOUND', '요청한 API를 찾을 수 없어요.', 404)
 })

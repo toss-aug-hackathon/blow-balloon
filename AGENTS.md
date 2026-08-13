@@ -1,8 +1,8 @@
-# AGENTS.md — blow-balloon
+# AGENTS.md — hoo-balloon
 
 ## 1. Project Mission
 
-Build a production-ready **Apps in Toss WebView mini app** named **`blow-balloon`** using **React + TypeScript**.
+Build a production-ready **Apps in Toss WebView mini app** named **`hoo-balloon`** using **React + TypeScript**.
 
 The app is a playful microphone-controlled balloon game with two modes:
 
@@ -27,7 +27,7 @@ The core experience must feel tactile, playful, responsive, and understandable w
 
 ## 2. Non-Negotiable Requirements
 
-- App/repository name: `blow-balloon`
+- App/repository name: `hoo-balloon`
 - Platform: Apps in Toss mini app, WebView
 - Frontend: React + TypeScript
 - Use the current official Apps in Toss Web Framework.
@@ -888,7 +888,7 @@ Suggested result image contents:
 폐활량 테스트
 한 번에 분 시간: 8.4초
 최종 풍선 크기: 87%
-blow-balloon
+hoo-balloon
 ```
 
 ### 풍선 많이 만들기
@@ -896,7 +896,7 @@ blow-balloon
 ```text
 풍선 많이 만들기
 30초 동안 18개 완성!
-blow-balloon
+hoo-balloon
 ```
 
 If the current runtime supports a reliable share API, it may be added behind capability detection.

@@ -17,7 +17,7 @@
 ## 2. API 기본 주소
 
 ```text
-https://<SUPABASE_PROJECT_REF>.supabase.co/functions/v1/game-api
+https://<SUPABASE_PROJECT_REF>.supabase.co/functions/v1/ranking-api
 ```
 
 ```ts
@@ -27,7 +27,7 @@ if (!SUPABASE_URL) {
   throw new Error('VITE_SUPABASE_URL이 설정되지 않았습니다.')
 }
 
-const GAME_API_URL = `${SUPABASE_URL}/functions/v1/game-api`
+const RANKING_API_URL = `${SUPABASE_URL}/functions/v1/ranking-api`
 ```
 
 로컬 개발에서는 `.env.example`을 `.env.local`로 복사한 뒤 실제 값을 입력한다. `.env.example`은 예시 파일이므로 실제 프로젝트 값으로 수정하지 않는다.
@@ -46,24 +46,24 @@ DB 접속 정보
 
 현재 API는 일반 `fetch()`로 호출한다. 프론트엔드에서 Supabase DB를 직접 조회하거나 수정하지 않는다.
 
-현재 구조는 Supabase Auth와 `supabase-js` 클라이언트를 사용하지 않으므로 `VITE_SUPABASE_PUBLISHABLE_KEY`는 설정하지 않는다. 사용자 식별에는 토스의 `getUserKeyForGame()` 결과만 사용한다.
+현재 구조는 Supabase Auth와 `supabase-js` 클라이언트를 사용하지 않으므로 `VITE_SUPABASE_PUBLISHABLE_KEY`는 설정하지 않는다. 사용자 식별에는 토스의 `getAnonymousKey()` 결과만 사용한다.
 
 ## 3. 사용자 식별
 
-앱 실행 후 토스 API로 사용자 식별값을 가져온다. `getUserKeyForGame()`은 문자열을 직접 반환하지 않고 성공 시 `{ type: 'HASH', hash: string }` 객체를 반환한다.
+앱 실행 후 토스 API로 사용자 식별값을 가져온다. `getAnonymousKey()`은 문자열을 직접 반환하지 않고 성공 시 `{ type: 'HASH', hash: string }` 객체를 반환한다.
 
 ```ts
-const userKeyResult = await getUserKeyForGame()
+const anonymousKeyResult = await getAnonymousKey()
 
 if (
-  !userKeyResult ||
-  userKeyResult === 'INVALID_CATEGORY' ||
-  userKeyResult === 'ERROR'
+  !anonymousKeyResult ||
+  anonymousKeyResult === 'INVALID_CATEGORY' ||
+  anonymousKeyResult === 'ERROR'
 ) {
   throw new Error('토스 사용자 식별값을 가져오지 못했습니다.')
 }
 
-const userKey = userKeyResult.hash
+const anonymousKey = anonymousKeyResult.hash
 ```
 
 - `INVALID_CATEGORY`: 게임 카테고리 미니앱이 아닌 경우
@@ -75,12 +75,12 @@ const userKey = userKeyResult.hash
 백엔드 요청에는 다음 헤더로 전달한다.
 
 ```text
-x-game-user-key: <userKey>
+x-anonymous-user-key: <anonymousKey>
 ```
 
 요청 본문이나 URL 파라미터에는 넣지 않는다.
 
-`userKey` 처리 규칙:
+`anonymousKey` 처리 규칙:
 
 - 화면에 표시하지 않는다.
 - 콘솔이나 분석 로그에 기록하지 않는다.
@@ -90,15 +90,15 @@ x-game-user-key: <userKey>
 
 랭킹 조회에는 사용자 키가 필요하지 않다. 사용자 확인, 별명 등록, 점수 등록, 마이페이지 조회에는 필요하다.
 
-## 4. 게임 타입
+## 4. 랭킹 모드
 
 다음 문자열을 정확히 사용한다.
 
 ```ts
-type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
+type RankingType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 ```
 
-| 화면의 게임 | API `gameType` |
+| 화면의 게임 | API `rankingType` |
 | --- | --- |
 | 풍선 스피드런 | `BALLOON_COUNT` |
 | 폐활량 테스트 | `LUNG_CAPACITY` |
@@ -114,7 +114,7 @@ type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 
 ```json
 {
-  "gameType": "BALLOON_COUNT",
+  "rankingType": "BALLOON_COUNT",
   "score": 26,
   "durationMs": 17360
 }
@@ -128,7 +128,7 @@ type GameType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 
 ```json
 {
-  "gameType": "LUNG_CAPACITY",
+  "rankingType": "LUNG_CAPACITY",
   "score": 184,
   "durationMs": 8420
 }
@@ -149,17 +149,17 @@ const score = Math.round(calculatedScore)
 
 ## 6. 앱 시작 시 사용자 확인
 
-앱 실행 후 `userKey`를 획득하면 등록된 사용자인지 조회한다.
+앱 실행 후 `anonymousKey`를 획득하면 등록된 사용자인지 조회한다.
 
 ```http
-GET /game-user
-x-game-user-key: <userKey>
+GET /ranking-user
+x-anonymous-user-key: <anonymousKey>
 ```
 
 ```ts
-const response = await fetch(`${GAME_API_URL}/game-user`, {
+const response = await fetch(`${RANKING_API_URL}/ranking-user`, {
   headers: {
-    'x-game-user-key': userKey,
+    'x-anonymous-user-key': anonymousKey,
   },
 })
 
@@ -188,7 +188,7 @@ const result = await response.json()
 ```
 
 ```ts
-type GameUser =
+type RankingUser =
   | {
       isRegistered: true
       displayName: string
@@ -242,7 +242,7 @@ type GameUser =
 ```http
 POST /register-nickname
 Content-Type: application/json
-x-game-user-key: <userKey>
+x-anonymous-user-key: <anonymousKey>
 ```
 
 요청:
@@ -254,11 +254,11 @@ x-game-user-key: <userKey>
 ```
 
 ```ts
-const response = await fetch(`${GAME_API_URL}/register-nickname`, {
+const response = await fetch(`${RANKING_API_URL}/register-nickname`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'x-game-user-key': userKey,
+    'x-anonymous-user-key': anonymousKey,
   },
   body: JSON.stringify({ nickname }),
 })
@@ -294,7 +294,7 @@ const result = await response.json()
 ```http
 POST /update-nickname
 Content-Type: application/json
-x-game-user-key: <userKey>
+x-anonymous-user-key: <anonymousKey>
 ```
 
 ```json
@@ -310,27 +310,27 @@ x-game-user-key: <userKey>
 ```http
 POST /submit-score
 Content-Type: application/json
-x-game-user-key: <userKey>
+x-anonymous-user-key: <anonymousKey>
 ```
 
 요청:
 
 ```json
 {
-  "gameType": "BALLOON_COUNT",
+  "rankingType": "BALLOON_COUNT",
   "score": 26,
   "durationMs": 17360
 }
 ```
 
 ```ts
-const response = await fetch(`${GAME_API_URL}/submit-score`, {
+const response = await fetch(`${RANKING_API_URL}/submit-score`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'x-game-user-key': userKey,
+    'x-anonymous-user-key': anonymousKey,
   },
-  body: JSON.stringify({ gameType, score, durationMs }),
+  body: JSON.stringify({ rankingType, score, durationMs }),
 })
 
 const result = await response.json()
@@ -341,7 +341,7 @@ const result = await response.json()
 ```json
 {
   "success": true,
-  "gameType": "BALLOON_COUNT",
+  "rankingType": "BALLOON_COUNT",
   "submittedScore": 26,
   "bestScore": 26,
   "bestDurationMs": 17360,
@@ -354,7 +354,7 @@ const result = await response.json()
 ```json
 {
   "success": true,
-  "gameType": "BALLOON_COUNT",
+  "rankingType": "BALLOON_COUNT",
   "submittedScore": 24,
   "bestScore": 26,
   "bestDurationMs": 17360,
@@ -375,21 +375,21 @@ const result = await response.json()
 
 ## 10. 전체 랭킹 조회
 
-랭킹은 게임별로 따로 조회한다.
+랭킹은 모드별로 따로 조회한다.
 
 ```http
-GET /ranking?gameType=BALLOON_COUNT&limit=15
+GET /ranking?rankingType=BALLOON_COUNT&limit=15
 ```
 
 ```http
-GET /ranking?gameType=LUNG_CAPACITY&limit=15
+GET /ranking?rankingType=LUNG_CAPACITY&limit=15
 ```
 
-이 요청에는 `x-game-user-key`가 필요하지 않다.
+이 요청에는 `x-anonymous-user-key`가 필요하지 않다.
 
 ```ts
 const response = await fetch(
-  `${GAME_API_URL}/ranking?gameType=${gameType}&limit=100`,
+  `${RANKING_API_URL}/ranking?rankingType=${rankingType}&limit=100`,
 )
 
 const ranking = await response.json()
@@ -424,7 +424,7 @@ type RankingItem = {
 랭킹 화면 처리:
 
 - 화면 진입 시 선택된 게임 랭킹을 조회한다.
-- 게임 타입 탭을 변경할 때 다시 조회한다.
+- 랭킹 모드 탭을 변경할 때 다시 조회한다.
 - 화면을 계속 열어두면 5~10초 간격 polling을 사용할 수 있다.
 - 화면을 벗어나면 polling을 중지한다.
 - `limit`은 1~100만 사용한다.
@@ -443,17 +443,17 @@ type RankingItem = {
 
 ## 11. 마이페이지 조회
 
-등록된 사용자의 두 게임 최고 기록과 현재 순위를 조회한다.
+등록된 사용자의 두 모드 최고 기록과 현재 순위를 조회한다.
 
 ```http
 GET /my-records
-x-game-user-key: <userKey>
+x-anonymous-user-key: <anonymousKey>
 ```
 
 ```ts
-const response = await fetch(`${GAME_API_URL}/my-records`, {
+const response = await fetch(`${RANKING_API_URL}/my-records`, {
   headers: {
-    'x-game-user-key': userKey,
+    'x-anonymous-user-key': anonymousKey,
   },
 })
 
@@ -500,7 +500,7 @@ const result = await response.json()
 type MyRecordsResponse = {
   displayName: string
   records: Record<
-    GameType,
+    RankingType,
     {
       bestScore: number | null
       rank: number | null
@@ -522,8 +522,8 @@ type MyRecordsResponse = {
 
 ```text
 앱 실행
-→ getUserKeyForGame()
-→ GET /game-user
+→ getAnonymousKey()
+→ GET /ranking-user
 → 등록 여부를 앱 상태에 저장
 → 게임 선택 및 플레이
 → 게임 종료
@@ -558,7 +558,7 @@ type MyRecordsResponse = {
 
 ```text
 랭킹 화면 진입
-→ 선택된 gameType으로 GET /ranking
+→ 선택된 rankingType으로 GET /ranking
 → 게임 탭 변경 시 다시 조회
 ```
 
@@ -567,7 +567,7 @@ type MyRecordsResponse = {
 ```text
 마이페이지 진입
 → GET /my-records
-→ 두 게임 기록과 현재 순위 표시
+→ 두 모드 기록과 현재 순위 표시
 ```
 
 ## 13. 오류 처리
@@ -596,9 +596,9 @@ type MyRecordsResponse = {
 주요 오류 코드:
 
 ```text
-INVALID_USER_KEY
+INVALID_ANONYMOUS_KEY
 INVALID_NICKNAME
-INVALID_GAME_TYPE
+INVALID_RANKING_TYPE
 INVALID_SCORE
 INVALID_LIMIT
 USER_NOT_REGISTERED
@@ -620,7 +620,7 @@ type ApiErrorBody = {
   }
 }
 
-class GameApiError extends Error {
+class RankingApiError extends Error {
   constructor(
     readonly code: string,
     message: string,
@@ -628,14 +628,14 @@ class GameApiError extends Error {
     readonly retryAfterSeconds: number | null,
   ) {
     super(message)
-    this.name = 'GameApiError'
+    this.name = 'RankingApiError'
   }
 }
 
-async function gameApi<T>(
+async function rankingApi<T>(
   path: string,
   options: RequestInit = {},
-  userKey?: string,
+  anonymousKey?: string,
 ): Promise<T> {
   const headers = new Headers(options.headers)
 
@@ -643,11 +643,11 @@ async function gameApi<T>(
     headers.set('Content-Type', 'application/json')
   }
 
-  if (userKey) {
-    headers.set('x-game-user-key', userKey)
+  if (anonymousKey) {
+    headers.set('x-anonymous-user-key', anonymousKey)
   }
 
-  const response = await fetch(`${GAME_API_URL}${path}`, {
+  const response = await fetch(`${RANKING_API_URL}${path}`, {
     ...options,
     headers,
   })
@@ -657,7 +657,7 @@ async function gameApi<T>(
   if (!response.ok) {
     const errorBody = body as ApiErrorBody
     const retryAfter = response.headers.get('Retry-After')
-    throw new GameApiError(
+    throw new RankingApiError(
       errorBody.error?.code ?? 'UNKNOWN_ERROR',
       errorBody.error?.message ?? '요청을 처리하지 못했어요.',
       response.status,
@@ -672,14 +672,14 @@ async function gameApi<T>(
 사용 예:
 
 ```ts
-const ranking = await gameApi<RankingItem[]>(
-  `/ranking?gameType=${gameType}&limit=100`,
+const ranking = await rankingApi<RankingItem[]>(
+  `/ranking?rankingType=${rankingType}&limit=100`,
 )
 
-const records = await gameApi<MyRecordsResponse>(
+const records = await rankingApi<MyRecordsResponse>(
   '/my-records',
   {},
-  userKey,
+  anonymousKey,
 )
 ```
 
@@ -691,11 +691,11 @@ const records = await gameApi<MyRecordsResponse>(
 - 등록하지 않으면 별명과 점수를 전송하지 않는다.
 - 별명 등록 성공 후 해당 게임 점수를 저장한다.
 - 기존 사용자는 별명 입력을 생략한다.
-- 두 게임 타입을 정확히 분리한다.
+- 두 랭킹 모드를 정확히 분리한다.
 - 신기록 여부는 서버 응답으로 표시한다.
 - 랭킹 화면 진입과 게임 탭 변경 시 최신 데이터를 조회한다.
 - 마이페이지 진입 시 최신 기록을 조회한다.
 - 기록 없는 게임은 `기록 없음`으로 표시한다.
-- `userKey`와 서버 Secret을 화면이나 로그에 노출하지 않는다.
+- `anonymousKey`와 서버 Secret을 화면이나 로그에 노출하지 않는다.
 - 네트워크 실패 시 방금 플레이한 결과를 유지하고 재시도할 수 있다.
 - 랭킹 polling은 화면을 벗어날 때 반드시 정리한다.

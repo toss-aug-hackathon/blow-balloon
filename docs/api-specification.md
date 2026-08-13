@@ -4,10 +4,10 @@
 
 ## 개요
 
-Supabase Edge Function `game-api`가 랭킹·프로필 HTTP API를 제공합니다.
+Supabase Edge Function `ranking-api`가 랭킹·프로필 HTTP API를 제공합니다.
 
 ```text
-https://<SUPABASE_PROJECT_REF>.supabase.co/functions/v1/game-api
+https://<SUPABASE_PROJECT_REF>.supabase.co/functions/v1/ranking-api
 ```
 
 프런트엔드는 `VITE_SUPABASE_URL`에서 이 주소를 구성합니다. 실제 프로젝트 URL과 배포 상태는 저장소만으로 확인할 수 없습니다.
@@ -19,9 +19,9 @@ https://<SUPABASE_PROJECT_REF>.supabase.co/functions/v1/game-api
 | Header | 적용 | 설명 |
 | --- | --- | --- |
 | `Content-Type: application/json` | POST | JSON 요청 본문 |
-| `x-game-user-key` | `/ranking` 이외 모든 API | Toss `getUserKeyForGame()` 결과의 `hash`, trim된 1~255자 |
+| `x-anonymous-user-key` | `/ranking` 이외 모든 API | Toss `getAnonymousKey()` 결과의 `hash`, trim된 1~255자 |
 
-JWT 또는 Supabase Auth 세션은 사용하지 않습니다. `x-game-user-key`는 사용자 식별값이지만 서버 서명 검증이 없어 강한 인증 토큰으로 볼 수 없습니다.
+JWT 또는 Supabase Auth 세션은 사용하지 않습니다. `x-anonymous-user-key`는 사용자 식별값이지만 서버 서명 검증이 없어 강한 인증 토큰으로 볼 수 없습니다.
 
 ### 성공 응답
 
@@ -41,9 +41,9 @@ JWT 또는 Supabase Auth 세션은 사용하지 않습니다. `x-game-user-key`�
 
 | HTTP | 대표 코드 | 발생 조건 |
 | --- | --- | --- |
-| 400 | `INVALID_USER_KEY`, `INVALID_NICKNAME`, `INVALID_GAME_TYPE`, `INVALID_SCORE`, `INVALID_DURATION`, `INVALID_LIMIT`, `INVALID_INPUT` | 헤더·본문·쿼리 검증 실패 |
+| 400 | `INVALID_ANONYMOUS_KEY`, `INVALID_NICKNAME`, `INVALID_RANKING_TYPE`, `INVALID_SCORE`, `INVALID_DURATION`, `INVALID_LIMIT`, `INVALID_INPUT` | 헤더·본문·쿼리 검증 실패 |
 | 404 | `USER_NOT_REGISTERED`, `NOT_FOUND` | 미등록 사용자 또는 없는 경로 |
-| 429 | `RATE_LIMITED` | 같은 사용자·게임의 점수 제출이 3초 이내 반복됨 |
+| 429 | `RATE_LIMITED` | 같은 사용자·모드의 점수 제출이 3초 이내 반복됨 |
 | 500 | `INTERNAL_ERROR` | 매핑되지 않은 데이터베이스 오류 |
 
 429 응답에는 `Retry-After: 3`이 포함됩니다.
@@ -52,7 +52,7 @@ JWT 또는 Supabase Auth 세션은 사용하지 않습니다. `x-game-user-key`�
 
 - 허용 Origin: `*`
 - 허용 Method: `GET, POST, OPTIONS`
-- 허용 Header: `content-type, x-game-user-key`
+- 허용 Header: `content-type, x-anonymous-user-key`
 - `OPTIONS` 응답: 204
 
 CORS 허용은 인증이나 인가를 대체하지 않습니다.
@@ -61,8 +61,8 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 
 | Method | Endpoint | 사용자 키 | 목적 |
 | --- | --- | --- | --- |
-| GET | `/ranking` | 불필요 | 게임별 공개 랭킹 조회 |
-| GET | `/game-user` | 필요 | 등록 사용자 확인 |
+| GET | `/ranking` | 불필요 | 모드별 공개 랭킹 조회 |
+| GET | `/ranking-user` | 필요 | 등록 사용자 확인 |
 | POST | `/register-nickname` | 필요 | 최초 프로필 등록 |
 | POST | `/update-nickname` | 필요 | 등록 사용자의 별명 변경 |
 | POST | `/submit-score` | 필요 | 모드별 최고 기록 제출 |
@@ -70,13 +70,13 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 
 ## `GET /ranking`
 
-공개 게임 랭킹을 조회합니다.
+공개 모드별 랭킹을 조회합니다.
 
 ### Query
 
 | 이름 | 필수 | 값 |
 | --- | --- | --- |
-| `gameType` | 예 | `BALLOON_COUNT` 또는 `LUNG_CAPACITY` |
+| `rankingType` | 예 | `BALLOON_COUNT` 또는 `LUNG_CAPACITY` |
 | `limit` | 아니요 | 1~100 정수, 기본 100 |
 
 ### 200 응답
@@ -100,9 +100,9 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 - 프런트엔드는 `limit=15`로 요청하고 현재 랭킹 UI는 1~8위를 표시합니다.
 - 별도 사용자별 rate limit은 구현되어 있지 않습니다.
 
-## `GET /game-user`
+## `GET /ranking-user`
 
-`x-game-user-key`에 대응하는 등록 상태를 조회합니다.
+`x-anonymous-user-key`에 대응하는 등록 상태를 조회합니다.
 
 ### 200 응답: 등록 사용자
 
@@ -183,7 +183,7 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 
 ```json
 {
-  "gameType": "BALLOON_COUNT",
+  "rankingType": "BALLOON_COUNT",
   "score": 18,
   "durationMs": 17360
 }
@@ -191,7 +191,7 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 
 | 필드 | 타입·범위 | 의미 |
 | --- | --- | --- |
-| `gameType` | enum | `BALLOON_COUNT` 또는 `LUNG_CAPACITY` |
+| `rankingType` | enum | `BALLOON_COUNT` 또는 `LUNG_CAPACITY` |
 | `score` | safe integer | 풍선 수 0~50 또는 크게 불기 점수 0~9999 |
 | `durationMs` | null 또는 0~86,400,000 정수 | 스피드런 마지막 완성 시간 또는 크게 불기 호흡 시간 |
 
@@ -200,7 +200,7 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 ```json
 {
   "success": true,
-  "gameType": "BALLOON_COUNT",
+  "rankingType": "BALLOON_COUNT",
   "submittedScore": 18,
   "bestScore": 18,
   "bestDurationMs": 17360,
@@ -213,7 +213,7 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 - 공통: 점수가 더 높으면 새 기록입니다.
 - `LUNG_CAPACITY`: 점수가 같으면 `durationMs`가 더 길 때 새 기록입니다.
 - `BALLOON_COUNT`: 점수가 같으면 `durationMs`가 더 짧을 때 새 기록입니다.
-- 동일 사용자·게임 제출은 DB 트랜잭션에서 직렬화되고 3초에 한 번만 허용됩니다.
+- 동일 사용자·모드 제출은 DB 트랜잭션에서 직렬화되고 3초에 한 번만 허용됩니다.
 - 사용자가 먼저 등록되어 있지 않으면 404를 반환합니다.
 
 서버는 결과가 실제 플레이에서 만들어졌는지 증명하지 않고 값의 범위·형식과 빈도만 검증합니다.
@@ -256,8 +256,8 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 
 ## 구현 근거와 상태
 
-- 라우팅·검증·응답: `supabase/functions/game-api/index.ts`
-- 프런트엔드 호출 계약: `src/api/gameApi.ts`
+- 라우팅·검증·응답: `supabase/functions/ranking-api/index.ts`
+- 프런트엔드 호출 계약: `src/api/rankingApi.ts`
 - 데이터 로직·권한: `supabase/migrations/*.sql`
 - 연동 상세: `supabase/FRONTEND_INTEGRATION.md`
 - 구현 상태: 코드 경로는 연결되어 있습니다. 실제 Supabase 배포와 운영 호출 성공 여부는 **확인 필요**입니다.
