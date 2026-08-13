@@ -97,6 +97,9 @@ export function ResultScreen({
     setRankingError(null);
     try {
       const registeredUser = await registerNickname(trimmedNickname, anonymousKey);
+      // onRegistered로 부모 상태가 바뀌면 자동 저장 effect가 실행될 수 있다.
+      // 이 등록 흐름에서는 아래의 수동 저장만 사용해 중복 제출을 막는다.
+      submittedResultRef.current = resultKey;
       onRegistered(registeredUser);
       const nextSubmission = await submitScore(rankingType, score, durationMs, anonymousKey);
       setSubmission(nextSubmission);
