@@ -462,16 +462,6 @@ export default function App() {
             onFinish={finishGame}
             onInterrupted={interruptLungTest}
           />
-          <div className="game-hud">
-            <button
-              className="game-exit"
-              type="button"
-              onClick={() => setIsExitConfirmOpen(true)}
-              aria-label="플레이 종료하고 홈으로"
-            >
-              <img src="/navigation/cancel.png" alt="" aria-hidden="true" />
-            </button>
-          </div>
           {expectedRank !== null && (
             <div className="live-rank-impact" key={expectedRank} aria-live="polite">
               <span className="live-rank-impact__label">
@@ -578,7 +568,6 @@ export default function App() {
           onUserUpdated={rankingUser.setUser}
         />
       )}
-
       {isExitConfirmOpen && (
         <div className="confirm-dialog-backdrop">
           <section
