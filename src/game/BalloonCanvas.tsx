@@ -60,7 +60,7 @@ export function BalloonCanvas({
       const topInset = Number.isFinite(safeTop) ? safeTop : 0;
       // 캔버스 자체가 토스 네비게이션 아래에서 시작하므로, 풍선 많이 만들기에서는
       // 캔버스 상단을 실제 풍선 더미의 경계로 사용해 투명한 빈 벽이 생기지 않게 한다.
-      engine.setSafeTopInset(mode === 'balloon-rush' ? 28 : topInset);
+      engine.setSafeTopInset(mode === 'balloon-rush' ? 0 : topInset);
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);

@@ -503,20 +503,20 @@ export default function App() {
             onFinish={finishGame}
             onInterrupted={interruptLungTest}
           />
-          {expectedRank !== null && (
-            <div className="live-rank-impact" key={expectedRank} aria-live="polite">
-              <span className="live-rank-impact__label">
-                {expectedRank === 1 ? '새로운 왕좌!' : expectedRank <= 10 ? 'TOP 10 진입!' : '실시간 예상 순위'}
-              </span>
-              <span className="live-rank-impact__rank">
-                <strong className="live-rank-impact__value">
-                  {expectedRank}<small>위</small>
-                </strong>
-                <i className="live-rank-impact__arrow" aria-hidden="true">↑</i>
-              </span>
-            </div>
-          )}
           <div className="game-control-panel">
+            {expectedRank !== null && (
+              <div className="live-rank-impact" key={expectedRank} aria-live="polite">
+                <span className="live-rank-impact__label">
+                  {expectedRank === 1 ? '새로운 왕좌!' : expectedRank <= 10 ? 'TOP 10 진입!' : '실시간 예상 순위'}
+                </span>
+                <span className="live-rank-impact__rank">
+                  <strong className="live-rank-impact__value">
+                    {expectedRank}<small>위</small>
+                  </strong>
+                  <i className="live-rank-impact__arrow" aria-hidden="true">↑</i>
+                </span>
+              </div>
+            )}
             {mode && (
               <div className="lung-live-stats" aria-live="polite">
                 {mode === 'lung-test' ? (

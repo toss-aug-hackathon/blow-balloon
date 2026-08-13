@@ -1,5 +1,36 @@
 import { clamp, lerp } from '../../utils/math';
 import type { BalloonBody } from '../types';
+import { getBalloonAsset } from '../balloons/balloonAssets';
+
+const COLLISION_RADIUS_FACTOR_BY_ASSET: Readonly<Record<number, number>> = {
+  1: 1.04,
+  2: 1.00,
+  3: 0.98,
+  4: 1.08,
+  5: 1.08,
+  6: 1.02,
+  7: 1.08,
+  8: 1.04,
+  9: 0.98,
+  10: 1.00,
+  11: 1.12,
+  12: 1.04,
+  13: 0.98,
+  14: 1.04,
+  15: 0.98,
+};
+
+function getVisualTopExtent(balloon: BalloonBody): number {
+  const asset = getBalloonAsset(balloon.variant.assetId);
+  const bodySize = Math.min(balloon.radiusX, balloon.radiusY) * 3.1 * balloon.depth;
+  const fitScale = Math.min(bodySize / asset.width, bodySize / asset.height);
+  return (asset.height * fitScale) / 2;
+}
+
+function getCollisionRadius(balloon: BalloonBody): number {
+  const factor = COLLISION_RADIUS_FACTOR_BY_ASSET[balloon.variant.assetId] ?? 1;
+  return ((balloon.radiusX + balloon.radiusY) * 0.46) * factor;
+}
 
 export function constrainToBounds(
   balloon: BalloonBody,
@@ -16,8 +47,9 @@ export function constrainToBounds(
     balloon.x = width - radiusX;
     balloon.vx = -Math.abs(balloon.vx) * 0.32;
   }
-  if (balloon.y - radiusY < topInset) {
-    balloon.y = topInset + radiusY;
+  const visualTopExtent = Math.max(radiusY, getVisualTopExtent(balloon));
+  if (balloon.y - visualTopExtent < topInset) {
+    balloon.y = topInset + visualTopExtent;
     balloon.vy = Math.abs(balloon.vy) * 0.18;
   }
   if (balloon.y + radiusY > height) {
@@ -33,8 +65,8 @@ export function resolveBalloonCollision(
   const dx = second.x - first.x;
   const dy = second.y - first.y;
   const distance = Math.hypot(dx, dy) || 0.001;
-  const firstRadius = (first.radiusX + first.radiusY) * 0.46;
-  const secondRadius = (second.radiusX + second.radiusY) * 0.46;
+  const firstRadius = getCollisionRadius(first);
+  const secondRadius = getCollisionRadius(second);
   const minimumDistance = firstRadius + secondRadius;
   if (distance >= minimumDistance) return false;
 
