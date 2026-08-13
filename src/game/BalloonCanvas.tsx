@@ -58,9 +58,9 @@ export function BalloonCanvas({
           .getPropertyValue('--ait-safe-top'),
       );
       const topInset = Number.isFinite(safeTop) ? safeTop : 0;
-      // 풍선은 실제 기기 상단 safe area까지만 올라가고,
-      // 게임 HUD 아래의 추가 여백에는 막히지 않게 한다.
-      engine.setSafeTopInset(topInset);
+      // 캔버스 자체가 토스 네비게이션 아래에서 시작하므로, 풍선 많이 만들기에서는
+      // 캔버스 상단을 실제 풍선 더미의 경계로 사용해 투명한 빈 벽이 생기지 않게 한다.
+      engine.setSafeTopInset(mode === 'balloon-rush' ? 28 : topInset);
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);

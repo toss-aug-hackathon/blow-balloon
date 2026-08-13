@@ -44,8 +44,8 @@ export function getNicknameValidationError(value: string): string | null {
   const nickname = value.trim();
   const length = Array.from(nickname).length;
 
-  if (length < 2 || length > 12) {
-    return '별명은 2~12자로 입력해 주세요.';
+  if (length < 2 || length > 15) {
+    return '별명은 2~15자로 입력해 주세요.';
   }
   if (nickname.includes('#')) {
     return '별명에는 #을 사용할 수 없어요.';

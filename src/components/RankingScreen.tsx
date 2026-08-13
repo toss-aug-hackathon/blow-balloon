@@ -288,7 +288,7 @@ export function RankingScreen({
                 <input
                   id="my-records-nickname"
                   value={nickname}
-                  maxLength={12}
+                  maxLength={15}
                   autoFocus
                   onChange={(event) => setNickname(event.target.value)}
                 />
