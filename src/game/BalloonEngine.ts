@@ -38,6 +38,7 @@ type BalloonEngineOptions = {
 // The active balloon starts behind the bottom wind panel and reveals itself
 // as it grows into the playfield.
 const ACTIVE_BALLOON_TARGET_RATIO = 0.82;
+const RUSH_COMPLETED_BALLOON_SCALE = 0.91;
 // 크게 불기 풍선은 상단 HUD와 겹치지 않으면서 플레이 영역 중앙에 오도록 한다.
 const LUNG_ACTIVE_BALLOON_CENTER_Y_RATIO = 0.56;
 const RUSH_SPAWN_LANES = [0.24, 0.5, 0.76] as const;
@@ -236,6 +237,8 @@ export class BalloonEngine {
 
   private completeActiveBalloon(): void {
     this.activeBalloon.completed = true;
+    this.activeBalloon.radiusX *= RUSH_COMPLETED_BALLOON_SCALE;
+    this.activeBalloon.radiusY *= RUSH_COMPLETED_BALLOON_SCALE;
     this.activeBalloon.vx = (Math.random() - 0.5) * 8;
     this.activeBalloon.vy = -8 - Math.random() * 8;
     this.activeBalloon.angularVelocity = (Math.random() - 0.5) * 0.2;

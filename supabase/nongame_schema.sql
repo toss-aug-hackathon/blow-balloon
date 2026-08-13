@@ -186,10 +186,10 @@ begin
     pg_catalog.hashtextextended(v_user_id::text || ':' || p_ranking_type::text, 0)
   );
 
-  select best_score, best_duration_ms, last_submitted_at
+  select rs.best_score, rs.best_duration_ms, rs.last_submitted_at
     into v_previous_best_score, v_previous_duration_ms, v_last_submitted_at
-  from public.ranking_scores
-  where ranking_user_id = v_user_id and ranking_type = p_ranking_type;
+  from public.ranking_scores rs
+  where rs.ranking_user_id = v_user_id and rs.ranking_type = p_ranking_type;
 
   if found then
     if v_last_submitted_at > now() - interval '3 seconds' then
