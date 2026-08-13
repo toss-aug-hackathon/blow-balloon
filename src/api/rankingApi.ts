@@ -69,6 +69,41 @@ const myRecordsRequestTokens = new Map<string, symbol>();
 const MAX_VISIBLE_RANKING_ITEMS = 15;
 const MY_RECORDS_STORAGE_PREFIX = 'hoo-balloon:nongame:my-records:';
 const REGISTERED_USER_STORAGE_PREFIX = 'hoo-balloon:nongame:registered-user:';
+const TOP_RANKING_STORAGE_PREFIX = 'hoo-balloon:nongame:top-ranking:';
+
+function saveRankingToStorage(rankingType: RankingType, ranking: RankingItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      `${TOP_RANKING_STORAGE_PREFIX}${rankingType}`,
+      JSON.stringify(ranking.slice(0, MAX_VISIBLE_RANKING_ITEMS)),
+    );
+  } catch {
+    // Local storage may be unavailable or full in a WebView.
+  }
+}
+
+function readRankingFromStorage(rankingType: RankingType): RankingItem[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = window.localStorage.getItem(
+      `${TOP_RANKING_STORAGE_PREFIX}${rankingType}`,
+    );
+    if (!stored) return null;
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return null;
+    return parsed
+      .filter((item) => item && typeof item === 'object')
+      .map((item: Record<string, unknown>) => ({
+        rank: Number(item.rank) || 0,
+        displayName: String(item.displayName ?? ''),
+        score: Number(item.score) || 0,
+        durationMs: item.durationMs != null ? Number(item.durationMs) : null,
+      }));
+  } catch {
+    return null;
+  }
+}
 
 function saveRegisteredRankingUser(anonymousKey: string, user: RegisteredRankingUser): void {
   try {
@@ -258,6 +293,7 @@ export function getRanking(rankingType: RankingType): Promise<RankingItem[]> {
         durationMs: item.durationMs ?? null,
       }));
       rankingCache.set(rankingType, normalizedRanking);
+      saveRankingToStorage(rankingType, normalizedRanking);
       return normalizedRanking;
     })
     .finally(() => {
@@ -296,7 +332,16 @@ export function getMyRecords(
 }
 
 export function getCachedRanking(rankingType: RankingType): RankingItem[] | null {
-  return rankingCache.get(rankingType) ?? null;
+  const memoryCached = rankingCache.get(rankingType);
+  if (memoryCached) return memoryCached;
+
+  const stored = readRankingFromStorage(rankingType);
+  if (stored) {
+    rankingCache.set(rankingType, stored);
+    return stored;
+  }
+
+  return null;
 }
 
 export function getCachedMyRecords(anonymousKey: string): MyRecordsResponse | null {
@@ -313,14 +358,13 @@ export function updateCachedDisplayName(anonymousKey: string, displayName: strin
   if (records) cacheMyRecords(anonymousKey, { ...records, displayName });
 
   for (const [rankingType, ranking] of rankingCache) {
-    rankingCache.set(
-      rankingType,
-      ranking.map((item) =>
-        item.displayName.includes(' #') && item.displayName.split(' #')[1] === displayName.split(' #')[1]
-          ? { ...item, displayName }
-          : item,
-      ),
+    const nextRanking = ranking.map((item) =>
+      item.displayName.includes(' #') && item.displayName.split(' #')[1] === displayName.split(' #')[1]
+        ? { ...item, displayName }
+        : item,
     );
+    rankingCache.set(rankingType, nextRanking);
+    saveRankingToStorage(rankingType, nextRanking);
   }
 }
 
@@ -339,7 +383,7 @@ export function syncRankingAfterScore(params: {
   anonymousKey: string;
 }): void {
   const { rankingType, bestScore, bestDurationMs, displayName, anonymousKey } = params;
-  const cachedRanking = rankingCache.get(rankingType);
+  const cachedRanking = getCachedRanking(rankingType);
 
   if (cachedRanking) {
     const cachedUserScore = cachedRanking.find(
@@ -371,6 +415,7 @@ export function syncRankingAfterScore(params: {
             : index + 1,
       }));
     rankingCache.set(rankingType, nextRanking);
+    saveRankingToStorage(rankingType, nextRanking);
   }
 
   const cachedRecords = getCachedMyRecords(anonymousKey);
