@@ -76,6 +76,14 @@ export default function App() {
   const [result, setResult] = useState<GameResult | null>(null);
   const [debugWindOn, setDebugWindOn] = useState(false);
   const [testWindOn, setTestWindOn] = useState(false);
+  const [hasGrantedInSession, setHasGrantedInSession] = useState(() => {
+    try {
+      return sessionStorage.getItem('hoo_balloon_mic_session_granted') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [rankingSnapshot, setRankingSnapshot] = useState<RankingItem[]>(() => {
     if (initialEntry === 'lung-test') {
       return getCachedRanking('LUNG_CAPACITY') ?? [];
@@ -146,8 +154,37 @@ export default function App() {
 
   const requestMicrophone = useCallback(() => {
     setScreen('calibrating');
-    void requestPermission(() => setScreen('mic-permission'));
+    void requestPermission(() => {
+      setHasGrantedInSession(true);
+      try {
+        sessionStorage.setItem('hoo_balloon_mic_session_granted', 'true');
+      } catch {
+        // ignore
+      }
+      setScreen('mic-permission');
+    });
   }, [requestPermission]);
+
+  useEffect(() => {
+    if (
+      screen === 'mic-permission' &&
+      hasGrantedInSession &&
+      detector.permission === 'idle'
+    ) {
+      requestMicrophone();
+    }
+  }, [screen, hasGrantedInSession, detector.permission, requestMicrophone]);
+
+  useEffect(() => {
+    if (detector.permission === 'denied' || detector.permission === 'error') {
+      setHasGrantedInSession(false);
+      try {
+        sessionStorage.removeItem('hoo_balloon_mic_session_granted');
+      } catch {
+        // ignore
+      }
+    }
+  }, [detector.permission]);
 
   useEffect(() => {
     let removeBackListener: (() => void) | undefined;
