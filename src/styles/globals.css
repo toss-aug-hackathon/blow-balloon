@@ -309,6 +309,7 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   text-align: center;
 }
 
@@ -2464,11 +2465,12 @@ h1 {
 /* Final mobile home spacing and copy width tuning. */
 @media (max-width: 600px) {
   .home-screen {
-    padding-top: calc(38px + var(--ait-safe-top));
+    padding-top: calc(8px + var(--ait-safe-top));
   }
 
   .home-screen .home-header {
-    padding-top: 28px;
+    padding-top: 0;
+    margin-bottom: 50px;
   }
 
   .home-screen .mode-card--rush {
@@ -3008,6 +3010,10 @@ h1 {
   font-size: 19px;
   font-weight: 850;
   letter-spacing: -0.05em;
+}
+
+.countdown-screen {
+  padding-bottom: calc(84px + var(--ait-safe-bottom));
 }
 
 .game-screen > .game-hud > .game-stat::before {
@@ -4116,6 +4122,7 @@ h1 {
 
 .ranking-screen {
   background: transparent;
+  padding-top: var(--ait-safe-top);
 }
 
 .ranking-header {
@@ -4532,7 +4539,7 @@ h1 {
   min-height: 100dvh;
   overflow-y: auto;
   padding-top: calc(24px + var(--ait-safe-top));
-  padding-bottom: calc(24px + var(--ait-safe-bottom));
+  padding-bottom: calc(84px + var(--ait-safe-bottom));
 }
 
 .result-record-heading {
@@ -4674,7 +4681,7 @@ h1 {
 }
 
 .ranking-header {
-  padding-top: 54px;
+  padding-top: 0;
 }
 
 .back-button,
