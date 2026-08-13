@@ -66,7 +66,7 @@ export default defineConfig({
   ],
   navigationBar: {
     withBackButton: true,
-    withHomeButton: true,
+    withHomeButton: false,
     withTitle: true,
     transparentBackground: false,
     theme: "light",
