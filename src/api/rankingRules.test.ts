@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RankingItem } from './gameApi';
+import type { RankingItem } from './rankingApi';
 import {
   chooseBetterDuration,
   calculateExpectedRank,

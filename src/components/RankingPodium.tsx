@@ -1,15 +1,15 @@
-import type { GameType, RankingItem } from '../api/gameApi';
+import type { RankingType, RankingItem } from '../api/rankingApi';
 import { getRankingBalloonSrc } from '../utils/rankingBalloon';
 
 type RankingPodiumProps = {
   ranking: RankingItem[];
-  gameType: GameType;
+  rankingType: RankingType;
 };
 
-const formatScore = (gameType: GameType, score: number) =>
-  gameType === 'LUNG_CAPACITY' ? `${score}점` : `${score}개`;
+const formatScore = (rankingType: RankingType, score: number) =>
+  rankingType === 'LUNG_CAPACITY' ? `${score}점` : `${score}개`;
 
-export function RankingPodium({ ranking, gameType }: RankingPodiumProps) {
+export function RankingPodium({ ranking, rankingType }: RankingPodiumProps) {
   return (
     <span className="home-ranking-podium" aria-label="상위 3위">
       {[1, 2, 3].map((rank) => {
@@ -24,12 +24,12 @@ export function RankingPodium({ ranking, gameType }: RankingPodiumProps) {
               <>
                 <img
                   className="home-ranking-podium__balloon"
-                  src={getRankingBalloonSrc(gameType, rank)}
+                  src={getRankingBalloonSrc(rankingType, rank)}
                   alt=""
                 />
                 <span className="home-ranking-podium__name">{item.displayName}</span>
                 <strong className="home-ranking-podium__score">
-                  {formatScore(gameType, item.score)}
+                  {formatScore(rankingType, item.score)}
                 </strong>
               </>
             ) : (

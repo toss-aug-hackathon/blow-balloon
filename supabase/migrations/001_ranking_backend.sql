@@ -1,4 +1,4 @@
--- blow-balloon ranking backend
+-- hoo-balloon ranking backend
 -- Supabase Dashboard > SQL Editor에서 전체를 한 번 실행하세요.
 
 do $$

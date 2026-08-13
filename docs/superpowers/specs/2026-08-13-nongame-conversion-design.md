@@ -2,7 +2,7 @@
 
 ## 목표
 
-현재 게임 카테고리로 구성된 `blow-balloon`을 Apps in Toss 비게임 미니앱으로 전환한다. 풍선 크게 불기, 풍선 스피드런, 랭킹 기능은 유지하되 사용자 식별·내비게이션·권한 요청·딥링크·Supabase 데이터 모델과 문서를 비게임 기준으로 일치시킨다.
+현재 게임 카테고리로 구성된 `hoo-balloon`을 Apps in Toss 비게임 미니앱으로 전환한다. 풍선 크게 불기, 풍선 스피드런, 랭킹 기능은 유지하되 사용자 식별·내비게이션·권한 요청·딥링크·Supabase 데이터 모델과 문서를 비게임 기준으로 일치시킨다.
 
 기존 랭킹 데이터는 개발 단계 데이터이므로 전환 마이그레이션에서 초기화한다. 기존 게임용 사용자 식별키와 비게임용 익명 식별키를 연결하거나 이전하지 않는다.
 
@@ -101,7 +101,7 @@ Edge Function은 새 RPC만 호출한다. 점수 범위, 제출 속도 제한, �
 - `/balloon-rush`: 풍선 스피드런 안내 화면
 - `/ranking`: 랭킹 화면
 
-최종 콘솔 스킴은 각각 `intoss://blow-balloon/lung-test`, `intoss://blow-balloon/balloon-rush`, `intoss://blow-balloon/ranking`으로 등록할 수 있도록 문서화한다. 앱은 초기 URL 경로를 파싱해 유효한 진입점만 처리하고, 알 수 없는 경로는 홈으로 폴백한다. 브라우저 히스토리를 외부 이동 목적으로 조작하지 않는다.
+최종 콘솔 스킴은 각각 `intoss://hoo-balloon/lung-test`, `intoss://hoo-balloon/balloon-rush`, `intoss://hoo-balloon/ranking`으로 등록할 수 있도록 문서화한다. 앱은 초기 URL 경로를 파싱해 유효한 진입점만 처리하고, 알 수 없는 경로는 홈으로 폴백한다. 브라우저 히스토리를 외부 이동 목적으로 조작하지 않는다.
 
 ## WebView와 UX
 

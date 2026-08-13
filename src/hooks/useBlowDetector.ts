@@ -63,7 +63,7 @@ export function useBlowDetector(publishUiFrames = true) {
     setPermission('idle');
   }, []);
 
-  const requestPermission = useCallback(async () => {
+  const requestPermission = useCallback(async (onCalibrated?: () => void) => {
     stop();
     setPermission('requesting');
     setErrorMessage(null);
@@ -84,6 +84,7 @@ export function useBlowDetector(publishUiFrames = true) {
       const calibrationSamples: number[] = [];
       const calibrationStartedAt = performance.now();
       let lastUiUpdate = 0;
+      let didCalibrate = false;
 
       const readFrame = (now: number) => {
         const isCalibrating = now - calibrationStartedAt < BLOW_CONFIG.calibrationMs;
@@ -92,9 +93,11 @@ export function useBlowDetector(publishUiFrames = true) {
           calibrationSamples.push(rms);
           signalRef.current = { ...EMPTY_FRAME, rawRms: rms };
         } else {
-          if (!signalRef.current.baselineRms) {
+          if (!didCalibrate) {
             detectorRef.current.setBaseline(calibrationSamples);
+            didCalibrate = true;
             setIsCalibrated(true);
+            onCalibrated?.();
           }
           signalRef.current = detectorRef.current.update(rms, now, breathiness);
         }

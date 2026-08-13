@@ -12,22 +12,22 @@
 | Toss 키가 있는 미등록 사용자 | 가능 | 가능 | 별명 등록 후 가능 | 등록 전 불가 | 등록 후 가능 |
 | 등록 사용자 | 가능 | 가능 | 결과 진입 시 자동 | 가능 | 가능 |
 
-화면 노출 조건은 클라이언트 UI 조건이며, 서버 접근 통제는 `x-game-user-key`, Edge Function 검증과 Service Role 전용 RPC가 담당합니다.
+화면 노출 조건은 클라이언트 UI 조건이며, 서버 접근 통제는 `x-anonymous-user-key`, Edge Function 검증과 Service Role 전용 RPC가 담당합니다.
 
 ## 화면 구조
 
 | 화면 식별자 | 목적 | 진입 조건 | 주요 행동 | 다음 화면 | 상태 |
 | --- | --- | --- | --- | --- | --- |
-| `home` | 모드 선택과 기록 미리보기 | 앱 시작 또는 홈 이동 | 두 게임 선택, 기록장 열기 | `mic-permission`, `ranking` | 구현 완료 |
-| `mic-permission` | 마이크 시작과 바람 미리보기 | 모드 선택 | 권한 재시도, 카운트다운 시작, 홈 | `countdown`, `home` | 구현 완료 |
-| `calibrating` | 주변 소음 보정 안내 | 전환 경로 없음 | 재시도, 홈 | 의도상 `countdown` | **접근 불가** |
+| `home` | 모드 선택과 기록 미리보기 | 앱 시작 또는 홈 이동 | 두 모드 선택, 기록장 열기 | `mic-permission`, `ranking` | 구현 완료 |
+| `mic-permission` | 마이크 사용 설명과 바람 미리보기 | 모드 선택 또는 직접 진입 | 명시적 권한 요청, 카운트다운 시작, 홈 | `calibrating`, `countdown`, `home` | 구현 완료 |
+| `calibrating` | 주변 소음 보정 안내 | 권한 요청 버튼 | 완료 시 자동 이동, 재시도, 홈 | `mic-permission`, `home` | 구현 완료 |
 | `countdown` | 3·2·1 시작 안내 | 권한 화면의 시작 버튼 | 자동 카운트다운 | `game` | 구현 완료 |
 | `game` | Canvas 게임과 HUD | 카운트다운 종료 | 불기, 나가기 | `result`, `interrupted`, `home` | 구현 완료 |
 | `interrupted` | 크게 불기 백그라운드 중단 안내 | 시작된 호흡 중 문서 숨김 | 다시 도전, 홈 | `mic-permission`, `home` | 구현 완료 |
 | `result` | 기록·랭킹 저장 결과 | 게임 완료 | 등록/저장, 기록장, 재도전, 홈 | `ranking`, `mic-permission`, `home` | 구현 완료 |
-| `ranking` | 공개 랭킹과 나의 기록 | 홈·결과에서 열기 | 게임 탭, 나의 기록, 별명 변경 | `home` | 구현 완료 |
+| `ranking` | 공개 랭킹과 나의 기록 | 홈·결과·딥링크에서 열기 | 모드 탭, 나의 기록, 별명 변경 | `home` | 구현 완료 |
 
-`calibrating` 상태와 UI는 선언되어 있지만 `setScreen('calibrating')` 호출이 없어 현재 사용자 여정에 포함되지 않습니다.
+`/lung-test`, `/balloon-rush`, `/ranking` 딥링크의 마지막 경로 조각을 읽어 해당 화면으로 진입하며, 잘못된 경로는 홈으로 폴백합니다.
 
 ## 화면 전이
 
@@ -35,7 +35,7 @@
 flowchart TD
   Home["home<br/>모드 선택"]
   Permission["mic-permission<br/>권한·입력 미리보기"]
-  Calibration["calibrating<br/>구현됐지만 전환 없음"]
+  Calibration["calibrating<br/>주변 소음 보정"]
   Countdown["countdown<br/>3·2·1"]
   Game["game<br/>Canvas 플레이"]
   Interrupted["interrupted<br/>한 호흡 중단"]
@@ -44,7 +44,9 @@ flowchart TD
 
   Home -->|모드 선택| Permission
   Home -->|기록장| Ranking
-  Permission -->|시작| Countdown
+  Permission -->|마이크 허용| Calibration
+  Calibration -->|보정 완료| Permission
+  Permission -->|플레이 시작| Countdown
   Permission -->|뒤로| Home
   Countdown -->|자동| Game
   Game -->|완료| Result
@@ -56,10 +58,9 @@ flowchart TD
   Result -->|기록장| Ranking
   Result -->|홈| Home
   Ranking -->|뒤로| Home
-  Permission -.->|현재 연결 없음| Calibration
 ```
 
-실선은 실제 `setScreen()` 전이이며 점선은 현재 연결되지 않은 상태를 나타냅니다. 근거는 `src/App.tsx`입니다.
+근거는 `src/App.tsx`와 `src/utils/appEntry.ts`입니다.
 
 ## 주요 사용자 여정
 
@@ -67,15 +68,17 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-  Select["모드 선택"] --> Mic["마이크 요청·표본 수집"]
-  Mic --> Count["카운트다운"]
+  Select["모드 선택"] --> Explain["마이크 사용 설명"]
+  Explain --> Mic["사용자 버튼으로 권한 요청·보정"]
+  Mic --> Ready["바람 인식 확인"]
+  Ready --> Count["카운트다운"]
   Count --> Play["바람으로 플레이"]
   Play --> Result["결과 확인"]
   Result --> Retry["재도전"]
   Result --> Home["홈"]
 ```
 
-마이크 권한은 앱 시작 시가 아니라 모드 버튼을 누른 뒤 요청됩니다. 다만 권한 승인 직후 보정 완료 여부를 기다리는 UI gate는 없습니다.
+마이크 권한은 앱 시작이나 모드 선택만으로 요청하지 않습니다. 사용자가 권한 화면의 `마이크 허용하고 준비하기` 버튼을 눌러야 요청하며, 보정이 끝난 뒤에만 시작 버튼을 제공합니다.
 
 ### 첫 랭킹 등록
 
@@ -99,9 +102,8 @@ flowchart LR
 
 공개 랭킹은 사용자 키 없이 접근하며, 나의 기록과 별명 변경은 등록된 사용자 키가 있어야 합니다.
 
-## 조건부·미구현 UI
+## 조건부 UI
 
 - 결과 이미지 생성 버튼과 미리보기는 없습니다. 생성 모듈만 존재합니다.
-- `calibrating` 화면은 렌더링 코드가 있으나 현재 접근할 수 없습니다.
 - 개발 환경 `?debug`에서만 진단 오버레이가 나타납니다.
 - `VITE_BLOW_BALLOON_TEST_MODE=true`이면 권한 화면과 게임 화면에 버튼식 바람 입력이 추가됩니다.

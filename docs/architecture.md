@@ -4,7 +4,7 @@
 
 ## 시스템 범위
 
-후우풍선은 Apps in Toss WebView에서 실행되는 React 단일 페이지 앱과, 선택적 랭킹 기능을 제공하는 Supabase 백엔드로 구성됩니다. 게임 루프와 오디오 분석은 기기 안에서 처리하고, 등록 사용자의 별명과 최고 기록만 HTTP API로 전송합니다.
+후우풍선은 Apps in Toss 비게임 WebView에서 실행되는 React 단일 페이지 앱과, 선택적 랭킹 기능을 제공하는 Supabase 백엔드로 구성됩니다. 플레이 루프와 오디오 분석은 기기 안에서 처리하고, 등록 사용자의 별명과 최고 기록만 HTTP API로 전송합니다.
 
 ```mermaid
 flowchart LR
@@ -15,10 +15,10 @@ flowchart LR
   Detector["RMS·BlowDetector"]
   Canvas["BalloonCanvas·BalloonEngine"]
   Cache["메모리·localStorage 캐시"]
-  API["gameApi fetch 클라이언트"]
-  Edge["Supabase Edge Function<br/>game-api"]
+  API["rankingApi fetch 클라이언트"]
+  Edge["Supabase Edge Function<br/>ranking-api"]
   RPC["Security Definer RPC"]
-  DB[("Postgres<br/>game_users·game_scores")]
+  DB[("Postgres<br/>ranking_users·ranking_scores")]
 
   User --> Toss
   Toss --> React
@@ -26,7 +26,7 @@ flowchart LR
   Audio --> Detector
   Detector -->|DetectorFrame ref| Canvas
   Canvas -->|100ms HUD·완료 이벤트| React
-  Toss -->|getUserKeyForGame| React
+  Toss -->|getAnonymousKey| React
   React <--> Cache
   React --> API
   API --> Edge
@@ -44,8 +44,8 @@ flowchart LR
 | `BlowDetector` | RMS, 시간, breathiness | 기준 소음, 평활값, 호흡 상태 머신 | 바람 세기·호흡 상태 | `src/audio/blowDetector.ts` |
 | `BalloonCanvas` | 모드, signal ref | Canvas 수명주기, RAF, resize·visibility | 렌더 루프, 중단 이벤트 | `src/game/BalloonCanvas.tsx` |
 | `BalloonEngine` | DetectorFrame, delta time | 고빈도 풍선·물리·타이머 상태 | 100ms HUD, 최종 결과 | `src/game/BalloonEngine.ts` |
-| `gameApi` | 사용자 키, 점수·별명 요청 | HTTP 계약, 메모리·localStorage 캐시 | Edge Function 호출, 캐시 동기화 | `src/api/gameApi.ts` |
-| `game-api` | HTTP 요청 | 검증, 오류 매핑, 관리자 Supabase 클라이언트 | Service Role RPC 호출 | `supabase/functions/game-api/index.ts` |
+| `rankingApi` | 사용자 키, 점수·별명 요청 | HTTP 계약, 메모리·localStorage 캐시 | Edge Function 호출, 캐시 동기화 | `src/api/rankingApi.ts` |
+| `ranking-api` | HTTP 요청 | 검증, 오류 매핑, 관리자 Supabase 클라이언트 | Service Role RPC 호출 | `supabase/functions/ranking-api/index.ts` |
 | Postgres RPC | 검증된 인자 | 등록, 별명 변경, 최고 기록, 순위 계산 | 트랜잭션 데이터 변경·조회 | `supabase/migrations/*.sql` |
 
 ## 마이크에서 게임 결과까지
@@ -80,15 +80,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant Result as ResultScreen
-  participant Client as gameApi
-  participant Edge as game-api
+  participant Client as rankingApi
+  participant Edge as ranking-api
   participant RPC as Postgres RPC
   participant DB as Tables
 
-  Result->>Client: submitScore(gameType, score, durationMs, userKey)
-  Client->>Edge: POST /submit-score + x-game-user-key
+  Result->>Client: submitScore(rankingType, score, durationMs, anonymousKey)
+  Client->>Edge: POST /submit-score + x-anonymous-user-key
   Edge->>Edge: 헤더·모드·점수·시간 검증
-  Edge->>RPC: submit_best_score (Service Role)
+  Edge->>RPC: submit_best_ranking_score (Service Role)
   RPC->>DB: 사용자 확인·advisory lock·upsert
   DB-->>RPC: 최고 점수·시간
   RPC-->>Edge: is_new_best
@@ -101,8 +101,8 @@ sequenceDiagram
 
 ## 인증과 인가 경계
 
-1. WebView는 `getUserKeyForGame()` 결과의 `hash`를 메모리에 보관합니다.
-2. 클라이언트는 보호 API에 `x-game-user-key` 헤더를 보냅니다.
+1. WebView는 `getAnonymousKey()` 결과의 `hash`를 메모리에 보관합니다.
+2. 클라이언트는 보호 API에 `x-anonymous-user-key` 헤더를 보냅니다.
 3. Edge Function은 헤더 형식만 검사하고 Service Role로 제한된 RPC를 호출합니다.
 4. 테이블은 RLS를 강제하고 `anon`, `authenticated` 직접 권한을 회수합니다.
 5. RPC 실행 권한은 `service_role`에만 부여됩니다.
@@ -111,7 +111,7 @@ sequenceDiagram
 
 ## 데이터와 캐시
 
-- 서버의 영속 데이터는 `game_users`, `game_scores` 두 테이블입니다.
+- 서버의 영속 데이터는 `ranking_users`, `ranking_scores` 두 테이블입니다.
 - 브라우저 메모리는 공개 랭킹과 요청 Promise를 캐시합니다.
 - `localStorage`에는 등록 사용자 표시 정보와 나의 기록 캐시를 사용자 키 기반 키 이름으로 저장합니다.
 - 마이크 원본 오디오, RMS 이력, 전체 플레이 프레임은 저장하거나 전송하지 않습니다.
@@ -133,23 +133,20 @@ flowchart TD
   Source["React·TypeScript 소스"] --> AIT["ait build"]
   AIT --> Dist["dist WebView 산출물"]
   Dist --> Toss["Apps in Toss 배포 대상"]
-  Migrations["supabase/migrations 001→007"] --> Postgres["Supabase Postgres"]
-  Function["supabase/functions/game-api"] --> Edge["Supabase Edge Functions"]
+  Migrations["supabase/migrations 001→008"] --> Postgres["Supabase Postgres"]
+  Function["supabase/functions/ranking-api"] --> Edge["Supabase Edge Functions"]
   Edge --> Postgres
 ```
 
-- 프런트엔드 설정은 `granite.config.ts`가 소유하며 앱 이름, 브랜드, 마이크 권한, WebView 속성과 `dist` 출력 경로를 정의합니다.
+- 프런트엔드 설정은 `granite.config.ts`가 소유하며 앱 이름, 브랜드, 마이크 권한, 비게임 `partner` WebView 속성과 `dist` 출력 경로를 정의합니다.
 - `pnpm build:web`은 TypeScript와 Vite 웹 빌드를, `pnpm build`는 Apps in Toss 빌드를 실행합니다.
 - Supabase 스키마와 Edge Function은 프런트엔드와 별개로 적용·배포해야 합니다.
 - 실제 Toss 및 Supabase 운영 배포 상태는 저장소만으로 확인할 수 없습니다.
 
 ## 알려진 제약
 
-- 보정 표본 수집은 구현됐지만 보정 완료가 게임 시작의 강제 조건이 아닙니다.
 - 크게 불기 엔진은 감지기의 `ending` 유예 상태를 성장 상태로 취급하지 않아 짧은 신호 저하에도 시도가 끝날 수 있습니다.
 - 결과 이미지 생성기는 결과 UI와 연결되지 않았습니다.
-- 홈의 크게 불기 설명은 동점 시 더 빠른 기록을 암시하지만, 실제 DB 정렬과 기록장 안내는 더 긴 호흡을 우선합니다.
 - 점수는 클라이언트에서 계산되므로 서버는 범위와 빈도만 검증하며 실제 플레이를 증명하지 못합니다.
 - 공개 랭킹은 3초 폴링이며 서버 푸시나 재시도 백오프가 없습니다.
-- 기존 랭킹 인덱스는 `game_type, best_score desc, user_id`이고 모드별 시간 동점 정렬 컬럼은 포함하지 않습니다.
 - 실기기별 마이크 자동 처리와 WebView 스펙트럼 품질 차이는 런타임 튜닝이 필요합니다.

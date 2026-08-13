@@ -6,21 +6,20 @@ import {
   getRanking,
   updateCachedDisplayName,
   updateNickname,
-  type GameType,
+  type RankingType,
   type MyRecordsResponse,
   type RankingItem,
-  type RegisteredGameUser,
-} from '../api/gameApi';
+  type RegisteredRankingUser,
+} from '../api/rankingApi';
 import { formatSeconds } from '../utils/math';
 import { getNicknameValidationError } from '../utils/nicknamePolicy';
 import { getRankingBalloonSrc } from '../utils/rankingBalloon';
 import { RankingPodium } from './RankingPodium';
 
 type RankingScreenProps = {
-  userKey: string | null;
+  anonymousKey: string | null;
   isRegistered: boolean;
-  onHome: () => void;
-  onUserUpdated: (user: RegisteredGameUser) => void;
+  onUserUpdated: (user: RegisteredRankingUser) => void;
 };
 
 type View = 'ranking' | 'mine';
@@ -28,32 +27,31 @@ type RankMovement = 'up' | 'down' | 'same';
 
 const RANKING_POLL_INTERVAL_MS = 3000;
 
-const gameTabs: Array<{ type: GameType; label: string }> = [
+const rankingTabs: Array<{ type: RankingType; label: string }> = [
   { type: 'LUNG_CAPACITY', label: '크게 불기' },
   { type: 'BALLOON_COUNT', label: '스피드런' },
 ];
 
-function formatScore(gameType: GameType, score: number) {
-  return gameType === 'LUNG_CAPACITY'
+function formatScore(rankingType: RankingType, score: number) {
+  return rankingType === 'LUNG_CAPACITY'
     ? `${score}점`
     : `${score}개`;
 }
 
 export function RankingScreen({
-  userKey,
+  anonymousKey,
   isRegistered,
-  onHome,
   onUserUpdated,
 }: RankingScreenProps) {
   const [view, setView] = useState<View>('ranking');
-  const [gameType, setGameType] = useState<GameType>('LUNG_CAPACITY');
+  const [rankingType, setRankingType] = useState<RankingType>('LUNG_CAPACITY');
   const [ranking, setRanking] = useState<RankingItem[] | null>(() =>
     getCachedRanking('LUNG_CAPACITY'),
   );
   const [records, setRecords] = useState<MyRecordsResponse | null>(() =>
-    userKey ? getCachedMyRecords(userKey) : null,
+    anonymousKey ? getCachedMyRecords(anonymousKey) : null,
   );
-  const rankHistoryRef = useRef(new Map<GameType, Map<string, number>>());
+  const rankHistoryRef = useRef(new Map<RankingType, Map<string, number>>());
   const [rankMovements, setRankMovements] = useState<Record<string, RankMovement>>({});
   const [error, setError] = useState<string | null>(null);
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -72,7 +70,7 @@ export function RankingScreen({
   const saveNickname = async () => {
     const nextNickname = nickname.trim();
     const validationError = getNicknameValidationError(nextNickname);
-    if (!userKey || validationError) {
+    if (!anonymousKey || validationError) {
       setNicknameError(validationError ?? '사용자 정보를 확인한 뒤 다시 시도해 주세요.');
       return;
     }
@@ -82,13 +80,13 @@ export function RankingScreen({
     const nextRecordsRevision = recordsRevisionRef.current + 1;
     recordsRevisionRef.current = nextRecordsRevision;
     try {
-      const updatedUser = await updateNickname(nextNickname, userKey);
+      const updatedUser = await updateNickname(nextNickname, anonymousKey);
       onUserUpdated(updatedUser);
-      updateCachedDisplayName(userKey, updatedUser.displayName);
+      updateCachedDisplayName(anonymousKey, updatedUser.displayName);
       setRecords((current) =>
         current ? { ...current, displayName: updatedUser.displayName } : current,
       );
-      const refreshedRecords = await getMyRecords(userKey, { forceRefresh: true })
+      const refreshedRecords = await getMyRecords(anonymousKey, { forceRefresh: true })
         .catch(() => null);
       if (recordsRevisionRef.current === nextRecordsRevision && refreshedRecords) {
         setRecords(refreshedRecords);
@@ -107,7 +105,7 @@ export function RankingScreen({
     let cancelled = false;
 
     const applyRanking = (nextRanking: RankingItem[]) => {
-      const previousRanks = rankHistoryRef.current.get(gameType);
+      const previousRanks = rankHistoryRef.current.get(rankingType);
       const nextMovements: Record<string, RankMovement> = {};
 
       if (previousRanks) {
@@ -124,7 +122,7 @@ export function RankingScreen({
       }
 
       rankHistoryRef.current.set(
-        gameType,
+        rankingType,
         new Map(nextRanking.map((item) => [item.displayName, item.rank])),
       );
       setRankMovements(nextMovements);
@@ -135,11 +133,11 @@ export function RankingScreen({
       setError(null);
 
       if (view === 'mine') {
-        if (!userKey || !isRegistered) return;
+        if (!anonymousKey || !isRegistered) return;
         const requestRevision = recordsRevisionRef.current;
-        setRecords(getCachedMyRecords(userKey));
+        setRecords(getCachedMyRecords(anonymousKey));
         try {
-          const nextRecords = await getMyRecords(userKey);
+          const nextRecords = await getMyRecords(anonymousKey);
           if (
             !cancelled &&
             recordsRevisionRef.current === requestRevision
@@ -158,9 +156,9 @@ export function RankingScreen({
         return;
       }
 
-      setRanking(getCachedRanking(gameType));
+      setRanking(getCachedRanking(rankingType));
       try {
-        const nextRanking = await getRanking(gameType);
+        const nextRanking = await getRanking(rankingType);
         if (!cancelled) applyRanking(nextRanking);
       } catch (requestError) {
         if (!cancelled) {
@@ -182,26 +180,22 @@ export function RankingScreen({
       cancelled = true;
       if (pollId !== undefined) window.clearInterval(pollId);
     };
-  }, [gameType, isRegistered, userKey, view]);
+  }, [rankingType, isRegistered, anonymousKey, view]);
 
   return (
     <main className="screen ranking-screen">
       <header className="ranking-header">
-        <button className="back-button" type="button" onClick={onHome}>
-          <img src="/navigation/back.png" alt="" aria-hidden="true" />
-          <span className="sr-only">홈으로</span>
-        </button>
-          <h1>풍선 기록장</h1>
+        <h1>풍선 기록장</h1>
         <p>
-          {gameType === 'LUNG_CAPACITY'
+          {rankingType === 'LUNG_CAPACITY'
             ? '풍선 점수가 높을수록, 같은 점수라면 호흡이 길수록 높은 기록이에요.'
             : '풍선 수가 많을수록, 같은 개수라면 마지막 완성이 빠를수록 높은 기록이에요.'}
         </p>
       </header>
 
       <div className="ranking-tabs" role="tablist" aria-label="랭킹 메뉴">
-        <button type="button" className={view === 'ranking' && gameType === 'LUNG_CAPACITY' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('LUNG_CAPACITY'); setView('ranking'); }}>크게 불기</button>
-        <button type="button" className={view === 'ranking' && gameType === 'BALLOON_COUNT' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setGameType('BALLOON_COUNT'); setView('ranking'); }}>스피드런</button>
+        <button type="button" className={view === 'ranking' && rankingType === 'LUNG_CAPACITY' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setRankingType('LUNG_CAPACITY'); setView('ranking'); }}>크게 불기</button>
+        <button type="button" className={view === 'ranking' && rankingType === 'BALLOON_COUNT' ? 'is-selected' : ''} onClick={() => { setRankMovements({}); setRankingType('BALLOON_COUNT'); setView('ranking'); }}>스피드런</button>
         <button type="button" className={view === 'mine' ? 'is-selected' : ''} onClick={() => setView('mine')}>나의 기록</button>
       </div>
 
@@ -209,7 +203,7 @@ export function RankingScreen({
         <>
           {ranking && ranking.length > 0 && (
             <div className="ranking-podium">
-              <RankingPodium ranking={ranking} gameType={gameType} />
+              <RankingPodium ranking={ranking} rankingType={rankingType} />
             </div>
           )}
           <section className="ranking-list" aria-live="polite">
@@ -227,10 +221,10 @@ export function RankingScreen({
                   <strong>{rank}</strong>
                   {item ? (
                     <>
-                      <img className="ranking-item__balloon" src={getRankingBalloonSrc(gameType, rank)} alt="" />
+                      <img className="ranking-item__balloon" src={getRankingBalloonSrc(rankingType, rank)} alt="" />
                       <span>{item.displayName}</span>
                       <b>
-                        {formatScore(gameType, item.score)}
+                        {formatScore(rankingType, item.score)}
                         <small>
                           {item.durationMs === null ? '시간 기록 없음' : `${formatSeconds(item.durationMs)}초`}
                         </small>
@@ -265,9 +259,9 @@ export function RankingScreen({
             )}
           </section>
         </>
-      ) : !isRegistered || !userKey ? (
+      ) : !isRegistered || !anonymousKey ? (
         <section className="ranking-notice ranking-notice--card">
-          게임 결과에서 랭킹에 등록하면<br />
+          플레이 결과에서 랭킹에 등록하면<br />
           나의 기록을 확인할 수 있어요.
         </section>
       ) : error ? (
@@ -289,6 +283,7 @@ export function RankingScreen({
           {isEditingNickname && (
             <div className="nickname-edit-form">
               <label htmlFor="my-records-nickname">새 별명</label>
+              <small>별명은 랭킹에 공개돼요. 개인정보는 입력하지 마세요.</small>
               <div>
                 <input
                   id="my-records-nickname"
@@ -304,7 +299,7 @@ export function RankingScreen({
               {nicknameError && <small>{nicknameError}</small>}
             </div>
           )}
-          {gameTabs.map((tab) => {
+          {rankingTabs.map((tab) => {
             const record = records.records[tab.type];
             return (
               <div key={tab.type} className="my-record">

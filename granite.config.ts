@@ -44,7 +44,7 @@ function getLocalDevelopmentHost(): string {
 }
 
 export default defineConfig({
-  appName: "blow-balloon",
+  appName: "hoo-balloon",
   brand: {
     displayName: "후우풍선",
     primaryColor: "#ff6b74",
@@ -65,14 +65,14 @@ export default defineConfig({
     },
   ],
   navigationBar: {
-    withBackButton: false,
-    withHomeButton: false,
-    withTitle: false,
-    transparentBackground: true,
+    withBackButton: true,
+    withHomeButton: true,
+    withTitle: true,
+    transparentBackground: false,
     theme: "light",
   },
   webViewProps: {
-    type: "game",
+    type: "partner",
     bounces: false,
     pullToRefreshEnabled: false,
     overScrollMode: "never",

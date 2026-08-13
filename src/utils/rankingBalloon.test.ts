@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { GameType } from '../api/gameApi';
+import type { RankingType } from '../api/rankingApi';
 import { getRankingBalloonSrc } from './rankingBalloon';
 
 describe('ranking balloon placement', () => {
-  it.each<GameType>(['LUNG_CAPACITY', 'BALLOON_COUNT'])(
+  it.each<RankingType>(['LUNG_CAPACITY', 'BALLOON_COUNT'])(
     'uses a different balloon for ranks 1 through 8 in %s',
-    (gameType) => {
+    (rankingType) => {
       const sources = Array.from({ length: 8 }, (_, index) =>
-        getRankingBalloonSrc(gameType, index + 1),
+        getRankingBalloonSrc(rankingType, index + 1),
       );
       expect(new Set(sources).size).toBe(8);
     },

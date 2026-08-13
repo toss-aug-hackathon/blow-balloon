@@ -1,8 +1,10 @@
-# 후우풍선 (`blow-balloon`)
+# 후우풍선 (`hoo-balloon`)
 
-마이크에 바람을 불어 풍선을 키우고 기록을 겨루는 Apps in Toss WebView 미니 게임입니다. React는 화면 흐름을, Canvas 2D는 실시간 풍선 렌더링과 물리를, Web Audio API는 마이크 신호 분석을 담당합니다.
+마이크에 바람을 불어 풍선을 키우고 기록을 남기는 Apps in Toss **비게임 WebView 미니앱**입니다. React는 화면 흐름을, Canvas 2D는 실시간 풍선 렌더링과 물리를, Web Audio API는 마이크 신호 분석을 담당합니다.
 
 > `풍선 크게 불기`는 마이크 입력으로 만드는 재미용 기록입니다. 실제 폐활량이나 의료 지표를 측정하지 않습니다.
+
+랭킹 식별에는 Toss 계정 프로필·이름·전화번호를 받지 않고 `getAnonymousKey()`가 반환한 익명 hash만 사용합니다. 익명 키를 가져오지 못해도 플레이와 공개 랭킹 조회는 가능합니다.
 
 ## 주요 화면
 
@@ -44,7 +46,8 @@
 - **마이크 기반 조작:** Web Audio API로 마이크 신호를 기기 안에서 분석하고 주변 소음 기준값, RMS, 바람 세기 평활화와 호흡 상태를 게임 입력으로 변환합니다. 마이크 소리는 저장하거나 서버로 전송하지 않습니다.
 - **Canvas 풍선 애니메이션:** React 렌더링과 분리된 `requestAnimationFrame` 루프에서 풍선 성장, 흔들림, 부력, 충돌과 상단 패킹을 처리합니다.
 - **랭킹과 나의 기록:** 게임 중 예상 순위를 보여주고, 결과 화면에서 기록을 등록할 수 있습니다. 모드별 랭킹, 개인 최고 기록과 별명 변경도 지원합니다.
-- **모바일 WebView 대응:** Apps in Toss Safe Area와 화면 켜짐 기능을 사용합니다. 백그라운드 전환 시 모드에 따라 게임을 일시정지하거나 현재 시도를 종료하고, 게임 이탈 시 마이크와 애니메이션 자원을 정리합니다.
+- **비게임 연동:** `partner` WebView 설정, Toss 익명 키, 표준 상단 내비게이션과 딥링크 진입을 사용합니다.
+- **모바일 WebView 대응:** Apps in Toss Safe Area와 화면 켜짐 기능을 사용합니다. 백그라운드 전환 시 모드에 따라 플레이를 일시정지하거나 현재 시도를 종료하고, 이탈 시 마이크와 애니메이션 자원을 정리합니다.
 - **개발용 테스트 입력:** 마이크를 사용할 수 없는 환경에서는 환경 변수로 버튼식 바람 입력을 활성화할 수 있습니다.
 
 ## 기술 스택
@@ -81,7 +84,7 @@ VITE_BLOW_BALLOON_TEST_MODE=false
 
 | 변수 | 필수 여부 | 용도 |
 | --- | --- | --- |
-| `VITE_SUPABASE_URL` | 랭킹 기능에 필요 | `game-api` Edge Function 기본 주소를 구성합니다. |
+| `VITE_SUPABASE_URL` | 랭킹 기능에 필요 | `ranking-api` Edge Function 기본 주소를 구성합니다. |
 | `VITE_BLOW_BALLOON_TEST_MODE` | 선택 | `true`이면 마이크 대신 화면의 `바람 불기` 버튼을 사용합니다. |
 
 실제 관리자 키는 프런트엔드 환경 변수에 넣지 않습니다. Supabase 설정과 마이그레이션 순서는 [Supabase 안내](supabase/README.md)를 따르세요.
@@ -122,10 +125,10 @@ src/
 ├── api/         랭킹 Edge Function 클라이언트와 캐시
 ├── components/  홈 보조 UI, 결과, 랭킹, 바람 계기
 ├── game/        Canvas 엔진, 풍선 렌더링, 규칙과 물리
-├── hooks/       마이크, Toss 사용자, Safe Area, 화면 켜짐
+├── hooks/       마이크, Toss 익명 사용자, Safe Area, 화면 켜짐
 └── sdk/         Apps in Toss v2 호환 어댑터
 supabase/
-├── functions/   game-api Edge Function
+├── functions/   ranking-api Edge Function
 ├── migrations/  랭킹 데이터베이스 순차 마이그레이션
 └── seeds/       검수용 랭킹 데이터 추가·제거 SQL
 ```
@@ -137,5 +140,6 @@ supabase/
 - [아키텍처](docs/architecture.md): 런타임 경계, 데이터 흐름, 배포 구조와 제약
 - [API 명세](docs/api-specification.md): Edge Function HTTP 계약과 오류
 - [ERD](docs/erd.md): Postgres 테이블, 관계, 제약과 접근 정책
+- [Apps in Toss 비게임 출시 체크리스트](docs/apps-in-toss-nongame-checklist.md): 콘솔 등록, 딥링크, 실기기 검수 항목
 - [Supabase 운영 안내](supabase/README.md): Dashboard 적용·배포·검증 절차
 - [프런트엔드 연동 참고](supabase/FRONTEND_INTEGRATION.md): 랭킹 연동의 상세 계약
