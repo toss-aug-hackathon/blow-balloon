@@ -220,8 +220,8 @@ export function ResultScreen({
             <input
               id="nickname"
               value={nickname}
-              maxLength={12}
-              placeholder="2~12자 입력"
+              maxLength={15}
+              placeholder="2~15자 입력"
               onChange={(event) => setNickname(event.target.value)}
             />
             <button

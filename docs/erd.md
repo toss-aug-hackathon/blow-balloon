@@ -39,7 +39,7 @@ erDiagram
 | --- | --- | --- |
 | `id` | identity, PK | 내부 사용자 식별자 |
 | `anonymous_key` | `NOT NULL`, unique, 1~255자, trim 유지 | Toss `getAnonymousKey()` 결과의 hash 식별값 |
-| `nickname` | `NOT NULL`, 2~12자, trim 유지, `#`·제어문자 금지 | 공개 표시 별명 |
+| `nickname` | `NOT NULL`, 2~15자, trim 유지, `#`·제어문자 금지 | 공개 표시 별명 |
 | `public_id` | `NOT NULL`, unique index | 1000~9999 범위에서 등록 시 무작위 생성되는 현재 4자리 표시 ID |
 | `created_at` | `NOT NULL`, `now()` | 생성 시각 |
 | `updated_at` | `NOT NULL`, `now()` | 별명 변경 등 갱신 시각 |
