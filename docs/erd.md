@@ -2,7 +2,7 @@
 
 [README로 돌아가기](../README.md) · [API 명세](api-specification.md)
 
-이 문서는 `supabase/migrations/001_ranking_backend.sql`부터 `008_nongame_anonymous_identity_reset.sql`까지 순서대로 적용한 최종 스키마를 설명합니다.
+이 문서는 `supabase/migrations/001_ranking_backend.sql`부터 `010_nickname_display_policy.sql`까지 순서대로 적용한 최종 스키마를 설명합니다.
 
 ## 데이터 모델
 
@@ -39,7 +39,7 @@ erDiagram
 | --- | --- | --- |
 | `id` | identity, PK | 내부 사용자 식별자 |
 | `anonymous_key` | `NOT NULL`, unique, 1~255자, trim 유지 | Toss `getAnonymousKey()` 결과의 hash 식별값 |
-| `nickname` | `NOT NULL`, 2~15자, trim 유지, `#`·제어문자 금지 | 공개 표시 별명 |
+| `nickname` | `NOT NULL`, 완성형 한글·영문·숫자 2~6자 | 공개 표시 별명 |
 | `public_id` | `NOT NULL`, unique index | 1000~9999 범위에서 등록 시 무작위 생성되는 현재 4자리 표시 ID |
 | `created_at` | `NOT NULL`, `now()` | 생성 시각 |
 | `updated_at` | `NOT NULL`, `now()` | 별명 변경 등 갱신 시각 |
@@ -66,7 +66,7 @@ erDiagram
 - `(ranking_user_id, ranking_type)` unique: 사용자별·모드별 한 행
 - `best_duration_ms`: null 또는 0~86,400,000ms
 
-마이그레이션 003은 잠시 스피드런 상한을 30으로 낮췄고, 006에서 현재 상한 50으로 확장했습니다. 최종 상태 판단은 가장 나중에 적용되는 006과 007을 기준으로 합니다.
+마이그레이션 003은 잠시 스피드런 상한을 30으로 낮췄고, 006에서 현재 상한 50으로 확장했습니다. 닉네임 정책은 009에서 15자로 확장된 뒤 010에서 현재의 2~6자 허용 문자 정책으로 변경됩니다.
 
 ## 관계와 삭제 정책
 
