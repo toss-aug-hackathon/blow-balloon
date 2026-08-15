@@ -52,7 +52,7 @@ export default defineConfig({
   },
   web: {
     host: getLocalDevelopmentHost(),
-    port: 5174,
+    port: 5173,
     commands: {
       dev: "vite --host",
       build: "tsc -b && vite build",

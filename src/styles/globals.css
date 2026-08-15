@@ -46,7 +46,7 @@ button:focus-visible {
 
 .app-shell {
   min-height: 100%;
-  touch-action: pan-y;
+  touch-action: none;
   background:
     radial-gradient(circle at 90% 10%, rgba(255, 214, 153, 0.42), transparent 28%),
     linear-gradient(155deg, #fff9f1 0%, #fff5e6 52%, #edf9ff 100%);
@@ -1901,7 +1901,7 @@ h1 {
   align-items: center;
   justify-content: flex-start;
   min-height: 100dvh;
-  overflow-y: auto;
+  overflow: hidden;
   text-align: center;
 }
 
@@ -4564,7 +4564,7 @@ h1 {
 .result-screen {
   justify-content: flex-start;
   min-height: 100dvh;
-  overflow-y: auto;
+  overflow: hidden;
   padding-top: calc(24px + var(--ait-safe-top));
   padding-bottom: calc(84px + var(--ait-safe-bottom));
 }
@@ -4920,4 +4920,626 @@ h1 {
 .result-screen .result-retry-button:active {
   background: #38262f;
   transform: translateY(1px);
+}
+
+/* Scroll-free WebView layout: every screen stays inside the dynamic viewport. */
+html,
+body,
+#root {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.app-shell {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.screen {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+/* Ranking uses all remaining height instead of extending the document. */
+.ranking-screen {
+  display: flex;
+  flex-direction: column;
+  padding-top: max(6px, var(--ait-safe-top));
+  padding-bottom: max(8px, var(--ait-safe-bottom));
+}
+
+.ranking-header,
+.ranking-tabs,
+.ranking-podium {
+  flex: 0 0 auto;
+}
+
+.ranking-header {
+  padding-bottom: clamp(8px, 1.8vh, 18px);
+}
+
+.ranking-header h1 {
+  font-size: clamp(28px, 5.3vh, 45px);
+}
+
+.ranking-header > p:last-child {
+  margin-top: clamp(3px, 0.8vh, 9px);
+  font-size: clamp(11px, 1.7vh, 14px);
+  line-height: 1.35;
+}
+
+.ranking-tabs {
+  margin-top: clamp(5px, 1.2vh, 12px);
+  padding: 4px;
+}
+
+.ranking-tabs button {
+  min-height: clamp(34px, 5vh, 37px);
+}
+
+.ranking-podium {
+  height: clamp(128px, 17.5vh, 158px);
+  margin-top: clamp(7px, 1.5vh, 18px);
+}
+
+.ranking-podium .home-ranking-podium {
+  height: 100%;
+  min-height: 0;
+  padding-top: 0;
+}
+
+.ranking-podium .home-ranking-podium__card,
+.ranking-podium .home-ranking-podium__card--1 {
+  min-height: 0;
+  height: 88%;
+  justify-content: flex-start;
+  padding: clamp(5px, 1vh, 10px) 5px;
+  padding-top: 9px;
+}
+
+.ranking-podium .home-ranking-podium__card--1 {
+  height: 100%;
+}
+
+.ranking-podium .home-ranking-podium__balloon {
+  width: clamp(28px, 6.2vh, 45px);
+  height: clamp(28px, 6.2vh, 45px);
+}
+
+.ranking-podium .home-ranking-podium__card--1 .home-ranking-podium__balloon {
+  width: clamp(34px, 7.2vh, 56px);
+  height: clamp(34px, 7.2vh, 56px);
+}
+
+.ranking-podium .home-ranking-podium__rank,
+.ranking-podium .home-ranking-podium__name,
+.ranking-podium .home-ranking-podium__score {
+  flex: 0 0 auto;
+  line-height: 1.15;
+}
+
+.ranking-list,
+.my-records,
+.ranking-notice--card {
+  min-height: 0;
+  flex: 1 1 0;
+  margin-top: clamp(7px, 1.4vh, 16px);
+}
+
+.ranking-list {
+  display: grid;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+}
+
+.ranking-item {
+  min-height: 0;
+  height: 100%;
+}
+
+.my-records {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-record {
+  min-height: 0;
+  flex: 1 1 0;
+  align-content: center;
+}
+
+/* Result content remains complete while its spacing yields on short screens. */
+.result-screen {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  justify-content: flex-start;
+  padding:
+    max(10px, var(--ait-safe-top))
+    calc(16px + var(--ait-safe-right))
+    max(10px, var(--ait-safe-bottom))
+    calc(16px + var(--ait-safe-left));
+  overflow: hidden;
+}
+
+.result-record-heading {
+  flex: 0 0 auto;
+  margin-bottom: clamp(6px, 1.7vh, 18px);
+}
+
+.result-screen .result-record-heading .eyebrow {
+  margin-bottom: clamp(3px, 0.8vh, 8px);
+  padding: clamp(4px, 0.8vh, 7px) 11px;
+  font-size: clamp(11px, 1.7vh, 14px);
+}
+
+.result-screen .result-record-heading h1 {
+  font-size: clamp(34px, 7vh, 56px);
+}
+
+.result-screen .result-title {
+  margin-top: clamp(3px, 0.8vh, 8px);
+  font-size: clamp(13px, 2vh, 16px);
+}
+
+.result-screen .result-card {
+  min-height: 0;
+  flex: 0 1 auto;
+  padding: clamp(8px, 1.8vh, 15px) clamp(10px, 3vw, 16px);
+}
+
+.result-screen .result-grid > div {
+  min-height: clamp(54px, 9.7vh, 82px);
+  padding: clamp(6px, 1.4vh, 12px) 6px;
+}
+
+.result-screen .result-grid dt,
+.result-screen .medical-note,
+.result-screen .result-mode-guide,
+.result-screen .ranking-result > span,
+.result-screen .ranking-progress,
+.result-screen .ranking-choice small,
+.result-screen .error-text {
+  font-size: clamp(11px, 1.7vh, 14px);
+  line-height: 1.35;
+}
+
+.result-screen .result-grid dd {
+  margin-top: clamp(2px, 0.7vh, 6px);
+  font-size: clamp(16px, 2.5vh, 20px);
+}
+
+.result-screen .result-note-group {
+  margin-top: clamp(5px, 1.3vh, 14px);
+  padding: clamp(6px, 1.2vh, 12px) 10px;
+}
+
+.result-screen .medical-note {
+  margin-top: 3px;
+}
+
+.result-screen .ranking-result {
+  margin-top: clamp(6px, 1.5vh, 18px);
+  padding-top: clamp(6px, 1.5vh, 16px);
+}
+
+.result-screen .ranking-result .eyebrow {
+  margin-bottom: 2px;
+  font-size: clamp(11px, 1.7vh, 14px);
+}
+
+.result-screen .ranking-result > strong {
+  font-size: clamp(14px, 2vh, 17px);
+}
+
+.result-screen .nickname-form {
+  gap: clamp(3px, 0.7vh, 7px);
+}
+
+.result-screen .nickname-form input {
+  margin-top: clamp(3px, 0.7vh, 10px);
+  min-height: 40px;
+  padding: 8px 10px;
+}
+
+.result-screen .nickname-form__actions,
+.result-screen .ranking-choice__actions {
+  gap: 7px;
+  margin-top: clamp(5px, 1vh, 14px);
+}
+
+.result-screen .nickname-form__actions .button,
+.result-screen .ranking-choice__actions .button,
+.result-screen .result-utility-links--wide .button {
+  min-height: 40px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  font-size: clamp(11px, 1.7vh, 14px);
+}
+
+.result-screen .result-utility-links {
+  margin-top: clamp(5px, 1vh, 12px);
+}
+
+.result-screen .button-stack {
+  flex: 0 0 auto;
+  gap: clamp(2px, 0.7vh, 10px);
+  margin-top: clamp(6px, 1.5vh, 24px);
+}
+
+.result-screen .button-stack .button {
+  min-height: 40px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.result-screen .button-stack .text-button {
+  min-height: 40px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* Centered utility screens shrink decoration before controls or copy. */
+.center-screen {
+  padding-top: max(58px, var(--ait-safe-top));
+  padding-bottom: max(10px, var(--ait-safe-bottom));
+}
+
+.center-screen .permission-art {
+  width: clamp(104px, 21vh, 170px);
+  height: clamp(104px, 21vh, 170px);
+  margin-bottom: clamp(5px, 1.5vh, 20px);
+}
+
+.center-screen .calibration-rings {
+  width: clamp(120px, 23vh, 190px);
+  height: clamp(120px, 23vh, 190px);
+  margin-bottom: clamp(7px, 2vh, 30px);
+}
+
+.center-screen .body-copy,
+.mic-permission-screen .body-copy {
+  margin-top: clamp(5px, 1.5vh, 17px);
+  margin-bottom: clamp(8px, 3vh, 42px);
+}
+
+.mic-permission-screen > .button.button--primary {
+  min-height: 44px;
+  margin-top: clamp(5px, 1.5vh, 24px);
+}
+
+.mic-test-card {
+  margin: clamp(4px, 1vh, 12px) 0 clamp(5px, 1.5vh, 18px);
+  padding: clamp(8px, 1.5vh, 14px) 12px;
+  gap: clamp(4px, 1vh, 10px);
+}
+
+.center-screen .status-icon {
+  margin-bottom: clamp(8px, 2vh, 30px);
+}
+
+.countdown-screen {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.confirm-dialog-backdrop {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.confirm-dialog {
+  max-height: calc(100dvh - var(--ait-safe-top) - var(--ait-safe-bottom) - 24px);
+  padding: clamp(16px, 3vh, 26px) 20px clamp(14px, 2.5vh, 20px);
+  overflow: hidden;
+}
+
+@media (max-height: 700px) {
+  .home-screen {
+    justify-content: flex-start;
+    padding-top: max(4px, var(--ait-safe-top));
+    padding-bottom: max(4px, var(--ait-safe-bottom));
+  }
+
+  .home-screen .home-header {
+    margin-bottom: 8px;
+    padding-bottom: 0;
+  }
+
+  .home-screen .home-header h1 {
+    font-size: clamp(25px, 7vw, 32px);
+    line-height: 1.08;
+  }
+
+  .home-screen .home-header > p:last-child {
+    margin-top: 5px;
+    font-size: 11px;
+  }
+
+  .home-ranking-preview__title {
+    margin-bottom: 2px;
+  }
+
+  .home-ranking-preview__title strong {
+    font-size: 13px;
+  }
+
+  .home-screen .home-record-preview {
+    margin-bottom: 5px;
+    padding: 0;
+  }
+
+  .home-screen .home-ranking-podium {
+    min-height: 76px;
+    height: 76px;
+  }
+
+  .home-screen .home-ranking-podium__card,
+  .home-screen .home-ranking-podium__card--1 {
+    min-height: 0;
+    height: 68px;
+    padding: 4px;
+  }
+
+  .home-screen .home-ranking-podium__card--1 {
+    height: 76px;
+  }
+
+  .home-screen .home-ranking-podium__balloon,
+  .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
+    width: 28px;
+    height: 28px;
+    margin: 0;
+  }
+
+  .home-screen .home-ranking-podium__rank {
+    font-size: 11px;
+  }
+
+  .home-screen .home-ranking-podium__name,
+  .home-screen .home-ranking-podium__score,
+  .home-screen .home-ranking-podium__empty {
+    font-size: 9px;
+  }
+
+  .home-screen .mode-list {
+    gap: 6px;
+  }
+
+  .home-screen .mode-card {
+    min-height: 104px;
+    padding: 12px 41% 10px 15px;
+    border-radius: 18px;
+  }
+
+  .home-screen .mode-card strong {
+    font-size: 17px;
+  }
+
+  .home-screen .mode-card small,
+  .home-screen .mode-card--rush small {
+    width: auto;
+    max-width: 185px;
+    margin-top: 5px;
+    padding: 0;
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .home-screen .mode-card .balloon-art--lung,
+  .home-screen .mode-card .balloon-art--bunch {
+    top: 2px;
+    right: -8px;
+    height: 100px;
+  }
+
+  .home-screen .privacy-note {
+    margin-top: 5px;
+    padding: 0;
+    font-size: 10px;
+  }
+
+  .ranking-item {
+    grid-template-columns: 24px 30px minmax(0, 1fr) minmax(66px, auto) 18px;
+    column-gap: 6px;
+    padding: 0 9px;
+  }
+
+  .ranking-item__balloon,
+  .ranking-item__placeholder {
+    width: 28px;
+    height: 28px;
+  }
+
+  .ranking-item > span,
+  .ranking-item > b {
+    font-size: 12px;
+  }
+
+  .ranking-item > b small {
+    font-size: 9px;
+  }
+
+  .my-records__heading {
+    padding: 8px 12px 5px;
+  }
+
+  .nickname-edit-form {
+    gap: 4px;
+    margin: 0 12px 6px;
+    padding: 7px;
+  }
+
+  .nickname-edit-form input,
+  .nickname-edit-form button {
+    min-height: 40px;
+  }
+
+  .my-record {
+    padding: 8px 12px;
+  }
+
+  .my-record strong {
+    font-size: 16px;
+  }
+}
+
+@media (max-height: 620px) {
+  .center-screen {
+    gap: 5px;
+    padding-top: max(48px, var(--ait-safe-top));
+  }
+
+  .center-screen h1,
+  .mic-permission-screen h1,
+  .mic-permission-title {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  .center-screen .permission-art {
+    width: 88px;
+    height: 88px;
+    margin-bottom: 2px;
+  }
+
+  .center-screen .calibration-rings {
+    width: 105px;
+    height: 105px;
+    margin-bottom: 4px;
+  }
+
+  .calibration-rings i:nth-child(1) { width: 46px; height: 46px; }
+  .calibration-rings i:nth-child(2) { width: 72px; height: 72px; }
+  .calibration-rings i:nth-child(3) { width: 100px; height: 100px; }
+
+  .calibration-rings span,
+  .status-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+  }
+
+  .center-screen .body-copy,
+  .mic-permission-screen .body-copy {
+    margin: 4px 0 7px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .center-screen .mode-eyebrow {
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+
+  .mic-test-card {
+    margin: 2px 0 4px;
+    padding: 6px 9px;
+  }
+
+  .mic-test-card .wind-meter {
+    gap: 4px;
+    padding: 7px 9px;
+  }
+
+  .ranking-screen {
+    padding-top: max(3px, var(--ait-safe-top));
+    padding-bottom: max(3px, var(--ait-safe-bottom));
+  }
+
+  .ranking-header h1 {
+    font-size: 27px;
+  }
+
+  .ranking-header > p:last-child {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .ranking-tabs button {
+    min-height: 32px;
+    font-size: 11px;
+  }
+
+  .ranking-podium {
+    height: 112px;
+  }
+
+  .ranking-podium .home-ranking-podium__name,
+  .ranking-podium .home-ranking-podium__score,
+  .ranking-podium .home-ranking-podium__empty {
+    font-size: 9px;
+  }
+
+  .result-screen {
+    padding-top: max(5px, var(--ait-safe-top));
+    padding-bottom: max(5px, var(--ait-safe-bottom));
+  }
+
+  .result-screen .result-record-heading h1 {
+    font-size: 30px;
+  }
+
+  .result-screen .result-record-heading .eyebrow {
+    margin-bottom: 2px;
+    padding: 3px 9px;
+    font-size: 10px;
+  }
+
+  .result-screen .result-title {
+    margin-top: 2px;
+    font-size: 11px;
+  }
+
+  .result-screen .result-card {
+    padding: 5px 8px;
+    border-radius: 20px;
+  }
+
+  .result-screen .result-grid > div {
+    min-height: 48px;
+    padding: 4px;
+  }
+
+  .result-screen .result-note-group {
+    margin-top: 3px;
+    padding: 3px 7px;
+  }
+
+  .result-screen .result-mode-guide,
+  .result-screen .medical-note,
+  .result-screen .ranking-result > span,
+  .result-screen .ranking-progress,
+  .result-screen .ranking-choice small,
+  .result-screen .error-text,
+  .result-screen .nickname-form small {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .result-screen .ranking-result {
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+
+  .result-screen .ranking-choice__actions,
+  .result-screen .nickname-form__actions {
+    margin-top: 3px;
+  }
+
+  .result-screen .result-utility-links,
+  .result-screen .button-stack {
+    margin-top: 4px;
+  }
+
+  .result-screen .button-stack {
+    gap: 0;
+  }
 }

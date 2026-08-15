@@ -17,9 +17,7 @@ create table public.ranking_users (
     and anonymous_key = btrim(anonymous_key)
   ),
   constraint ranking_users_nickname_valid check (
-    char_length(nickname) between 2 and 15
-    and nickname = btrim(nickname)
-    and nickname !~ '[#[:cntrl:]]'
+    nickname ~ '^[가-힣A-Za-z0-9]{2,6}$'
   )
 );
 
@@ -98,8 +96,7 @@ begin
      or char_length(p_anonymous_key) not between 1 and 255
      or p_anonymous_key <> btrim(p_anonymous_key)
      or p_nickname is null
-     or char_length(p_nickname) not between 2 and 15
-     or p_nickname ~ '[#[:cntrl:]]'
+     or p_nickname !~ '^[가-힣A-Za-z0-9]{2,6}$'
      or not public.is_safe_nickname(p_nickname) then
     raise exception using errcode = '22023', message = 'INVALID_NICKNAME';
   end if;
@@ -134,8 +131,7 @@ begin
      or char_length(p_anonymous_key) not between 1 and 255
      or p_anonymous_key <> btrim(p_anonymous_key)
      or p_nickname is null
-     or char_length(p_nickname) not between 2 and 15
-     or p_nickname ~ '[#[:cntrl:]]'
+     or p_nickname !~ '^[가-힣A-Za-z0-9]{2,6}$'
      or not public.is_safe_nickname(p_nickname) then
     raise exception using errcode = '22023', message = 'INVALID_NICKNAME';
   end if;

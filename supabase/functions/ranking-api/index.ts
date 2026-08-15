@@ -101,7 +101,7 @@ function parseNickname(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const nickname = value.trim()
   const length = Array.from(nickname).length
-  if (length < 2 || length > 15 || /[#\p{Cc}]/u.test(nickname)) return null
+  if (length < 2 || length > 6 || !/^[가-힣A-Za-z0-9]+$/u.test(nickname)) return null
   const normalized = nickname
     .normalize('NFKC')
     .toLocaleLowerCase()
@@ -163,7 +163,7 @@ async function registerNickname(req: Request, anonymousKey: string): Promise<Res
   const body = await parseJson(req)
   const nickname = parseNickname(body?.nickname)
   if (!nickname) {
-    return error('INVALID_NICKNAME', '별명은 # 없이 2~15자로 입력해 주세요.', 400)
+    return error('INVALID_NICKNAME', '별명은 한글, 영문, 숫자 2~6자로 입력해 주세요.', 400)
   }
 
   const { data, error: dbError } = await supabase.rpc('register_ranking_user', {
@@ -186,7 +186,7 @@ async function updateNickname(req: Request, anonymousKey: string): Promise<Respo
   const body = await parseJson(req)
   const nickname = parseNickname(body?.nickname)
   if (!nickname) {
-    return error('INVALID_NICKNAME', '별명은 # 없이 2~15자로 입력해 주세요.', 400)
+    return error('INVALID_NICKNAME', '별명은 한글, 영문, 숫자 2~6자로 입력해 주세요.', 400)
   }
 
   const { data, error: dbError } = await supabase.rpc('update_ranking_nickname', {

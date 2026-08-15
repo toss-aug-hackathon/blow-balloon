@@ -12,7 +12,10 @@ import {
   type RegisteredRankingUser,
 } from '../api/rankingApi';
 import { formatSeconds } from '../utils/math';
-import { getNicknameValidationError } from '../utils/nicknamePolicy';
+import {
+  getNicknameValidationError,
+  NICKNAME_MAX_LENGTH,
+} from '../utils/nicknamePolicy';
 import { getRankingBalloonSrc } from '../utils/rankingBalloon';
 import { RankingPodium } from './RankingPodium';
 
@@ -288,7 +291,8 @@ export function RankingScreen({
                 <input
                   id="my-records-nickname"
                   value={nickname}
-                  maxLength={15}
+                  maxLength={NICKNAME_MAX_LENGTH}
+                  placeholder="한글·영문·숫자 2~6자"
                   autoFocus
                   onChange={(event) => setNickname(event.target.value)}
                 />

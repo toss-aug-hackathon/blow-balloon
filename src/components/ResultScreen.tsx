@@ -10,7 +10,10 @@ import {
 import type { GameResult } from '../game/types';
 import { getLungScoreTitle } from '../game/rules';
 import { formatSeconds } from '../utils/math';
-import { getNicknameValidationError } from '../utils/nicknamePolicy';
+import {
+  getNicknameValidationError,
+  NICKNAME_MAX_LENGTH,
+} from '../utils/nicknamePolicy';
 
 type ResultScreenProps = {
   result: GameResult;
@@ -223,8 +226,8 @@ export function ResultScreen({
             <input
               id="nickname"
               value={nickname}
-              maxLength={15}
-              placeholder="2~15자 입력"
+              maxLength={NICKNAME_MAX_LENGTH}
+              placeholder="한글·영문·숫자 2~6자"
               onChange={(event) => setNickname(event.target.value)}
             />
             <div className="nickname-form__actions">

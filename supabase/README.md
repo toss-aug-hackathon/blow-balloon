@@ -19,12 +19,12 @@ Supabase Dashboard만 사용해 설치하는 PostgreSQL + Edge Function 백엔�
 
 ## Dashboard 설치 순서
 
-기존 게임용 DB를 완전히 초기화하고 새로 구성하는 경우에는 migration 001~008 대신
+기존 게임용 DB를 완전히 초기화하고 새로 구성하는 경우에는 migration 001~010 대신
 [`nongame_schema.sql`](./nongame_schema.sql) 하나만 실행하세요. 이 파일은 비게임용
 최종 스키마만 생성하며 기존 데이터를 삭제하지 않습니다. 기존 객체와 데이터를 삭제하는
 SQL은 별도로 확인한 뒤 먼저 실행해야 합니다.
 
-기존 DB를 유지하면서 migration 기록을 이어가야 하는 경우에만 아래의 001~008 순서를 사용합니다.
+기존 DB를 유지하면서 migration 기록을 이어가야 하는 경우에만 아래의 001~010 순서를 사용합니다.
 
 1. Supabase 프로젝트의 **SQL Editor**를 엽니다.
 2. [`migrations/001_ranking_backend.sql`](./migrations/001_ranking_backend.sql) 전체를 붙여 넣고 실행합니다.
@@ -35,10 +35,12 @@ SQL은 별도로 확인한 뒤 먼저 실행해야 합니다.
 7. [`migrations/006_expand_speedrun_score_limit.sql`](./migrations/006_expand_speedrun_score_limit.sql) 전체를 붙여 넣고 실행합니다.
 8. [`migrations/007_mode_specific_ranking_duration.sql`](./migrations/007_mode_specific_ranking_duration.sql) 전체를 붙여 넣고 실행합니다.
 9. [`migrations/008_nongame_anonymous_identity_reset.sql`](./migrations/008_nongame_anonymous_identity_reset.sql) 전체를 붙여 넣고 실행합니다.
-10. **Edge Functions**에서 `ranking-api` Function을 새로 만듭니다.
-11. [`functions/ranking-api/index.ts`](./functions/ranking-api/index.ts) 전체로 교체합니다.
-12. Edge Function 설정에서 **Verify JWT with legacy secret**을 끕니다. 이 앱은 legacy anon JWT나 Supabase Auth JWT를 보내지 않습니다.
-13. Dashboard에서 Function을 배포합니다.
+10. [`migrations/009_nickname_length_15.sql`](./migrations/009_nickname_length_15.sql) 전체를 붙여 넣고 실행합니다.
+11. [`migrations/010_nickname_display_policy.sql`](./migrations/010_nickname_display_policy.sql) 전체를 붙여 넣고 실행합니다.
+12. **Edge Functions**에서 `ranking-api` Function을 새로 만듭니다.
+13. [`functions/ranking-api/index.ts`](./functions/ranking-api/index.ts) 전체로 교체합니다.
+14. Edge Function 설정에서 **Verify JWT with legacy secret**을 끕니다. 이 앱은 legacy anon JWT나 Supabase Auth JWT를 보내지 않습니다.
+15. Dashboard에서 Function을 배포합니다.
 
 > `008_nongame_anonymous_identity_reset.sql`은 비게임 익명 식별 체계로 전환하면서 기존 사용자와 랭킹을 모두 삭제합니다. 개발 데이터 초기화가 승인된 현재 전환용이며, 운영 데이터가 생긴 뒤에는 그대로 재실행하면 안 됩니다.
 
@@ -72,7 +74,7 @@ mock 사용자와 연결된 점수가 함께 제거됩니다.
 - 모든 점수는 `best_duration_ms`와 함께 저장합니다.
 - `LUNG_CAPACITY`: 점수가 높은 기록을 우선하고, 동점이면 호흡 시간이 긴 기록을 우선합니다.
 - `BALLOON_COUNT`: 개수가 많은 기록을 우선하고, 동점이면 마지막 풍선 완성 시간이 짧은 기록을 우선합니다.
-- 별명: 앞뒤 공백을 제거한 2~15자, `#`와 제어 문자 금지, 중복 허용
+- 별명: 완성형 한글·영문·숫자 2~6자, 중복 허용
 - 표시 ID: 최초 등록 시 생성되는 1000~9999 사이의 고정 숫자. 별명을 바꿔도 유지
 - 유해 별명: 욕설·성적 표현과 반복 문자·특수문자 우회 표현 차단
 - 랭킹 `limit`: 1~100

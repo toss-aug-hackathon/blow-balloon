@@ -133,7 +133,7 @@ flowchart TD
   Source["React·TypeScript 소스"] --> AIT["ait build"]
   AIT --> Dist["dist WebView 산출물"]
   Dist --> Toss["Apps in Toss 배포 대상"]
-  Migrations["supabase/migrations 001→008"] --> Postgres["Supabase Postgres"]
+  Migrations["supabase/migrations 001→010"] --> Postgres["Supabase Postgres"]
   Function["supabase/functions/ranking-api"] --> Edge["Supabase Edge Functions"]
   Edge --> Postgres
 ```
