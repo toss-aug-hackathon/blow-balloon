@@ -23,10 +23,10 @@ describe('BlowDetector', () => {
     expect(detector.update(0.005, 50).state).toBe('idle');
   });
 
-  it('uses calibrated RMS when spectrum data is weak', () => {
+  it('rejects a strong RMS signal when its spectrum is not breath-like', () => {
     const detector = createDetector();
-    expect(detector.update(0.08, 0, 0.08).state).toBe('candidate');
-    expect(detector.update(0.08, 200, 0.08).state).toBe('blowing');
+    expect(detector.update(0.08, 0, 0.08).state).toBe('idle');
+    expect(detector.update(0.08, 200, 0.08).state).toBe('idle');
   });
 
   it('starts after a sustained signal and tolerates a short gap', () => {

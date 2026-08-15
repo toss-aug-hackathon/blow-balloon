@@ -18,7 +18,8 @@ export const BLOW_CONFIG = {
   // 시작 임계값을 바람 세기 1로 환산할 때 사용하는 입력 범위 배수
   normalizationRangeMultiplier: 10,
   // 전체 0.2~8kHz 에너지 중 2~8kHz가 차지해야 하는 최소 비율
-  minimumBreathiness: 0.14,
+  // 말소리나 작은 소음이 불기로 판정되지 않도록 이전의 엄격한 값으로 유지
+  minimumBreathiness: 0.18,
   // React 화면에 마이크 상태를 반영하는 간격(ms)
   uiUpdateIntervalMs: 50,
 } as const;
