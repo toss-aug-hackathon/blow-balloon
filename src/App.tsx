@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { closeView, graniteEvent } from '@apps-in-toss/web-bridge';
 import { BalloonCanvas } from './game/BalloonCanvas';
 import type {
@@ -9,7 +9,7 @@ import type {
 import { useBlowDetector } from './hooks/useBlowDetector';
 import { useSafeArea } from './hooks/useSafeArea';
 import { useScreenAwake } from './hooks/useScreenAwake';
-import { formatSeconds } from './utils/math';
+import { formatSeconds, getContainScale } from './utils/math';
 import { ResultScreen } from './components/ResultScreen';
 import { RankingScreen } from './components/RankingScreen';
 import { HomeRecordPreview } from './components/HomeRecordPreview';
@@ -65,6 +65,44 @@ export default function App() {
         ? 'home'
         : 'mic-permission',
   );
+  const homeScreenRef = useRef<HTMLElement>(null);
+  const homeContentRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (screen !== 'home') return;
+    const screenElement = homeScreenRef.current;
+    const contentElement = homeContentRef.current;
+    if (!screenElement || !contentElement) return;
+
+    const fit = () => {
+      const style = getComputedStyle(screenElement);
+      const paddingTop = parseFloat(style.paddingTop);
+      const paddingBottom = parseFloat(style.paddingBottom);
+      const availableWidth = screenElement.clientWidth
+        - parseFloat(style.paddingLeft)
+        - parseFloat(style.paddingRight);
+      const availableHeight = screenElement.clientHeight
+        - paddingTop
+        - paddingBottom;
+      const scale = getContainScale(
+        availableWidth,
+        availableHeight,
+        contentElement.scrollWidth,
+        contentElement.scrollHeight,
+      );
+      contentElement.style.setProperty('--home-scale', String(scale));
+      contentElement.style.setProperty(
+        '--home-offset-y',
+        scale < 1 ? `${(paddingBottom - paddingTop) / 2}px` : '0px',
+      );
+    };
+
+    const observer = new ResizeObserver(fit);
+    observer.observe(screenElement);
+    observer.observe(contentElement);
+    fit();
+    return () => observer.disconnect();
+  }, [screen]);
   const [mode, setMode] = useState<GameMode | null>(() =>
     initialEntry === 'lung-test' || initialEntry === 'balloon-rush'
       ? initialEntry
@@ -303,7 +341,8 @@ export default function App() {
   return (
     <div className="app-shell">
       {screen === 'home' && (
-        <main className="screen home-screen">
+        <main className="screen home-screen" ref={homeScreenRef}>
+          <div className="home-content" ref={homeContentRef}>
           <header className="home-header">
             <h1>
               오늘은 어떤 풍선을
@@ -355,6 +394,7 @@ export default function App() {
             </button>
           </section>
           <p className="privacy-note">마이크 소리는 저장하지 않아요.</p>
+          </div>
         </main>
       )}
 
