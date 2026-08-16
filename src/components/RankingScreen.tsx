@@ -28,7 +28,8 @@ type RankingScreenProps = {
 type View = 'ranking' | 'mine';
 type RankMovement = 'up' | 'down' | 'same';
 
-const RANKING_POLL_INTERVAL_MS = 3000;
+const RANKING_POLL_INTERVAL_MS = 12_000;
+const RANKING_POLL_JITTER_MS = 3000;
 
 const rankingTabs: Array<{ type: RankingType; label: string }> = [
   { type: 'LUNG_CAPACITY', label: '크게 불기' },
@@ -174,14 +175,27 @@ export function RankingScreen({
       }
     };
 
-    void load();
-    const pollId = view === 'ranking'
-      ? window.setInterval(() => void load(), RANKING_POLL_INTERVAL_MS)
-      : undefined;
+    let pollId: number | undefined;
+    const scheduleNextPoll = () => {
+      if (view !== 'ranking' || cancelled) return;
+      pollId = window.setTimeout(async () => {
+        if (document.visibilityState === 'visible') await load();
+        scheduleNextPoll();
+      }, RANKING_POLL_INTERVAL_MS + Math.random() * RANKING_POLL_JITTER_MS);
+    };
+    const handleVisibility = () => {
+      if (view !== 'ranking' || document.visibilityState !== 'visible') return;
+      if (pollId !== undefined) window.clearTimeout(pollId);
+      void load().finally(scheduleNextPoll);
+    };
+
+    void load().finally(scheduleNextPoll);
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       cancelled = true;
-      if (pollId !== undefined) window.clearInterval(pollId);
+      if (pollId !== undefined) window.clearTimeout(pollId);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [rankingType, isRegistered, anonymousKey, view]);
 

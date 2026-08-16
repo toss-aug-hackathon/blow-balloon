@@ -7,6 +7,7 @@ export type DetectorFrame = {
   rawRms: number;
   baselineRms: number;
   windStrength: number;
+  displayWindStrength: number;
   hasStrongSignal: boolean;
   isBlowing: boolean;
   state: BlowState;
@@ -126,10 +127,19 @@ export class BlowDetector {
     }
 
     const isBlowing = this.state === 'blowing' || this.state === 'ending';
+    const endingProgress =
+      this.state === 'ending' && this.endingStartedAt !== null
+        ? Math.min(1, Math.max(0, (nowMs - this.endingStartedAt) / this.options.endGraceMs))
+        : 0;
     return {
       rawRms,
       baselineRms: this.baseline,
       windStrength: isBlowing ? this.smoothedWind : 0,
+      // 실제 판정이 종료 유예 중이면 남은 유예 시간도 퍼센트에 반영한다.
+      // 게임 성장용 windStrength와 분리해 감도와 판정 규칙에는 영향을 주지 않는다.
+      displayWindStrength: isBlowing
+        ? this.smoothedWind * (1 - endingProgress)
+        : 0,
       hasStrongSignal: rawRms >= startThreshold && looksLikeBreath,
       isBlowing,
       state: this.state,

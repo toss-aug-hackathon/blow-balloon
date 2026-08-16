@@ -8,7 +8,7 @@ import {
 } from '../api/rankingApi';
 import { extractAnonymousKey } from '../utils/anonymousIdentity';
 
-export type RankingUserStatus = 'loading' | 'ready' | 'unavailable';
+export type RankingUserStatus = 'loading' | 'ready' | 'cached' | 'unavailable';
 
 export function useRankingUser() {
   const [anonymousKey, setAnonymousKey] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export function useRankingUser() {
         setUser(null);
         setStatus('unavailable');
         return;
-}
+      }
       setAnonymousKey(nextAnonymousKey);
       try {
         const userRequest = getRankingUser(nextAnonymousKey);
@@ -37,9 +37,10 @@ export function useRankingUser() {
         setUser(nextUser);
         setStatus('ready');
       } catch {
+        // 서버 저장 성공으로 간주하지 않고, 오프라인 Outbox 보관을 허용하는 힌트로만 쓴다.
         const cachedUser = getCachedRegisteredRankingUser(nextAnonymousKey);
-        setUser(cachedUser ?? { isRegistered: false });
-        setStatus('ready');
+        setUser(cachedUser);
+        setStatus(cachedUser ? 'cached' : 'unavailable');
       }
     } catch {
       setAnonymousKey(null);
@@ -51,6 +52,20 @@ export function useRankingUser() {
   useEffect(() => {
     void Promise.resolve().then(refresh);
   }, [refresh]);
+
+  useEffect(() => {
+    if (status !== 'cached') return;
+    const handleOnline = () => void refresh();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+    window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [refresh, status]);
 
   return { anonymousKey, user, setUser, status, refresh };
 }

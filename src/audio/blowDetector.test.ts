@@ -56,4 +56,18 @@ describe('BlowDetector', () => {
     expect(detector.update(0.005, 549).isBlowing).toBe(true);
     expect(detector.update(0.005, 550).state).toBe('idle');
   });
+
+  it('shows the remaining breath continuity while ending without changing wind strength', () => {
+    const detector = createDetector();
+    detector.update(0.08, 0);
+    detector.update(0.08, 100);
+
+    const endingStarted = detector.update(0.08, 200, 0.08);
+    const halfway = detector.update(0.08, 375, 0.08);
+
+    expect(endingStarted.state).toBe('ending');
+    expect(endingStarted.windStrength).toBe(1);
+    expect(halfway.windStrength).toBe(1);
+    expect(halfway.displayWindStrength).toBeCloseTo(0.5, 5);
+  });
 });

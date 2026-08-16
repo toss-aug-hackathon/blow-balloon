@@ -2637,6 +2637,15 @@ h1 {
   transition: width 120ms ease-out;
 }
 
+.wind-meter--ending .wind-meter__track i {
+  background: linear-gradient(90deg, #ffb340, #ff6b6b);
+}
+
+.wind-meter--ending .wind-meter__heading strong,
+.wind-meter--ending .wind-meter__label {
+  color: #d84b4b;
+}
+
 /* Final game layout: top stats stay clear of the playfield; wind sits at the bottom. */
 .game-screen > .game-hud {
   display: grid;
@@ -3256,6 +3265,11 @@ h1 {
   color: #292329;
   font-size: 24px;
   font-weight: 850;
+}
+
+.game-screen > .game-control-panel .wind-meter--ending .wind-meter__label,
+.game-screen > .game-control-panel .wind-meter--ending .wind-meter__heading strong {
+  color: #d84b4b;
 }
 
 /* Carry the game panel language into the result screen. */

@@ -66,7 +66,9 @@ const rankingRequests = new Map<RankingType, Promise<RankingItem[]>>();
 const myRecordsCache = new Map<string, MyRecordsResponse>();
 const myRecordsRequests = new Map<string, Promise<MyRecordsResponse>>();
 const myRecordsRequestTokens = new Map<string, symbol>();
+const scoreSubmissionRequests = new Map<string, Promise<SubmitScoreResponse>>();
 const MAX_VISIBLE_RANKING_ITEMS = 15;
+const RANKING_REQUEST_TIMEOUT_MS = 10_000;
 const MY_RECORDS_STORAGE_PREFIX = 'hoo-balloon:nongame:my-records:';
 const REGISTERED_USER_STORAGE_PREFIX = 'hoo-balloon:nongame:registered-user:';
 const TOP_RANKING_STORAGE_PREFIX = 'hoo-balloon:nongame:top-ranking:';
@@ -112,6 +114,14 @@ function saveRegisteredRankingUser(anonymousKey: string, user: RegisteredRanking
       JSON.stringify(user),
     );
   } catch {
+    // 서버 확인이 불가능한 동안의 Outbox 보조 정보이므로 저장 실패를 허용한다.
+  }
+}
+
+function clearRegisteredRankingUser(anonymousKey: string): void {
+  try {
+    window.localStorage.removeItem(`${REGISTERED_USER_STORAGE_PREFIX}${anonymousKey}`);
+  } catch {
     // Local storage may be unavailable in a WebView.
   }
 }
@@ -124,16 +134,13 @@ export function getCachedRegisteredRankingUser(
       `${REGISTERED_USER_STORAGE_PREFIX}${anonymousKey}`,
     );
     if (!stored) return null;
-    const parsed: unknown = JSON.parse(stored);
-    if (
-      !parsed ||
-      typeof parsed !== 'object' ||
-      (parsed as Partial<RegisteredRankingUser>).isRegistered !== true ||
-      typeof (parsed as Partial<RegisteredRankingUser>).displayName !== 'string'
-    ) {
-      return null;
-    }
-    return parsed as RegisteredRankingUser;
+    const parsed = JSON.parse(stored) as Partial<RegisteredRankingUser>;
+    return parsed.isRegistered === true &&
+      typeof parsed.displayName === 'string' &&
+      typeof parsed.nickname === 'string' &&
+      typeof parsed.displayId === 'number'
+      ? parsed as RegisteredRankingUser
+      : null;
   } catch {
     return null;
   }
@@ -211,12 +218,43 @@ async function rankingApi<T>(
   if (options.body) headers.set('Content-Type', 'application/json');
   if (anonymousKey) headers.set('x-anonymous-user-key', anonymousKey);
 
-  const response = await fetch(`${rankingApiUrl}${path}`, {
-    ...options,
-    cache: 'no-store',
-    headers,
-  });
-  const body: unknown = await response.json();
+  let response: Response;
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(
+    () => controller.abort(),
+    RANKING_REQUEST_TIMEOUT_MS,
+  );
+  try {
+    response = await fetch(`${rankingApiUrl}${path}`, {
+      ...options,
+      cache: 'no-store',
+      headers,
+      signal: controller.signal,
+    });
+  } catch {
+    throw new RankingApiError(
+      controller.signal.aborted ? 'REQUEST_TIMEOUT' : 'NETWORK_ERROR',
+      controller.signal.aborted
+        ? '서버 응답이 늦어 기록을 기기에 보관했어요.'
+        : '네트워크 연결을 확인한 뒤 다시 시도해 주세요.',
+      0,
+      null,
+    );
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw new RankingApiError(
+      'INVALID_RESPONSE',
+      '랭킹 서버 응답을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',
+      response.status,
+      null,
+    );
+  }
 
   if (!response.ok) {
     const error = body as ApiErrorBody;
@@ -235,6 +273,7 @@ async function rankingApi<T>(
 export function getRankingUser(anonymousKey: string): Promise<RankingUser> {
   return rankingApi<RankingUser>('/ranking-user', {}, anonymousKey).then((user) => {
     if (user.isRegistered) saveRegisteredRankingUser(anonymousKey, user);
+    else clearRegisteredRankingUser(anonymousKey);
     return user;
   });
 }
@@ -280,12 +319,26 @@ export function submitScore(
   score: number,
   durationMs: number | null,
   anonymousKey: string,
+  submissionId: string,
 ): Promise<SubmitScoreResponse> {
-  return rankingApi<SubmitScoreResponse>(
+  const requestKey = `${anonymousKey}:${submissionId}`;
+  const pendingRequest = scoreSubmissionRequests.get(requestKey);
+  if (pendingRequest) return pendingRequest;
+
+  const request = rankingApi<SubmitScoreResponse>(
     '/submit-score',
-    { method: 'POST', body: JSON.stringify({ rankingType, score, durationMs }) },
+    {
+      method: 'POST',
+      body: JSON.stringify({ rankingType, score, durationMs, submissionId }),
+    },
     anonymousKey,
-  );
+  ).finally(() => {
+    if (scoreSubmissionRequests.get(requestKey) === request) {
+      scoreSubmissionRequests.delete(requestKey);
+    }
+  });
+  scoreSubmissionRequests.set(requestKey, request);
+  return request;
 }
 
 export function getRanking(rankingType: RankingType): Promise<RankingItem[]> {

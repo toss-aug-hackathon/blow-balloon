@@ -347,6 +347,8 @@ export class BalloonEngine {
       completedCount: this.completedBalloons.length,
       completionTimeMs: this.lastCompletionElapsedMs,
       windStrength: signal.windStrength,
+      displayWindStrength: signal.displayWindStrength,
+      isBreathEnding: signal.state === 'ending',
       isWaitingForBreath:
         this.mode === 'lung-test' && !this.lungBreathStarted,
       balloonScore:

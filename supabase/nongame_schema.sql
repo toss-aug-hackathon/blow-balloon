@@ -27,6 +27,7 @@ create table public.ranking_scores (
   ranking_type public.ranking_type not null,
   best_score bigint not null,
   best_duration_ms bigint,
+  last_submission_id uuid,
   last_submitted_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -148,7 +149,7 @@ $$;
 
 create or replace function public.submit_best_ranking_score(
   p_anonymous_key text, p_ranking_type public.ranking_type,
-  p_score bigint, p_duration_ms bigint
+  p_score bigint, p_duration_ms bigint, p_submission_id uuid
 )
 returns table (best_score bigint, best_duration_ms bigint, is_new_best boolean)
 language plpgsql security definer set search_path = ''
@@ -160,6 +161,7 @@ declare
   v_best_score bigint;
   v_best_duration_ms bigint;
   v_last_submitted_at timestamptz;
+  v_last_submission_id uuid;
   v_is_new_best boolean;
 begin
   if p_anonymous_key is null
@@ -167,6 +169,7 @@ begin
      or p_anonymous_key <> btrim(p_anonymous_key)
      or p_ranking_type is null
      or p_score is null
+     or p_submission_id is null
      or (p_ranking_type = 'BALLOON_COUNT' and p_score not between 0 and 50)
      or (p_ranking_type = 'LUNG_CAPACITY' and p_score not between 0 and 9999)
      or (p_duration_ms is not null and p_duration_ms not between 0 and 86400000) then
@@ -182,12 +185,17 @@ begin
     pg_catalog.hashtextextended(v_user_id::text || ':' || p_ranking_type::text, 0)
   );
 
-  select rs.best_score, rs.best_duration_ms, rs.last_submitted_at
-    into v_previous_best_score, v_previous_duration_ms, v_last_submitted_at
+  select rs.best_score, rs.best_duration_ms, rs.last_submitted_at, rs.last_submission_id
+    into v_previous_best_score, v_previous_duration_ms, v_last_submitted_at, v_last_submission_id
   from public.ranking_scores rs
   where rs.ranking_user_id = v_user_id and rs.ranking_type = p_ranking_type;
 
   if found then
+    if v_last_submission_id = p_submission_id then
+      return query select v_previous_best_score, v_previous_duration_ms, false;
+      return;
+    end if;
+
     if v_last_submitted_at > now() - interval '3 seconds' then
       raise exception using errcode = 'P0001', message = 'SCORE_SUBMISSION_TOO_FREQUENT';
     end if;
@@ -216,6 +224,7 @@ begin
     update public.ranking_scores
     set best_score = v_best_score,
         best_duration_ms = v_best_duration_ms,
+        last_submission_id = p_submission_id,
         last_submitted_at = now(),
         updated_at = case when v_is_new_best then now() else updated_at end
     where ranking_user_id = v_user_id and ranking_type = p_ranking_type;
@@ -223,10 +232,29 @@ begin
     return;
   end if;
 
-  insert into public.ranking_scores (ranking_user_id, ranking_type, best_score, best_duration_ms)
-  values (v_user_id, p_ranking_type, p_score, p_duration_ms);
+  insert into public.ranking_scores (
+    ranking_user_id, ranking_type, best_score, best_duration_ms, last_submission_id
+  )
+  values (v_user_id, p_ranking_type, p_score, p_duration_ms, p_submission_id);
   return query select p_score, p_duration_ms, true;
 end;
+$$;
+
+create or replace function public.submit_best_ranking_score(
+  p_anonymous_key text, p_ranking_type public.ranking_type,
+  p_score bigint, p_duration_ms bigint
+)
+returns table (best_score bigint, best_duration_ms bigint, is_new_best boolean)
+language sql security definer set search_path = ''
+as $$
+  select *
+  from public.submit_best_ranking_score(
+    p_anonymous_key,
+    p_ranking_type,
+    p_score,
+    p_duration_ms,
+    pg_catalog.gen_random_uuid()
+  );
 $$;
 
 create or replace function public.get_ranking(
@@ -283,6 +311,7 @@ revoke all on function public.is_safe_nickname(text) from public, anon, authenti
 revoke all on function public.get_ranking_user(text) from public, anon, authenticated;
 revoke all on function public.register_ranking_user(text, text) from public, anon, authenticated;
 revoke all on function public.update_ranking_nickname(text, text) from public, anon, authenticated;
+revoke all on function public.submit_best_ranking_score(text, public.ranking_type, bigint, bigint, uuid) from public, anon, authenticated;
 revoke all on function public.submit_best_ranking_score(text, public.ranking_type, bigint, bigint) from public, anon, authenticated;
 revoke all on function public.get_ranking(public.ranking_type, integer) from public, anon, authenticated;
 revoke all on function public.get_ranking_records(text) from public, anon, authenticated;
@@ -291,6 +320,7 @@ grant execute on function public.is_safe_nickname(text) to service_role;
 grant execute on function public.get_ranking_user(text) to service_role;
 grant execute on function public.register_ranking_user(text, text) to service_role;
 grant execute on function public.update_ranking_nickname(text, text) to service_role;
+grant execute on function public.submit_best_ranking_score(text, public.ranking_type, bigint, bigint, uuid) to service_role;
 grant execute on function public.submit_best_ranking_score(text, public.ranking_type, bigint, bigint) to service_role;
 grant execute on function public.get_ranking(public.ranking_type, integer) to service_role;
 grant execute on function public.get_ranking_records(text) to service_role;

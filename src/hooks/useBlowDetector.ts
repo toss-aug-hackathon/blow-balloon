@@ -18,6 +18,7 @@ const EMPTY_FRAME: DetectorFrame = {
   rawRms: 0,
   baselineRms: 0,
   windStrength: 0,
+  displayWindStrength: 0,
   hasStrongSignal: false,
   isBlowing: false,
   state: 'idle',
@@ -138,6 +139,7 @@ export function useBlowDetector(publishUiFrames = true) {
       ...signalRef.current,
       isBlowing: false,
       windStrength: 0,
+      displayWindStrength: 0,
       state: 'idle',
       currentBreathDurationMs: 0,
     };
