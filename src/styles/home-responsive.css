@@ -1,0 +1,284 @@
+:root {
+  --s23-home-reference-patch: 20260816;
+}
+
+/*
+  Galaxy S23 compact reference tuning.
+
+  Visual reference:
+  - 648 x 1344 screenshot supplied by the user
+  - host top bar and Android bottom navigation are outside .home-screen
+
+  Layout strategy:
+  - remove PR #66's .home-content layout box with display: contents
+  - keep automatic home scaling visually disabled
+  - compact reproduces the S23 reference proportions rather than the later
+    ultra-compressed 104px-card variant
+  - tall keeps the same component proportions; only a little extra breathing
+    room is added around the ranking -> mode list transition
+*/
+
+.home-viewport-compact .home-content,
+.home-viewport-tall .home-content {
+  display: contents;
+  --home-scale: 1 !important;
+  --home-offset-y: 0px !important;
+  transform: none !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Galaxy S23 reference: compact                                               */
+/* -------------------------------------------------------------------------- */
+
+.home-viewport-compact.home-viewport-compact .home-screen {
+  align-items: stretch;
+  justify-content: flex-start;
+
+  /* Reference screenshot is ~18px inset on a 360-CSS-px-wide phone. */
+  padding-top: max(22px, var(--ait-safe-top));
+  padding-right: max(18px, var(--ait-safe-right));
+  padding-bottom: max(8px, var(--ait-safe-bottom));
+  padding-left: max(18px, var(--ait-safe-left));
+}
+
+.home-viewport-compact .home-screen .home-header {
+  margin-bottom: 22px;
+  padding: 8px 4px 0;
+}
+
+.home-viewport-compact .home-screen .home-header h1 {
+  font-size: clamp(36px, 10.8vw, 40px);
+  line-height: 1.08;
+}
+
+.home-viewport-compact .home-screen .home-header > p:last-child {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.home-viewport-compact .home-ranking-preview__title {
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.home-viewport-compact .home-ranking-preview__title strong {
+  font-size: 15px;
+}
+
+.home-viewport-compact .home-screen .home-record-preview {
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium {
+  min-height: 120px;
+  height: 120px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__card {
+  min-height: 0;
+  height: 104px;
+  padding: 5px 4px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 {
+  min-height: 0;
+  height: 120px;
+  padding: 5px 4px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__balloon {
+  width: 32px;
+  height: 32px;
+  margin: 1px 0 0;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
+  width: 42px;
+  height: 42px;
+  margin: 1px 0 0;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__rank {
+  font-size: 13px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 .home-ranking-podium__rank {
+  font-size: 15px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__name {
+  font-size: 10px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__score,
+.home-viewport-compact .home-screen .home-ranking-podium__empty {
+  font-size: 11px;
+}
+
+.home-viewport-compact .home-screen .mode-list {
+  gap: 10px;
+  padding-top: 14px !important;
+}
+
+.home-viewport-compact .home-screen .mode-card {
+  min-height: 142px;
+  padding: 18px 45% 17px 18px;
+  border-radius: 23px;
+}
+
+.home-viewport-compact .home-screen .mode-card strong {
+  font-size: 20px;
+}
+
+.home-viewport-compact .home-screen .mode-card small,
+.home-viewport-compact .home-screen .mode-card--rush small {
+  width: auto;
+  max-width: 190px;
+  margin-top: 7px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.home-viewport-compact .home-screen .mode-card .balloon-art--lung,
+.home-viewport-compact .home-screen .mode-card .balloon-art--bunch {
+  top: 1px;
+  right: -8px;
+  height: 136px;
+}
+
+/* In the reference the privacy copy is anchored close to the bottom. */
+.home-viewport-compact .home-screen .privacy-note {
+  margin: auto 0 0;
+  padding-top: 10px;
+  font-size: 11px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tall: preserve the same S23 compact proportions.                            */
+/* -------------------------------------------------------------------------- */
+
+.home-viewport-tall.home-viewport-tall .home-screen {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding-top: max(22px, var(--ait-safe-top));
+  padding-right: max(18px, var(--ait-safe-right));
+  padding-bottom: max(10px, var(--ait-safe-bottom));
+  padding-left: max(18px, var(--ait-safe-left));
+}
+
+.home-viewport-tall .home-screen .home-header {
+  margin-bottom: 24px;
+  padding: 8px 4px 0;
+}
+
+.home-viewport-tall .home-screen .home-header h1 {
+  font-size: clamp(36px, 10.8vw, 40px);
+  line-height: 1.08;
+}
+
+.home-viewport-tall .home-screen .home-header > p:last-child {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.home-viewport-tall .home-ranking-preview__title {
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.home-viewport-tall .home-ranking-preview__title strong {
+  font-size: 15px;
+}
+
+.home-viewport-tall .home-screen .home-record-preview {
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium {
+  min-height: 118px;
+  height: 118px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card {
+  min-height: 0;
+  height: 104px;
+  padding: 5px 4px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 {
+  min-height: 0;
+  height: 118px;
+  padding: 5px 4px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__balloon {
+  width: 32px;
+  height: 32px;
+  margin: 1px 0 0;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
+  width: 42px;
+  height: 42px;
+  margin: 1px 0 0;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__rank {
+  font-size: 13px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 .home-ranking-podium__rank {
+  font-size: 15px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__name {
+  font-size: 10px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__score,
+.home-viewport-tall .home-screen .home-ranking-podium__empty {
+  font-size: 11px;
+}
+
+.home-viewport-tall .home-screen .mode-list {
+  gap: 10px;
+  padding-top: 16px !important;
+}
+
+.home-viewport-tall .home-screen .mode-card {
+  min-height: 142px;
+  padding: 18px 45% 17px 18px;
+  border-radius: 23px;
+}
+
+.home-viewport-tall .home-screen .mode-card strong {
+  font-size: 20px;
+}
+
+.home-viewport-tall .home-screen .mode-card small,
+.home-viewport-tall .home-screen .mode-card--rush small {
+  width: auto;
+  max-width: 190px;
+  margin-top: 7px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.home-viewport-tall .home-screen .mode-card .balloon-art--lung,
+.home-viewport-tall .home-screen .mode-card .balloon-art--bunch {
+  top: 1px;
+  right: -8px;
+  height: 136px;
+}
+
+.home-viewport-tall .home-screen .privacy-note {
+  margin: auto 0 0;
+  padding-top: 10px;
+  font-size: 11px;
+}
