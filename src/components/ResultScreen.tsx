@@ -52,10 +52,13 @@ export function ResultScreen({
     result.mode === 'lung-test'
       ? Math.round(result.finalBalloonScale * 100)
       : Math.round(result.completedCount);
-  const durationMs =
+  const rawDurationMs =
     result.mode === 'lung-test'
       ? result.durationMs
       : result.completionTimeMs;
+  const durationMs = rawDurationMs == null
+    ? null
+    : Math.max(0, Math.round(rawDurationMs));
   const resultKey = `${rankingType}-${score}-${durationMs ?? 'none'}`;
   const registeredDisplayName = user?.isRegistered ? user.displayName : null;
 

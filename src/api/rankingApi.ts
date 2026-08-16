@@ -325,11 +325,19 @@ export function submitScore(
   const pendingRequest = scoreSubmissionRequests.get(requestKey);
   if (pendingRequest) return pendingRequest;
 
+  const normalizedDurationMs = durationMs == null
+    ? null
+    : Math.max(0, Math.round(durationMs));
   const request = rankingApi<SubmitScoreResponse>(
     '/submit-score',
     {
       method: 'POST',
-      body: JSON.stringify({ rankingType, score, durationMs, submissionId }),
+      body: JSON.stringify({
+        rankingType,
+        score,
+        durationMs: normalizedDurationMs,
+        submissionId,
+      }),
     },
     anonymousKey,
   ).finally(() => {
