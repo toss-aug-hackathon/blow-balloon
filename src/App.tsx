@@ -65,31 +65,46 @@ export default function App() {
         ? 'home'
         : 'mic-permission',
   );
+
+
+
   const homeScreenRef = useRef<HTMLElement>(null);
   const homeContentRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (screen !== 'home') return;
+
     const screenElement = homeScreenRef.current;
     const contentElement = homeContentRef.current;
     if (!screenElement || !contentElement) return;
 
     const fit = () => {
+      const isTall = window.matchMedia('(min-height: 701px)').matches;
+
+      // compact에서는 PR #66 스케일 로직이 전혀 개입하지 않는다.
+      if (!isTall) {
+        contentElement.style.removeProperty('--home-scale');
+        contentElement.style.removeProperty('--home-offset-y');
+        return;
+      }
+
       const style = getComputedStyle(screenElement);
       const paddingTop = parseFloat(style.paddingTop);
       const paddingBottom = parseFloat(style.paddingBottom);
-      const availableWidth = screenElement.clientWidth
-        - parseFloat(style.paddingLeft)
-        - parseFloat(style.paddingRight);
-      const availableHeight = screenElement.clientHeight
-        - paddingTop
-        - paddingBottom;
+      const availableWidth =
+        screenElement.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight);
+      const availableHeight =
+        screenElement.clientHeight - paddingTop - paddingBottom;
+
       const scale = getContainScale(
         availableWidth,
         availableHeight,
         contentElement.scrollWidth,
         contentElement.scrollHeight,
       );
+
       contentElement.style.setProperty('--home-scale', String(scale));
       contentElement.style.setProperty(
         '--home-offset-y',
@@ -100,9 +115,18 @@ export default function App() {
     const observer = new ResizeObserver(fit);
     observer.observe(screenElement);
     observer.observe(contentElement);
+    window.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+
     fit();
-    return () => observer.disconnect();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
   }, [screen]);
+
   const [mode, setMode] = useState<GameMode | null>(() =>
     initialEntry === 'lung-test' || initialEntry === 'balloon-rush'
       ? initialEntry
