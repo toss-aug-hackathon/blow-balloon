@@ -214,13 +214,16 @@ export async function enqueueScoreSubmission(params: {
   return withStorageLock(async () => {
     const now = Date.now();
     const envelope = await readEnvelope();
+    const normalizedDurationMs = params.durationMs == null
+      ? null
+      : Math.max(0, Math.round(params.durationMs));
     const candidate: PendingScoreSubmission = {
       version: OUTBOX_VERSION,
       id: params.submissionId ?? createSubmissionId(),
       ownerHash,
       rankingType: params.rankingType,
       score: params.score,
-      durationMs: params.durationMs,
+      durationMs: normalizedDurationMs,
       createdAt: now,
       attempts: 0,
       nextAttemptAt: 0,
@@ -344,16 +347,20 @@ export async function saveRankingScoreReliably(params: {
   durationMs: number | null;
 }): Promise<ReliableScoreSaveResult> {
   const submissionId = createSubmissionId();
+  const normalizedDurationMs = params.durationMs == null
+    ? null
+    : Math.max(0, Math.round(params.durationMs));
+  const normalizedParams = { ...params, durationMs: normalizedDurationMs };
   let pending: PendingScoreSubmission;
   try {
-    pending = await enqueueScoreSubmission({ ...params, submissionId });
+    pending = await enqueueScoreSubmission({ ...normalizedParams, submissionId });
   } catch (storageError) {
     try {
       const response = await submitScore(
-        params.rankingType,
-        params.score,
-        params.durationMs,
-        params.anonymousKey,
+        normalizedParams.rankingType,
+        normalizedParams.score,
+        normalizedParams.durationMs,
+        normalizedParams.anonymousKey,
         submissionId,
       );
       return {
@@ -362,9 +369,9 @@ export async function saveRankingScoreReliably(params: {
           version: OUTBOX_VERSION,
           id: submissionId,
           ownerHash: '',
-          rankingType: params.rankingType,
-          score: params.score,
-          durationMs: params.durationMs,
+          rankingType: normalizedParams.rankingType,
+          score: normalizedParams.score,
+          durationMs: normalizedParams.durationMs,
           createdAt: Date.now(),
           attempts: 0,
           nextAttemptAt: 0,
@@ -376,9 +383,26 @@ export async function saveRankingScoreReliably(params: {
     }
   }
 
-  globalThis.setTimeout(() => {
-    void syncRankingOutbox(params.anonymousKey).catch(() => undefined);
-  }, 0);
+  try {
+    const result = await syncRankingOutbox(normalizedParams.anonymousKey);
+    const synced = result.synced.find((event) => event.pending.id === pending.id);
+    if (synced) {
+      return {
+        status: 'synced',
+        pending: synced.pending,
+        response: synced.response,
+      };
+    }
+
+    const permanentFailure = result.permanentFailures.find(
+      (failure) => failure.pending.id === pending.id,
+    );
+    if (permanentFailure) throw permanentFailure.error;
+  } catch (syncError) {
+    if (syncError instanceof RankingApiError) throw syncError;
+    // The score is already durable in the outbox. A later lifecycle/online sync can retry it.
+  }
+
   return { status: 'queued', pending };
 }
 
