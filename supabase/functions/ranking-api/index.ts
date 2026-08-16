@@ -97,6 +97,14 @@ function parseDurationMs(value: unknown): number | null | undefined {
   return value as number
 }
 
+function parseSubmissionId(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const submissionId = value.toLowerCase()
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(submissionId)
+    ? submissionId
+    : null
+}
+
 function parseNickname(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const nickname = value.trim()
@@ -173,6 +181,7 @@ async function registerNickname(req: Request, anonymousKey: string): Promise<Res
   if (dbError) return databaseError(dbError.message)
 
   const user = data?.[0]
+  if (!user) return databaseError('EMPTY_REGISTER_USER_RESULT')
   return json({
     success: true,
     isRegistered: true,
@@ -196,6 +205,7 @@ async function updateNickname(req: Request, anonymousKey: string): Promise<Respo
   if (dbError) return databaseError(dbError.message)
 
   const user = data?.[0]
+  if (!user) return databaseError('EMPTY_UPDATE_USER_RESULT')
   return json({
     success: true,
     isRegistered: true,
@@ -224,22 +234,31 @@ async function submitScore(req: Request, anonymousKey: string): Promise<Response
   if (durationMs === undefined) {
     return error('INVALID_DURATION', '기록 시간을 확인해 주세요.', 400)
   }
+  const submissionId = body?.submissionId === undefined
+    ? null
+    : parseSubmissionId(body.submissionId)
+  if (body?.submissionId !== undefined && !submissionId) {
+    return error('INVALID_SUBMISSION_ID', '기록 식별값을 확인해 주세요.', 400)
+  }
 
   const { data, error: dbError } = await supabase.rpc('submit_best_ranking_score', {
     p_anonymous_key: anonymousKey,
     p_ranking_type: rankingType,
     p_score: score,
     p_duration_ms: durationMs,
+    ...(submissionId ? { p_submission_id: submissionId } : {}),
   })
   if (dbError) return databaseError(dbError.message)
+  const savedScore = data?.[0]
+  if (!savedScore) return databaseError('EMPTY_SUBMIT_SCORE_RESULT')
 
   return json({
     success: true,
     rankingType,
     submittedScore: score,
-    bestScore: data[0].best_score,
-    bestDurationMs: data[0].best_duration_ms,
-    isNewBest: data[0].is_new_best,
+    bestScore: savedScore.best_score,
+    bestDurationMs: savedScore.best_duration_ms,
+    isNewBest: savedScore.is_new_best,
   })
 }
 
@@ -261,7 +280,7 @@ async function getRanking(url: URL): Promise<Response> {
   })
   if (dbError) return databaseError(dbError.message)
 
-  return json(data.map((row) => ({
+  return json((data ?? []).map((row) => ({
     rank: row.rank,
     displayName: `${row.nickname} #${row.display_id}`,
     score: row.score,
@@ -301,27 +320,32 @@ async function getMyRecords(anonymousKey: string): Promise<Response> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders })
+  try {
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders })
 
-  const url = new URL(req.url)
-  const route = url.pathname.replace(/^\/ranking-api\/?/, '/')
+    const url = new URL(req.url)
+    const route = url.pathname.replace(/^\/ranking-api\/?/, '/')
 
-  if (route === '/ranking' && req.method === 'GET') return getRanking(url)
+    if (route === '/ranking' && req.method === 'GET') return getRanking(url)
 
-  const anonymousKey = getAnonymousKey(req)
-  if (!anonymousKey) {
-    return error('INVALID_ANONYMOUS_KEY', `${ANONYMOUS_KEY_HEADER} 헤더가 필요해요.`, 400)
+    const anonymousKey = getAnonymousKey(req)
+    if (!anonymousKey) {
+      return error('INVALID_ANONYMOUS_KEY', `${ANONYMOUS_KEY_HEADER} 헤더가 필요해요.`, 400)
+    }
+
+    if (route === '/ranking-user' && req.method === 'GET') return getRankingUser(anonymousKey)
+    if (route === '/register-nickname' && req.method === 'POST') {
+      return registerNickname(req, anonymousKey)
+    }
+    if (route === '/update-nickname' && req.method === 'POST') {
+      return updateNickname(req, anonymousKey)
+    }
+    if (route === '/submit-score' && req.method === 'POST') return submitScore(req, anonymousKey)
+    if (route === '/my-records' && req.method === 'GET') return getMyRecords(anonymousKey)
+
+    return error('NOT_FOUND', '요청한 API를 찾을 수 없어요.', 404)
+  } catch (requestError) {
+    console.error('Unhandled ranking API error:', requestError)
+    return error('INTERNAL_ERROR', '요청을 처리하지 못했어요.', 500)
   }
-
-  if (route === '/ranking-user' && req.method === 'GET') return getRankingUser(anonymousKey)
-  if (route === '/register-nickname' && req.method === 'POST') {
-    return registerNickname(req, anonymousKey)
-  }
-  if (route === '/update-nickname' && req.method === 'POST') {
-    return updateNickname(req, anonymousKey)
-  }
-  if (route === '/submit-score' && req.method === 'POST') return submitScore(req, anonymousKey)
-  if (route === '/my-records' && req.method === 'GET') return getMyRecords(anonymousKey)
-
-  return error('NOT_FOUND', '요청한 API를 찾을 수 없어요.', 404)
 })

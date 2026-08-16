@@ -2,7 +2,7 @@
 
 [README로 돌아가기](../README.md) · [API 명세](api-specification.md)
 
-이 문서는 `supabase/migrations/001_ranking_backend.sql`부터 `010_nickname_display_policy.sql`까지 순서대로 적용한 최종 스키마를 설명합니다.
+이 문서는 `supabase/migrations/001_ranking_backend.sql`부터 `012_submission_id_outbox.sql`까지 순서대로 적용한 최종 스키마를 설명합니다.
 
 ## 데이터 모델
 
@@ -55,7 +55,8 @@ erDiagram
 | `ranking_type` | `NOT NULL`, enum | `BALLOON_COUNT` 또는 `LUNG_CAPACITY` |
 | `best_score` | `NOT NULL`, 모드별 CHECK | 사용자의 해당 모드 최고 점수 |
 | `best_duration_ms` | nullable, `0..86400000` CHECK | 크게 불기는 호흡 시간, 스피드런은 마지막 완성 시간 |
-| `last_submitted_at` | `NOT NULL`, `now()` | 3초 제출 제한 기준 |
+| `last_submission_id` | nullable UUID | 마지막 Outbox 제출의 멱등 처리 키 |
+| `last_submitted_at` | `NOT NULL`, `now()` | 서로 다른 제출의 3초 빈도 제한 기준 |
 | `created_at` | `NOT NULL`, `now()` | 최초 기록 생성 시각 |
 | `updated_at` | `NOT NULL`, `now()` | 더 좋은 기록으로 바뀐 시각 |
 
@@ -104,7 +105,7 @@ erDiagram
 | `get_ranking_user` | `ranking_users` 조회 | 사용자 키에 대응하는 공개 프로필만 반환 |
 | `register_ranking_user` | `ranking_users` 삽입/기존 행 조회 | 고정 `public_id`, 중복 키 재등록 방지 |
 | `update_ranking_nickname` | `ranking_users.nickname` 갱신 | `public_id` 유지 |
-| `submit_best_ranking_score` | `ranking_users` 조회, `ranking_scores` 삽입/갱신 | advisory lock, 3초 제한, 모드별 최고 기록 비교 |
+| `submit_best_ranking_score` | `ranking_users` 조회, `ranking_scores` 삽입/갱신 | advisory lock, UUID 멱등 응답, 모드별 최고 기록 비교 |
 | `get_ranking` | 두 테이블 조인 조회 | 상위 100, 모드별 시간 동점 규칙 |
 | `get_ranking_records` | 두 테이블 조회 | 두 모드 기록과 현재 순위 반환 |
 

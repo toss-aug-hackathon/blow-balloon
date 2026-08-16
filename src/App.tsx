@@ -16,10 +16,10 @@ import { HomeRecordPreview } from './components/HomeRecordPreview';
 import { WindMeter } from './components/WindMeter';
 import { BALLOON_RUSH_DURATION_MS } from './game/rules';
 import { useRankingUser } from './hooks/useRankingUser';
+import { useRankingOutboxSync } from './hooks/useRankingOutboxSync';
 import { calculateExpectedRank } from './api/rankingRules';
 import {
   getCachedRanking,
-  getCachedRegisteredRankingUser,
   getRanking,
   prefetchRankings,
   type RankingItem,
@@ -42,6 +42,8 @@ const INITIAL_HUD: GameHudState = {
   completedCount: 0,
   completionTimeMs: null,
   windStrength: 0,
+  displayWindStrength: 0,
+  isBreathEnding: false,
   isWaitingForBreath: true,
   balloonScore: 0,
 };
@@ -95,11 +97,11 @@ export default function App() {
   });
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const rankingUser = useRankingUser();
-  const effectiveUser =
-    rankingUser.user ??
-    (rankingUser.anonymousKey
-      ? getCachedRegisteredRankingUser(rankingUser.anonymousKey)
-      : null);
+  const effectiveUser = rankingUser.user;
+  useRankingOutboxSync(
+    rankingUser.anonymousKey,
+    effectiveUser?.isRegistered === true,
+  );
   const isPlaying = screen === 'game';
   useScreenAwake(isPlaying);
 
@@ -396,7 +398,10 @@ export default function App() {
                         : '마이크에 후- 불면 반응해요!'}
                   </p>
                 </div>
-                <WindMeter strength={detector.frame.windStrength} />
+                <WindMeter
+                  strength={detector.frame.displayWindStrength}
+                  isEnding={detector.frame.state === 'ending'}
+                />
                 {detector.testModeEnabled && (
                   <div className="test-wind-control">
                     <button
@@ -492,7 +497,10 @@ export default function App() {
               ? '한 번의 호흡을 준비하세요'
               : '30초 동안 최대한 많이 불어보세요!'}
           </p>
-          <WindMeter strength={detector.frame.windStrength} />
+          <WindMeter
+            strength={detector.frame.displayWindStrength}
+            isEnding={detector.frame.state === 'ending'}
+          />
         </main>
       )}
 
@@ -551,7 +559,10 @@ export default function App() {
               <span>{mode === 'lung-test' ? '바람을 불어 풍선을 키워보세요' : '누르고 있는 동안 바람이 불어요'}</span>
             </p>
             <div className="game-wind-meter">
-              <WindMeter strength={hud.windStrength} />
+              <WindMeter
+                strength={hud.displayWindStrength}
+                isEnding={hud.isBreathEnding}
+              />
             </div>
             {detector.testModeEnabled && (
               <div className="test-wind-control">

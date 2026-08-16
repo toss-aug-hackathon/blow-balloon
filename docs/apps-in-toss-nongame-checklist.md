@@ -24,7 +24,7 @@
 
 ## Supabase 적용
 
-1. `supabase/migrations/001_ranking_backend.sql`부터 `010_nickname_display_policy.sql`까지 순서대로 실행합니다.
+1. `supabase/migrations/001_ranking_backend.sql`부터 `012_submission_id_outbox.sql`까지 `supabase/README.md`의 순서대로 실행합니다.
 2. `008`은 기존 사용자와 랭킹을 모두 삭제합니다. 개발 데이터 초기화가 승인된 전환 시점에 한 번만 실행합니다.
 3. `supabase/functions/ranking-api/index.ts`를 `ranking-api` Edge Function으로 배포합니다.
 4. JWT legacy secret 검증을 끄고, Service Role 키가 프런트엔드나 응답에 노출되지 않는지 확인합니다.

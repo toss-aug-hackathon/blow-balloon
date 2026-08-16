@@ -80,24 +80,28 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant Result as ResultScreen
+  participant Outbox as Native Storage·localStorage
   participant Client as rankingApi
   participant Edge as ranking-api
   participant RPC as Postgres RPC
   participant DB as Tables
 
-  Result->>Client: submitScore(rankingType, score, durationMs, anonymousKey)
-  Client->>Edge: POST /submit-score + x-anonymous-user-key
-  Edge->>Edge: 헤더·모드·점수·시간 검증
+  Result->>Outbox: submissionId·점수·시간 우선 보관
+  Outbox-->>Result: 기기 보관 완료
+  Outbox->>Client: 즉시 또는 백오프 후 자동 동기화
+  Client->>Edge: POST /submit-score + submissionId
+  Edge->>Edge: 헤더·모드·점수·시간·UUID 검증
   Edge->>RPC: submit_best_ranking_score (Service Role)
-  RPC->>DB: 사용자 확인·advisory lock·upsert
+  RPC->>DB: 사용자 확인·advisory lock·멱등 upsert
   DB-->>RPC: 최고 점수·시간
   RPC-->>Edge: is_new_best
   Edge-->>Client: JSON 응답
-  Client->>Client: 랭킹·나의 기록 캐시 동기화
+  Client->>Outbox: 성공 항목 제거
+  Client->>Client: 랭킹·나의 기록 조회 캐시 동기화
   Client-->>Result: 저장 결과
 ```
 
-동일 사용자·게임 점수 제출은 Postgres advisory transaction lock으로 직렬화되고, 마지막 제출 후 3초 안의 재요청은 거부됩니다.
+동일 사용자·게임 점수 제출은 Postgres advisory transaction lock으로 직렬화됩니다. 동일 `submissionId`는 현재 최고 기록을 반환하며, 다른 제출의 3초 제한은 Outbox가 오류 노출 없이 백오프합니다.
 
 ## 인증과 인가 경계
 
@@ -113,7 +117,9 @@ sequenceDiagram
 
 - 서버의 영속 데이터는 `ranking_users`, `ranking_scores` 두 테이블입니다.
 - 브라우저 메모리는 공개 랭킹과 요청 Promise를 캐시합니다.
-- `localStorage`에는 등록 사용자 표시 정보와 나의 기록 캐시를 사용자 키 기반 키 이름으로 저장합니다.
+- Apps in Toss 네이티브 Storage와 `localStorage`에는 서버 전송 전 Outbox를 이중 보관합니다. 오디오와 익명 키 원문은 포함하지 않습니다.
+- `localStorage`의 등록 프로필은 서버 확인이 일시 실패했을 때 Outbox 보관을 허용하는 힌트로만 사용하며 서버 저장 성공으로 간주하지 않습니다.
+- 공개 랭킹과 나의 기록은 읽기 전용 화면 캐시로 별도 저장합니다.
 - 마이크 원본 오디오, RMS 이력, 전체 플레이 프레임은 저장하거나 전송하지 않습니다.
 - 캐시를 사용할 수 없는 WebView에서는 예외를 무시하고 네트워크 결과로 동작합니다.
 
@@ -124,7 +130,7 @@ sequenceDiagram
 - 크게 불기 진행 중 백그라운드 이동은 시도를 중단합니다.
 - 스피드런은 백그라운드에서 엔진 시간을 멈추고 복귀 시 재개합니다.
 - 컴포넌트 해제 시 마이크 트랙, 오디오 노드, RAF, ResizeObserver와 이벤트를 정리합니다.
-- 결과 제출 실패는 결과 화면에 남아 재시도를 허용합니다.
+- 네트워크·서버 혼잡으로 실패한 결과는 Outbox에서 앱 시작·온라인 복구·화면 재활성화 시 자동 재시도합니다.
 
 ## 빌드와 배포 경계
 
@@ -133,7 +139,7 @@ flowchart TD
   Source["React·TypeScript 소스"] --> AIT["ait build"]
   AIT --> Dist["dist WebView 산출물"]
   Dist --> Toss["Apps in Toss 배포 대상"]
-  Migrations["supabase/migrations 001→010"] --> Postgres["Supabase Postgres"]
+  Migrations["supabase/migrations 001→012"] --> Postgres["Supabase Postgres"]
   Function["supabase/functions/ranking-api"] --> Edge["Supabase Edge Functions"]
   Edge --> Postgres
 ```
@@ -148,5 +154,5 @@ flowchart TD
 - 크게 불기 엔진은 감지기의 `ending` 유예 상태를 성장 상태로 취급하지 않아 짧은 신호 저하에도 시도가 끝날 수 있습니다.
 - 결과 이미지 생성기는 결과 UI와 연결되지 않았습니다.
 - 점수는 클라이언트에서 계산되므로 서버는 범위와 빈도만 검증하며 실제 플레이를 증명하지 못합니다.
-- 공개 랭킹은 3초 폴링이며 서버 푸시나 재시도 백오프가 없습니다.
+- 공개 랭킹은 화면이 보이는 동안 12~15초 jitter 폴링을 사용하며, Outbox 재시도는 최대 5분 지수 백오프를 사용합니다.
 - 실기기별 마이크 자동 처리와 WebView 스펙트럼 품질 차이는 런타임 튜닝이 필요합니다.

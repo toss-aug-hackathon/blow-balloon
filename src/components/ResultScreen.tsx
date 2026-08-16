@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   registerNickname,
   syncRankingAfterScore,
-  submitScore,
   type RankingUser,
   type RegisteredRankingUser,
   type SubmitScoreResponse,
 } from '../api/rankingApi';
+import {
+  saveRankingScoreReliably,
+  subscribeRankingSync,
+} from '../api/rankingOutbox';
 import type { GameResult } from '../game/types';
 import { getLungScoreTitle } from '../game/rules';
 import { formatSeconds } from '../utils/math';
@@ -39,7 +42,10 @@ export function ResultScreen({
   const [rankingError, setRankingError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submission, setSubmission] = useState<SubmitScoreResponse | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'queued' | 'failed'>('idle');
   const submittedResultRef = useRef<string | null>(null);
+  const pendingSubmissionIdRef = useRef<string | null>(null);
+  const pendingDisplayNameRef = useRef<string | null>(null);
 
   const rankingType = result.mode === 'lung-test' ? 'LUNG_CAPACITY' : 'BALLOON_COUNT';
   const score =
@@ -51,38 +57,75 @@ export function ResultScreen({
       ? result.durationMs
       : result.completionTimeMs;
   const resultKey = `${rankingType}-${score}-${durationMs ?? 'none'}`;
+  const registeredDisplayName = user?.isRegistered ? user.displayName : null;
 
-  const saveScore = useCallback(async (key: string) => {
+  const applySubmission = useCallback((
+    nextSubmission: SubmitScoreResponse,
+    key: string,
+    displayName: string,
+  ) => {
+    setSubmission(nextSubmission);
+    setSaveStatus('idle');
+    syncRankingAfterScore({
+      rankingType,
+      bestScore: nextSubmission.bestScore,
+      bestDurationMs: nextSubmission.bestDurationMs,
+      displayName,
+      anonymousKey: key,
+    });
+  }, [rankingType]);
+
+  const saveScore = useCallback(async (key: string, displayName: string) => {
     setIsSubmitting(true);
     setRankingError(null);
+    setSaveStatus('idle');
     try {
-      const nextSubmission = await submitScore(rankingType, score, durationMs, key);
-      setSubmission(nextSubmission);
-      if (user?.isRegistered) {
-        syncRankingAfterScore({
-          rankingType,
-          bestScore: nextSubmission.bestScore,
-          bestDurationMs: nextSubmission.bestDurationMs,
-          displayName: user.displayName,
-          anonymousKey: key,
-        });
+      const saved = await saveRankingScoreReliably({
+        rankingType,
+        score,
+        durationMs,
+        anonymousKey: key,
+      });
+      pendingSubmissionIdRef.current = saved.pending.id;
+      pendingDisplayNameRef.current = displayName;
+      if (saved.status === 'synced') {
+        applySubmission(saved.response, key, displayName);
+      } else {
+        setSaveStatus('queued');
       }
     } catch (error) {
+      setSaveStatus('failed');
       setRankingError(
         error instanceof Error ? error.message : '기록을 저장하지 못했어요.',
       );
     } finally {
       setIsSubmitting(false);
     }
-  }, [durationMs, rankingType, score, user]);
+  }, [applySubmission, durationMs, rankingType, score]);
+
+  useEffect(() => subscribeRankingSync((event) => {
+    if (
+      event.pending.id !== pendingSubmissionIdRef.current ||
+      !anonymousKey ||
+      !pendingDisplayNameRef.current
+    ) {
+      return;
+    }
+    if (event.type === 'synced') {
+      applySubmission(event.response, anonymousKey, pendingDisplayNameRef.current);
+      return;
+    }
+    setSaveStatus('failed');
+    setRankingError(event.error.message);
+  }), [anonymousKey, applySubmission]);
 
   useEffect(() => {
-    if (!anonymousKey || !user?.isRegistered || submittedResultRef.current === resultKey) {
+    if (!anonymousKey || !registeredDisplayName || submittedResultRef.current === resultKey) {
       return;
     }
     submittedResultRef.current = resultKey;
-    void saveScore(anonymousKey);
-  }, [resultKey, saveScore, user?.isRegistered, anonymousKey]);
+    void saveScore(anonymousKey, registeredDisplayName);
+  }, [resultKey, saveScore, registeredDisplayName, anonymousKey]);
 
   const handleRegister = async () => {
     const trimmedNickname = nickname.trim();
@@ -104,15 +147,7 @@ export function ResultScreen({
       // 이 등록 흐름에서는 아래의 수동 저장만 사용해 중복 제출을 막는다.
       submittedResultRef.current = resultKey;
       onRegistered(registeredUser);
-      const nextSubmission = await submitScore(rankingType, score, durationMs, anonymousKey);
-      setSubmission(nextSubmission);
-      syncRankingAfterScore({
-        rankingType,
-        bestScore: nextSubmission.bestScore,
-        bestDurationMs: nextSubmission.bestDurationMs,
-        displayName: registeredUser.displayName,
-        anonymousKey,
-      });
+      await saveScore(anonymousKey, registeredUser.displayName);
     } catch (error) {
       setRankingError(
         error instanceof Error ? error.message : '랭킹 등록을 완료하지 못했어요.',
@@ -205,7 +240,7 @@ export function ResultScreen({
         <section className="ranking-result" aria-live="polite">
           {submission ? (
           <>
-            <p className="eyebrow">랭킹 저장 완료</p>
+            <p className="eyebrow">랭킹에 반영됐어요</p>
             <strong>
               {submission.isNewBest ? '새로운 최고 기록이에요!' : '최고 기록을 유지했어요.'}
             </strong>
@@ -217,7 +252,13 @@ export function ResultScreen({
           </>
           ) : user?.isRegistered ? (
           <p className="ranking-progress">
-            {isSubmitting ? '이번 기록을 랭킹에 저장하고 있어요.' : '랭킹 저장을 다시 시도할 수 있어요.'}
+            {isSubmitting
+              ? '이번 기록을 안전하게 보관하고 있어요.'
+              : saveStatus === 'queued'
+                ? '기록을 안전하게 보관했어요. 연결되면 자동으로 랭킹에 반영돼요.'
+                : saveStatus === 'failed'
+                  ? '기록 저장을 다시 시도할 수 있어요.'
+                  : '이번 기록을 안전하게 보관하고 있어요.'}
           </p>
           ) : isRegistrationOpen ? (
           <div className="nickname-form">
@@ -272,7 +313,7 @@ export function ResultScreen({
             <>
               <p className="error-text">{rankingError}</p>
               {user?.isRegistered && anonymousKey && (
-                <button className="text-button" type="button" onClick={() => void saveScore(anonymousKey)}>
+                <button className="text-button" type="button" onClick={() => void saveScore(anonymousKey, user.displayName)}>
                   기록 저장 다시 시도
                 </button>
               )}

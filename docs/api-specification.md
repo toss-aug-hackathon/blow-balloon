@@ -41,12 +41,12 @@ JWT 또는 Supabase Auth 세션은 사용하지 않습니다. `x-anonymous-user-
 
 | HTTP | 대표 코드 | 발생 조건 |
 | --- | --- | --- |
-| 400 | `INVALID_ANONYMOUS_KEY`, `INVALID_NICKNAME`, `INVALID_RANKING_TYPE`, `INVALID_SCORE`, `INVALID_DURATION`, `INVALID_LIMIT`, `INVALID_INPUT` | 헤더·본문·쿼리 검증 실패 |
+| 400 | `INVALID_ANONYMOUS_KEY`, `INVALID_NICKNAME`, `INVALID_RANKING_TYPE`, `INVALID_SCORE`, `INVALID_DURATION`, `INVALID_SUBMISSION_ID`, `INVALID_LIMIT`, `INVALID_INPUT` | 헤더·본문·쿼리 검증 실패 |
 | 404 | `USER_NOT_REGISTERED`, `NOT_FOUND` | 미등록 사용자 또는 없는 경로 |
-| 429 | `RATE_LIMITED` | 같은 사용자·모드의 점수 제출이 3초 이내 반복됨 |
+| 429 | `RATE_LIMITED` | 서로 다른 제출이 같은 사용자·모드에서 3초 안에 반복됨 |
 | 500 | `INTERNAL_ERROR` | 매핑되지 않은 데이터베이스 오류 |
 
-429 응답에는 `Retry-After: 3`이 포함됩니다.
+429 응답에는 `Retry-After: 3`이 포함되며 Outbox가 사용자 안내 없이 재시도합니다.
 
 ### CORS와 OPTIONS
 
@@ -185,7 +185,8 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 {
   "rankingType": "BALLOON_COUNT",
   "score": 18,
-  "durationMs": 17360
+  "durationMs": 17360,
+  "submissionId": "12345678-1234-4123-8123-123456789abc"
 }
 ```
 
@@ -194,6 +195,7 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 | `rankingType` | enum | `BALLOON_COUNT` 또는 `LUNG_CAPACITY` |
 | `score` | safe integer | 풍선 수 0~50 또는 크게 불기 점수 0~9999 |
 | `durationMs` | null 또는 0~86,400,000 정수 | 스피드런 마지막 완성 시간 또는 크게 불기 호흡 시간 |
+| `submissionId` | UUID v4 | Outbox 재전송 중복 방지 식별값 |
 
 ### 200 응답
 
@@ -213,7 +215,7 @@ CORS 허용은 인증이나 인가를 대체하지 않습니다.
 - 공통: 점수가 더 높으면 새 기록입니다.
 - `LUNG_CAPACITY`: 점수가 같으면 `durationMs`가 더 길 때 새 기록입니다.
 - `BALLOON_COUNT`: 점수가 같으면 `durationMs`가 더 짧을 때 새 기록입니다.
-- 동일 사용자·모드 제출은 DB 트랜잭션에서 직렬화되고 3초에 한 번만 허용됩니다.
+- 동일 사용자·모드 제출은 DB 트랜잭션에서 직렬화됩니다. 같은 `submissionId`는 멱등 성공하고, 다른 제출이 3초 안에 들어오면 429로 백오프합니다.
 - 사용자가 먼저 등록되어 있지 않으면 404를 반환합니다.
 
 서버는 결과가 실제 플레이에서 만들어졌는지 증명하지 않고 값의 범위·형식과 빈도만 검증합니다.

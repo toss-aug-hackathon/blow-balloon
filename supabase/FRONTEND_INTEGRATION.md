@@ -116,7 +116,8 @@ type RankingType = 'BALLOON_COUNT' | 'LUNG_CAPACITY'
 {
   "rankingType": "BALLOON_COUNT",
   "score": 26,
-  "durationMs": 17360
+  "durationMs": 17360,
+  "submissionId": "12345678-1234-4123-8123-123456789abc"
 }
 ```
 
@@ -329,7 +330,7 @@ const response = await fetch(`${RANKING_API_URL}/submit-score`, {
     'Content-Type': 'application/json',
     'x-anonymous-user-key': anonymousKey,
   },
-  body: JSON.stringify({ rankingType, score, durationMs }),
+  body: JSON.stringify({ rankingType, score, durationMs, submissionId }),
 })
 
 const result = await response.json()
@@ -370,7 +371,7 @@ const result = await response.json()
 
 프론트에서 이전 최고 점수와 직접 비교해 신기록을 판단하지 않는다. 서버가 반환한 `isNewBest`를 사용한다.
 
-사용자가 이미 별명을 등록한 상태라면 게임 종료 후 `/submit-score`를 바로 호출한다.
+사용자가 이미 별명을 등록한 상태라면 게임 종료 후 먼저 로컬 Outbox에 보관하고 `/submit-score`를 백그라운드에서 호출한다. 같은 Outbox 항목을 재전송할 때는 같은 `submissionId`를 유지한다.
 
 ## 10. 전체 랭킹 조회
 
@@ -539,7 +540,8 @@ type MyRecordsResponse = {
 └─ 랭킹에 등록하기
    → 별명 입력
    → POST /register-nickname
-   → POST /submit-score
+   → 로컬 Outbox 보관
+   → POST /submit-score 자동 동기화
    → 신기록 여부 표시
    → 랭킹 화면 이동 가능
 ```
@@ -548,8 +550,9 @@ type MyRecordsResponse = {
 
 ```text
 게임 종료
-→ POST /submit-score
-→ 결과와 신기록 여부 표시
+→ 로컬 Outbox 보관 완료 표시
+→ POST /submit-score 자동 동기화
+→ 서버 반영과 신기록 여부 표시
 → 필요한 경우 랭킹 재조회
 ```
 
@@ -589,7 +592,7 @@ type MyRecordsResponse = {
 | --- | --- | --- |
 | `400` | 입력값 오류 | 입력 내용 확인 안내 |
 | `404` | 미등록 사용자 또는 없는 API | 등록 화면 또는 오류 화면 |
-| `429` | 점수 등록 요청 간격이 너무 짧음 | 3초 후 같은 점수로 재시도 |
+| `429` | 서로 다른 점수 등록 요청 간격이 너무 짧음 | Outbox에서 자동 백오프 |
 | `500` | 서버 내부 오류 | 재시도 안내 |
 
 주요 오류 코드:
@@ -599,6 +602,8 @@ INVALID_ANONYMOUS_KEY
 INVALID_NICKNAME
 INVALID_RANKING_TYPE
 INVALID_SCORE
+INVALID_DURATION
+INVALID_SUBMISSION_ID
 INVALID_LIMIT
 USER_NOT_REGISTERED
 RATE_LIMITED
@@ -606,7 +611,7 @@ NOT_FOUND
 INTERNAL_ERROR
 ```
 
-네트워크 또는 등록 실패 때문에 방금 플레이한 결과를 잃지 않도록 점수와 게임 결과를 화면 상태에 유지하고 재시도 버튼을 제공한다. `RATE_LIMITED` 응답에는 `Retry-After: 3` 헤더가 포함되므로 3초가 지난 뒤 같은 점수를 다시 전송한다.
+네트워크 또는 서버 장애가 발생해도 점수를 잃지 않도록 네이티브 Storage와 `localStorage` Outbox에 먼저 보관한다. 동일 `submissionId`는 서버가 멱등 처리하고, 429·네트워크·5xx는 지수 백오프로 자동 재전송한다. 로컬 보관과 서버 저장이 모두 실패하거나 영구 4xx가 발생한 경우에만 재시도 버튼을 제공한다.
 
 ## 14. 공통 요청 함수 예시
 
