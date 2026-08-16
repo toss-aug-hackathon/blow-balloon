@@ -190,15 +190,23 @@ export default function App() {
     }
   }, [detector.permission]);
 
+  const handleConfirmExit = useCallback(() => {
+    setIsExitConfirmOpen(false);
+    if (screen === 'home') {
+      stopDetector();
+      void closeView().catch(() => undefined);
+      return;
+    }
+    goHome();
+  }, [goHome, screen, stopDetector]);
+
   useEffect(() => {
     let removeBackListener: (() => void) | undefined;
 
     try {
       removeBackListener = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          if (screen === 'home') {
-            void closeView().catch(() => undefined);
-          } else if (screen === 'game') {
+          if (screen === 'home' || screen === 'game') {
             setIsExitConfirmOpen(true);
           } else {
             goHome();
@@ -621,7 +629,7 @@ export default function App() {
               >
                 닫기
               </button>
-              <button className="button button--primary" type="button" onClick={goHome}>
+              <button className="button button--primary" type="button" onClick={handleConfirmExit}>
                 종료하기
               </button>
             </div>
