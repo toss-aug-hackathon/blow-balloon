@@ -1,0 +1,237 @@
+/*
+  Apps-in-Toss WebView can report window.innerHeight differently from CSS
+  height media queries. Use JS-applied root classes instead of min/max-height
+  media queries for the home screen.
+*/
+
+/* <= 700px: old compact home layout */
+.home-viewport-compact .home-content {
+  --home-scale: 1 !important;
+  --home-offset-y: 0px !important;
+}
+
+.home-viewport-compact .home-screen {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding-top: max(4px, var(--ait-safe-top));
+  padding-bottom: max(4px, var(--ait-safe-bottom));
+}
+
+.home-viewport-compact .home-screen .home-header {
+  margin-bottom: 8px;
+  padding: 8px 4px 0;
+}
+
+.home-viewport-compact .home-screen .home-header h1 {
+  font-size: clamp(25px, 7vw, 32px);
+  line-height: 1.08;
+}
+
+.home-viewport-compact .home-screen .home-header > p:last-child {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.home-viewport-compact .home-ranking-preview__title {
+  margin-bottom: 2px;
+}
+
+.home-viewport-compact .home-ranking-preview__title strong {
+  font-size: 13px;
+}
+
+.home-viewport-compact .home-screen .home-record-preview {
+  margin-bottom: 5px;
+  padding: 0;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium {
+  min-height: 76px;
+  height: 76px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__card,
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 {
+  min-height: 0;
+  height: 68px;
+  padding: 4px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 {
+  height: 76px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__balloon,
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__rank,
+.home-viewport-compact .home-screen .home-ranking-podium__card--1 .home-ranking-podium__rank {
+  font-size: 11px;
+}
+
+.home-viewport-compact .home-screen .home-ranking-podium__name,
+.home-viewport-compact .home-screen .home-ranking-podium__score,
+.home-viewport-compact .home-screen .home-ranking-podium__empty {
+  font-size: 9px;
+}
+
+.home-viewport-compact .home-screen .mode-list {
+  gap: 6px;
+  padding-top: 0 !important;
+}
+
+.home-viewport-compact .home-screen .mode-card {
+  min-height: 104px;
+  padding: 12px 41% 10px 15px;
+  border-radius: 18px;
+}
+
+.home-viewport-compact .home-screen .mode-card strong {
+  font-size: 17px;
+}
+
+.home-viewport-compact .home-screen .mode-card small,
+.home-viewport-compact .home-screen .mode-card--rush small {
+  width: auto;
+  max-width: 185px;
+  margin-top: 5px;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.home-viewport-compact .home-screen .mode-card .balloon-art--lung,
+.home-viewport-compact .home-screen .mode-card .balloon-art--bunch {
+  top: 2px;
+  right: -8px;
+  height: 100px;
+}
+
+.home-viewport-compact .home-screen .privacy-note {
+  margin-top: 5px;
+  padding: 0;
+  font-size: 10px;
+}
+
+/* > 700px: compact proportions, gently enlarged, with guaranteed ranking/card gap */
+.home-viewport-tall .home-screen {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding-top: max(8px, var(--ait-safe-top));
+  padding-bottom: calc(16px + var(--ait-safe-bottom));
+}
+
+.home-viewport-tall .home-screen .home-header {
+  margin-bottom: 14px;
+  padding: 8px 4px 0;
+}
+
+.home-viewport-tall .home-screen .home-header h1 {
+  font-size: clamp(29px, 8vw, 36px);
+  line-height: 1.08;
+}
+
+.home-viewport-tall .home-screen .home-header > p:last-child {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.home-viewport-tall .home-ranking-preview__title {
+  margin-bottom: 4px;
+}
+
+.home-viewport-tall .home-ranking-preview__title strong {
+  font-size: 14px;
+}
+
+.home-viewport-tall .home-screen .home-record-preview {
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium {
+  min-height: 94px;
+  height: 94px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card,
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 {
+  min-height: 0;
+  height: 86px;
+  padding: 4px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 {
+  height: 94px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__balloon {
+  width: 36px;
+  height: 36px;
+  margin: 0;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
+  width: 42px;
+  height: 42px;
+  margin: 0;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__rank {
+  font-size: 12px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__card--1 .home-ranking-podium__rank {
+  font-size: 14px;
+}
+
+.home-viewport-tall .home-screen .home-ranking-podium__name,
+.home-viewport-tall .home-screen .home-ranking-podium__score,
+.home-viewport-tall .home-screen .home-ranking-podium__empty {
+  font-size: 10px;
+}
+
+/* This padding is on mode-list itself, so it cannot collapse away. */
+.home-viewport-tall .home-screen .mode-list {
+  gap: 9px;
+  padding-top: 24px !important;
+}
+
+.home-viewport-tall .home-screen .mode-card {
+  min-height: 118px;
+  padding: 15px 43% 13px 18px;
+  border-radius: 21px;
+}
+
+.home-viewport-tall .home-screen .mode-card strong {
+  font-size: 20px;
+}
+
+.home-viewport-tall .home-screen .mode-card small,
+.home-viewport-tall .home-screen .mode-card--rush small {
+  width: auto;
+  max-width: 205px;
+  margin-top: 6px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.home-viewport-tall .home-screen .mode-card .balloon-art--lung,
+.home-viewport-tall .home-screen .mode-card .balloon-art--bunch {
+  top: 4px;
+  right: -10px;
+  height: 114px;
+}
+
+.home-viewport-tall .home-screen .privacy-note {
+  margin-top: 8px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
