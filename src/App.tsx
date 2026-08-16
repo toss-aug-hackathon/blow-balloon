@@ -192,7 +192,6 @@ export default function App() {
 
   useEffect(() => {
     let removeBackListener: (() => void) | undefined;
-    let removeHomeListener: (() => void) | undefined;
 
     try {
       removeBackListener = graniteEvent.addEventListener('backEvent', {
@@ -206,16 +205,12 @@ export default function App() {
           }
         },
       });
-      removeHomeListener = graniteEvent.addEventListener('homeEvent', {
-        onEvent: goHome,
-      });
     } catch {
       // 일반 브라우저에서는 Apps in Toss 내비게이션 이벤트가 없을 수 있어요.
     }
 
     return () => {
       removeBackListener?.();
-      removeHomeListener?.();
     };
   }, [goHome, screen]);
 
@@ -617,18 +612,17 @@ export default function App() {
             aria-modal="true"
             aria-labelledby="exit-dialog-title"
           >
-            <h2 id="exit-dialog-title">플레이를 종료할까요?</h2>
-            <p>진행 중인 기록은 저장되지 않아요.</p>
+            <h2 id="exit-dialog-title">후우풍선을 종료할까요?</h2>
             <div className="confirm-dialog__actions">
               <button
                 className="button ranking-view-button"
                 type="button"
                 onClick={() => setIsExitConfirmOpen(false)}
               >
-                계속하기
+                닫기
               </button>
               <button className="button button--primary" type="button" onClick={goHome}>
-                종료하고 홈으로
+                종료하기
               </button>
             </div>
           </section>
