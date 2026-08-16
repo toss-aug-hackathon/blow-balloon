@@ -190,24 +190,22 @@ export default function App() {
     }
   }, [detector.permission]);
 
+  const handleConfirmExit = useCallback(() => {
+    setIsExitConfirmOpen(false);
+    stopDetector();
+    void closeView().catch(() => {
+      goHome();
+    });
+  }, [goHome, stopDetector]);
+
   useEffect(() => {
     let removeBackListener: (() => void) | undefined;
-    let removeHomeListener: (() => void) | undefined;
 
     try {
       removeBackListener = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          if (screen === 'home') {
-            void closeView().catch(() => undefined);
-          } else if (screen === 'game') {
-            setIsExitConfirmOpen(true);
-          } else {
-            goHome();
-          }
+          setIsExitConfirmOpen(true);
         },
-      });
-      removeHomeListener = graniteEvent.addEventListener('homeEvent', {
-        onEvent: goHome,
       });
     } catch {
       // 일반 브라우저에서는 Apps in Toss 내비게이션 이벤트가 없을 수 있어요.
@@ -215,9 +213,8 @@ export default function App() {
 
     return () => {
       removeBackListener?.();
-      removeHomeListener?.();
     };
-  }, [goHome, screen]);
+  }, []);
 
   const startTestWind = useCallback((event?: React.SyntheticEvent) => {
     if (event && event.cancelable) event.preventDefault();
@@ -617,18 +614,17 @@ export default function App() {
             aria-modal="true"
             aria-labelledby="exit-dialog-title"
           >
-            <h2 id="exit-dialog-title">플레이를 종료할까요?</h2>
-            <p>진행 중인 기록은 저장되지 않아요.</p>
+            <h2 id="exit-dialog-title">후우풍선을 종료할까요?</h2>
             <div className="confirm-dialog__actions">
               <button
                 className="button ranking-view-button"
                 type="button"
                 onClick={() => setIsExitConfirmOpen(false)}
               >
-                계속하기
+                닫기
               </button>
-              <button className="button button--primary" type="button" onClick={goHome}>
-                종료하고 홈으로
+              <button className="button button--primary" type="button" onClick={handleConfirmExit}>
+                종료하기
               </button>
             </div>
           </section>
