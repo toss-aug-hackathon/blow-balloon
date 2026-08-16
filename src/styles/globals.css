@@ -75,10 +75,6 @@ button:focus-visible {
 
 
 
-.home-content {
-  display: contents;
-}
-
 .home-header {
   padding: 18px 5px 22px;
   margin-bottom: 30px;
@@ -5263,8 +5259,15 @@ body,
   overflow: hidden;
 }
 
-/* <=700px: S23 실기 기준 compact */
-@media (max-height: 700px) {
+/*
+  Phone home layout: use the S23+ reference proportions on every phone height.
+
+  Why this is width-only:
+  Apps in Toss can expose very different CSS viewport heights across devices,
+  even when the physical screens are similar. Crossing 700px must not switch
+  the home into a different visual scale.
+*/
+@media (max-width: 600px) {
   .home-screen {
     align-items: stretch;
     justify-content: flex-start;
@@ -5288,10 +5291,12 @@ body,
   .home-screen .home-header > p:last-child {
     margin-top: 12px;
     font-size: 14px;
+    line-height: 1.45;
   }
 
   .home-ranking-preview__title {
     margin-bottom: 8px;
+    padding: 0 2px;
   }
 
   .home-ranking-preview__title strong {
@@ -5309,27 +5314,28 @@ body,
     height: 120px;
   }
 
-  .home-screen .home-ranking-podium__card,
-  .home-screen .home-ranking-podium__card--1 {
-    min-height: 104px;
+  .home-screen .home-ranking-podium__card {
+    min-height: 0;
     height: 104px;
     padding: 5px 4px;
   }
 
   .home-screen .home-ranking-podium__card--1 {
-    min-height: 120px;
+    min-height: 0;
     height: 120px;
+    padding: 5px 4px;
   }
 
   .home-screen .home-ranking-podium__balloon {
     width: 32px;
     height: 32px;
-    margin: 0;
+    margin: 1px 0 0;
   }
 
   .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
     width: 42px;
     height: 42px;
+    margin: 1px 0 0;
   }
 
   .home-screen .home-ranking-podium__rank {
@@ -5368,7 +5374,7 @@ body,
   .home-screen .mode-card small,
   .home-screen .mode-card--rush small {
     width: auto;
-    max-width: 185px;
+    max-width: 190px;
     margin-top: 7px;
     padding: 0;
     font-size: 13px;
@@ -5389,142 +5395,6 @@ body,
     font-size: 11px;
   }
 }
-
-/*
-  >700px: PR #66의 tall/full-size 홈 레이아웃 복원.
-  <=700px compact 블록은 건드리지 않는다.
-*/
-@media (min-height: 701px) and (max-width: 600px) {
-  .home-content {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    transform: translateY(var(--home-offset-y, 0)) scale(var(--home-scale, 1));
-    transform-origin: center;
-  }
-
-  .home-screen {
-    align-items: center;
-    justify-content: center;
-    padding-top: calc(78px + var(--ait-safe-top));
-    padding-bottom: calc(18px + var(--ait-safe-bottom));
-  }
-
-  .home-screen .home-header {
-    margin-bottom: 30px;
-    padding: 0 4px 2px;
-  }
-
-  .home-screen .home-header h1 {
-    font-size: clamp(32px, 9vw, 44px);
-    line-height: 1.08;
-  }
-
-  .home-screen .home-header > p:last-child {
-    margin-top: 10px;
-    font-size: 14px;
-  }
-
-  .home-ranking-preview__title {
-    margin-bottom: 6px;
-  }
-
-  .home-ranking-preview__title strong {
-    font-size: 16px;
-  }
-
-  .home-screen .home-record-preview {
-    margin-bottom: 14px;
-    padding: 4px 0 0;
-  }
-
-  .home-screen .home-ranking-podium {
-    min-height: 128px;
-    height: auto;
-  }
-
-  .home-screen .home-ranking-podium__card,
-  .home-screen .home-ranking-podium__card--1 {
-    min-height: 108px;
-    height: auto;
-    padding: 6px 3px 7px;
-  }
-
-  .home-screen .home-ranking-podium__card--1 {
-    min-height: 123px;
-  }
-
-  .home-screen .home-ranking-podium__balloon {
-    width: 45px;
-    height: 45px;
-    margin: 2px 0 1px;
-  }
-
-  .home-screen .home-ranking-podium__card--1 .home-ranking-podium__balloon {
-    width: 56px;
-    height: 56px;
-  }
-
-  .home-screen .home-ranking-podium__rank {
-    font-size: 14px;
-  }
-
-  .home-screen .home-ranking-podium__card--1 .home-ranking-podium__rank {
-    font-size: 18px;
-  }
-
-  .home-screen .home-ranking-podium__name {
-    font-size: 10px;
-  }
-
-  .home-screen .home-ranking-podium__score,
-  .home-screen .home-ranking-podium__empty {
-    font-size: 11px;
-  }
-
-  .home-screen .mode-list {
-    gap: 12px;
-  }
-
-  .home-screen .mode-card {
-    min-height: 146px;
-    padding: 18px 49% 14px 21px;
-  }
-
-  .home-screen .mode-card strong {
-    font-size: clamp(20px, 5.8vw, 25px);
-  }
-
-  .home-screen .mode-card small,
-  .home-screen .mode-card--rush small {
-    width: auto;
-    max-width: 235px;
-    margin-top: 10px;
-    padding-right: 4px;
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .home-screen .mode-card .balloon-art--lung {
-    top: 8px;
-    right: -16px;
-    height: 140px;
-  }
-
-  .home-screen .mode-card .balloon-art--bunch {
-    top: 8px;
-    right: -20px;
-    height: 140px;
-  }
-
-  .home-screen .privacy-note {
-    margin-top: 12px;
-    padding-top: 12px;
-    font-size: 13px;
-  }
-}
-
-
 
 @media (max-height: 700px) {
   .ranking-item {
