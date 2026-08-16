@@ -1,17 +1,15 @@
 const COMPACT_HOME_MAX_HEIGHT = 700;
 
-function getDeviceLikeHeight(): number {
+function getUsableViewportHeight(): number {
   return Math.max(
     window.innerHeight || 0,
     document.documentElement.clientHeight || 0,
     window.visualViewport?.height || 0,
-    window.screen?.height || 0,
-    window.screen?.availHeight || 0,
   );
 }
 
 function syncHomeViewportClass() {
-  const height = getDeviceLikeHeight();
+  const height = getUsableViewportHeight();
   if (height <= 0) return;
 
   const isCompact = height <= COMPACT_HOME_MAX_HEIGHT;
@@ -35,8 +33,11 @@ function scheduleInitialSyncs() {
   const syncFrame = () => {
     syncHomeViewportClass();
     framesLeft -= 1;
-    if (framesLeft > 0) window.requestAnimationFrame(syncFrame);
+    if (framesLeft > 0) {
+      window.requestAnimationFrame(syncFrame);
+    }
   };
+
   window.requestAnimationFrame(syncFrame);
 }
 
