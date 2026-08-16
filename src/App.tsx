@@ -190,21 +190,19 @@ export default function App() {
     }
   }, [detector.permission]);
 
-  const handleConfirmExit = useCallback(() => {
-    setIsExitConfirmOpen(false);
-    stopDetector();
-    void closeView().catch(() => {
-      goHome();
-    });
-  }, [goHome, stopDetector]);
-
   useEffect(() => {
     let removeBackListener: (() => void) | undefined;
 
     try {
       removeBackListener = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          setIsExitConfirmOpen(true);
+          if (screen === 'home') {
+            void closeView().catch(() => undefined);
+          } else if (screen === 'game') {
+            setIsExitConfirmOpen(true);
+          } else {
+            goHome();
+          }
         },
       });
     } catch {
@@ -214,7 +212,7 @@ export default function App() {
     return () => {
       removeBackListener?.();
     };
-  }, []);
+  }, [goHome, screen]);
 
   const startTestWind = useCallback((event?: React.SyntheticEvent) => {
     if (event && event.cancelable) event.preventDefault();
@@ -623,7 +621,7 @@ export default function App() {
               >
                 닫기
               </button>
-              <button className="button button--primary" type="button" onClick={handleConfirmExit}>
+              <button className="button button--primary" type="button" onClick={goHome}>
                 종료하기
               </button>
             </div>
