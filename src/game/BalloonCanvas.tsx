@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MutableRefObject } from 'react';
 import type { DetectorFrame } from '../audio/blowDetector';
 import { BalloonEngine } from './BalloonEngine';
 import { preloadBalloonAssets } from './balloons/balloonAssets';
@@ -11,7 +11,7 @@ import type {
 type BalloonCanvasProps = {
   mode: GameMode;
   initialBalloonId: number;
-  signalRef: React.RefObject<DetectorFrame>;
+  signalRef: MutableRefObject<DetectorFrame>;
   onHudChange: (hud: GameHudState) => void;
   onFinish: (result: GameResult) => void;
   onInterrupted: () => void;

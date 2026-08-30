@@ -147,7 +147,7 @@ curl --fail-with-body \
 - 점수와 모드별 시간 기록까지 같은 동점자는 같은 `rank`를 받으며 다음 순위는 건너뜁니다(`1, 1, 3`). 표시 순서는 `public_id` 오름차순으로 고정합니다.
 - 랭킹 응답은 상위 100명으로 제한해 무제한 조회를 막습니다.
 - 서비스 키와 `anonymous_key`는 응답에 포함하지 않습니다.
-- Apps in Toss WebView와 로컬 개발 환경에서 별도 Origin 설정 없이 호출할 수 있도록 CORS는 모든 Origin에 응답합니다. 이는 API 인증을 의미하지 않습니다.
+- CORS는 SDK 3.1.1 이상의 운영·QR Origin인 `https://hoo-balloon.apps.tossmini.com`, `https://hoo-balloon.private-apps.tossmini.com`과 로컬 Devtools(`localhost`, `127.0.0.1`)만 허용합니다. 이는 API 인증을 의미하지 않습니다.
 
 ### 남아 있는 신뢰 경계
 

@@ -9,7 +9,7 @@ const storageMocks = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock('@apps-in-toss/web-bridge', () => ({
+vi.mock('@apps-in-toss/web-framework', () => ({
   Storage: storageMocks,
 }));
 
@@ -86,6 +86,56 @@ describe('ranking outbox', () => {
       items: Array<{ id: string }>;
     };
     expect(saved.items[0]?.id).toBe(pending.id);
+  });
+
+  it('preserves pending records split between native and migrated local storage', async () => {
+    const createdAt = Date.now();
+    nativeStore.set('hoo-balloon:ranking-outbox:v1', JSON.stringify({
+      version: 1,
+      updatedAt: 20,
+      items: [{
+        version: 1,
+        id: '11111111-1111-4111-8111-111111111111',
+        ownerHash: 'native-owner',
+        rankingType: 'BALLOON_COUNT',
+        score: 2,
+        durationMs: 5000,
+        createdAt,
+        attempts: 0,
+        nextAttemptAt: 0,
+      }],
+    }));
+    localStore.set('hoo-balloon:ranking-outbox:v1', JSON.stringify({
+      version: 1,
+      updatedAt: 10,
+      items: [{
+        version: 1,
+        id: '22222222-2222-4222-8222-222222222222',
+        ownerHash: 'local-owner',
+        rankingType: 'LUNG_CAPACITY',
+        score: 100,
+        durationMs: 7000,
+        createdAt,
+        attempts: 0,
+        nextAttemptAt: 0,
+      }],
+    }));
+
+    const { enqueueScoreSubmission } = await import('./rankingOutbox');
+    await enqueueScoreSubmission({
+      anonymousKey: 'new-user',
+      rankingType: 'BALLOON_COUNT',
+      score: 3,
+      durationMs: 4000,
+    });
+
+    const saved = JSON.parse(Array.from(nativeStore.values())[0]) as {
+      items: Array<{ id: string }>;
+    };
+    expect(saved.items.map(({ id }) => id)).toEqual(expect.arrayContaining([
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+    ]));
   });
 
   it('queues a score silently and syncs it after the network recovers', async () => {

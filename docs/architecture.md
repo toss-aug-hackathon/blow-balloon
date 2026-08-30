@@ -111,7 +111,7 @@ sequenceDiagram
 4. 테이블은 RLS를 강제하고 `anon`, `authenticated` 직접 권한을 회수합니다.
 5. RPC 실행 권한은 `service_role`에만 부여됩니다.
 
-현재 Edge Function은 Toss 발급값의 서버 서명이나 JWT를 독립적으로 검증하지 않습니다. 따라서 사용자 키를 아는 요청자를 실제 Toss 사용자로 증명하는 강한 인증 경계는 아니며, 이것이 확인된 주요 신뢰 제약입니다. CORS `*`도 인증 수단이 아닙니다.
+현재 Edge Function은 Toss 발급값의 서버 서명이나 JWT를 독립적으로 검증하지 않습니다. 따라서 사용자 키를 아는 요청자를 실제 Toss 사용자로 증명하는 강한 인증 경계는 아니며, 이것이 확인된 주요 신뢰 제약입니다. 제한된 CORS 허용 목록도 인증 수단은 아닙니다.
 
 ## 데이터와 캐시
 
@@ -144,7 +144,7 @@ flowchart TD
   Edge --> Postgres
 ```
 
-- 프런트엔드 설정은 `granite.config.ts`가 소유하며 앱 이름, 브랜드, 마이크 권한, 비게임 `partner` WebView 속성과 `dist` 출력 경로를 정의합니다.
+- 프런트엔드 설정은 SDK 3.x의 `apps-in-toss.config.ts`가 소유하며 앱 이름, 브랜드 색상, 마이크 권한, WebView 속성과 `dist` 출력 경로를 정의합니다.
 - `pnpm build:web`은 TypeScript와 Vite 웹 빌드를, `pnpm build`는 Apps in Toss 빌드를 실행합니다.
 - Supabase 스키마와 Edge Function은 프런트엔드와 별개로 적용·배포해야 합니다.
 - 실제 Toss 및 Supabase 운영 배포 상태는 저장소만으로 확인할 수 없습니다.
