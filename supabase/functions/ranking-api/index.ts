@@ -40,11 +40,30 @@ const supabase = createClient(supabaseUrl, adminApiKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
 
+const allowedOrigins = new Set([
+  'https://hoo-balloon.apps.tossmini.com',
+  'https://hoo-balloon.private-apps.tossmini.com',
+])
+const localDevelopmentOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': `content-type, ${ANONYMOUS_KEY_HEADER}`,
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Expose-Headers': 'Retry-After',
+}
+
+function isAllowedOrigin(origin: string | null): origin is string {
+  return origin !== null && (
+    allowedOrigins.has(origin) ||
+    localDevelopmentOrigin.test(origin)
+  )
+}
+
+function applyCors(req: Request, response: Response): Response {
+  const origin = req.headers.get('Origin')
+  if (isAllowedOrigin(origin)) response.headers.set('Access-Control-Allow-Origin', origin)
+  response.headers.append('Vary', 'Origin')
+  return response
 }
 
 function json(
@@ -320,32 +339,53 @@ async function getMyRecords(anonymousKey: string): Promise<Response> {
 }
 
 Deno.serve(async (req) => {
-  try {
-    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders })
+  const origin = req.headers.get('Origin')
+  if (req.method === 'OPTIONS') {
+    if (!isAllowedOrigin(origin)) {
+      return new Response(null, { status: 403, headers: { ...corsHeaders, Vary: 'Origin' } })
+    }
+    return new Response(null, {
+      status: 204,
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Origin': origin,
+        Vary: 'Origin',
+      },
+    })
+  }
 
+  let response: Response
+  try {
     const url = new URL(req.url)
     const route = url.pathname.replace(/^\/ranking-api\/?/, '/')
 
-    if (route === '/ranking' && req.method === 'GET') return getRanking(url)
-
-    const anonymousKey = getAnonymousKey(req)
-    if (!anonymousKey) {
-      return error('INVALID_ANONYMOUS_KEY', `${ANONYMOUS_KEY_HEADER} 헤더가 필요해요.`, 400)
+    if (route === '/ranking' && req.method === 'GET') {
+      response = await getRanking(url)
+    } else {
+      const anonymousKey = getAnonymousKey(req)
+      if (!anonymousKey) {
+        response = error(
+          'INVALID_ANONYMOUS_KEY',
+          `${ANONYMOUS_KEY_HEADER} 헤더가 필요해요.`,
+          400,
+        )
+      } else if (route === '/ranking-user' && req.method === 'GET') {
+        response = await getRankingUser(anonymousKey)
+      } else if (route === '/register-nickname' && req.method === 'POST') {
+        response = await registerNickname(req, anonymousKey)
+      } else if (route === '/update-nickname' && req.method === 'POST') {
+        response = await updateNickname(req, anonymousKey)
+      } else if (route === '/submit-score' && req.method === 'POST') {
+        response = await submitScore(req, anonymousKey)
+      } else if (route === '/my-records' && req.method === 'GET') {
+        response = await getMyRecords(anonymousKey)
+      } else {
+        response = error('NOT_FOUND', '요청한 API를 찾을 수 없어요.', 404)
+      }
     }
-
-    if (route === '/ranking-user' && req.method === 'GET') return getRankingUser(anonymousKey)
-    if (route === '/register-nickname' && req.method === 'POST') {
-      return registerNickname(req, anonymousKey)
-    }
-    if (route === '/update-nickname' && req.method === 'POST') {
-      return updateNickname(req, anonymousKey)
-    }
-    if (route === '/submit-score' && req.method === 'POST') return submitScore(req, anonymousKey)
-    if (route === '/my-records' && req.method === 'GET') return getMyRecords(anonymousKey)
-
-    return error('NOT_FOUND', '요청한 API를 찾을 수 없어요.', 404)
   } catch (requestError) {
     console.error('Unhandled ranking API error:', requestError)
-    return error('INTERNAL_ERROR', '요청을 처리하지 못했어요.', 500)
+    response = error('INTERNAL_ERROR', '요청을 처리하지 못했어요.', 500)
   }
+  return applyCors(req, response)
 })

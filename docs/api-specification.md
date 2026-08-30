@@ -50,10 +50,10 @@ JWT 또는 Supabase Auth 세션은 사용하지 않습니다. `x-anonymous-user-
 
 ### CORS와 OPTIONS
 
-- 허용 Origin: `*`
+- 허용 Origin: `https://hoo-balloon.apps.tossmini.com`, `https://hoo-balloon.private-apps.tossmini.com`, 로컬 Devtools의 `localhost`·`127.0.0.1`
 - 허용 Method: `GET, POST, OPTIONS`
 - 허용 Header: `content-type, x-anonymous-user-key`
-- `OPTIONS` 응답: 204
+- 허용 Origin의 `OPTIONS` 응답: 204, 그 외 Origin: 403
 
 CORS 허용은 인증이나 인가를 대체하지 않습니다.
 

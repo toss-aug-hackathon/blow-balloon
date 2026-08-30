@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getAnonymousKey } from '@apps-in-toss/web-bridge';
+import { getAnonymousKey } from '@apps-in-toss/web-framework';
 import {
   getRankingUser,
   getMyRecords,

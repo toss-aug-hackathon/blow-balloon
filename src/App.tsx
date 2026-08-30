@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { closeView, graniteEvent } from '@apps-in-toss/web-bridge';
+import { closeView, graniteEvent } from '@apps-in-toss/web-framework';
 import { BalloonCanvas } from './game/BalloonCanvas';
 import type {
   GameHudState,

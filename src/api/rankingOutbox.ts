@@ -1,4 +1,4 @@
-import { Storage } from '@apps-in-toss/web-bridge';
+import { Storage } from '@apps-in-toss/web-framework';
 import { compareRankingItems } from './rankingRules';
 import {
   RankingApiError,
@@ -142,12 +142,23 @@ async function readEnvelope(): Promise<OutboxEnvelope> {
     readNativeEnvelope(),
     Promise.resolve(readLocalEnvelope()),
   ]);
-  const envelope = !nativeEnvelope
-    ? localEnvelope
-    : !localEnvelope || nativeEnvelope.updatedAt >= localEnvelope.updatedAt
-      ? nativeEnvelope
-      : localEnvelope;
-  return envelope ?? { version: OUTBOX_VERSION, updatedAt: 0, items: [] };
+  if (!nativeEnvelope && !localEnvelope) {
+    return { version: OUTBOX_VERSION, updatedAt: 0, items: [] };
+  }
+
+  const itemsById = new Map<string, PendingScoreSubmission>();
+  const envelopes = [nativeEnvelope, localEnvelope]
+    .filter((envelope): envelope is OutboxEnvelope => envelope !== null)
+    .sort((a, b) => a.updatedAt - b.updatedAt);
+  for (const envelope of envelopes) {
+    for (const item of envelope.items) itemsById.set(item.id, item);
+  }
+
+  return {
+    version: OUTBOX_VERSION,
+    updatedAt: Math.max(...envelopes.map(({ updatedAt }) => updatedAt)),
+    items: Array.from(itemsById.values()),
+  };
 }
 
 async function writeEnvelope(items: PendingScoreSubmission[], previousUpdatedAt: number): Promise<void> {
